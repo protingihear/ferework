@@ -4,6 +4,8 @@ import 'package:http/http.dart' as http;
 import 'dart:convert';
 
 class Sign_Up_Page extends StatefulWidget {
+  const Sign_Up_Page({super.key});
+
   @override
   sign_up createState() => sign_up();
 }
@@ -17,6 +19,7 @@ class sign_up extends State<Sign_Up_Page> {
   final TextEditingController confirmPasswordController =
       TextEditingController();
   String? gender; // Jenis kelamin ("L" atau "P")
+  String? role;
   bool isAgreed = false;
 
   @override
@@ -29,10 +32,10 @@ class sign_up extends State<Sign_Up_Page> {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Image.asset(
-                  'assets/logo.png',
-                  height: 100,
-                ),
+                // Image.asset(
+                //   'assets/logo.png',
+                //   height: 100,
+                // ),
                 SizedBox(height: 16),
                 Text(
                   'Sign Up',
@@ -127,26 +130,81 @@ class sign_up extends State<Sign_Up_Page> {
                 ),
                 Row(
                   children: [
-                    Radio<String>(
-                      value: 'L',
-                      groupValue: gender,
+                    Expanded(
+                      child: RadioListTile<String>(
+                        title: Text('Laki-Laki'),
+                        value: 'L',
+                        groupValue: gender,
+                        onChanged: (value) {
+                          setState(() {
+                            gender = value;
+                          });
+                        },
+                      ),
+                    ),
+                    Expanded(
+                      child: RadioListTile<String>(
+                        title: Text('Perempuan'),
+                        value: 'P',
+                        groupValue: gender,
+                        onChanged: (value) {
+                          setState(() {
+                            gender = value;
+                          });
+                        },
+                      ),
+                    ),
+                  ],
+                ),
+
+                //Role Selection
+                Align(
+                  alignment: Alignment.centerLeft,
+                  child: Text('Pilih Peran*',
+                      style: TextStyle(fontWeight: FontWeight.bold)),
+                ),
+                Column(
+                  children: [
+                    Row(
+                      mainAxisSize: MainAxisSize
+                          .min, // Mengurangi ruang kosong di antara children
+                      children: [
+                        Expanded(
+                          child: RadioListTile<String>(
+                            title: Text('Ahli Bahasa'),
+                            value: 'Ahli Bahasa',
+                            groupValue: role,
+                            onChanged: (value) {
+                              setState(() {
+                                role = value;
+                              });
+                            },
+                          ),
+                        ),
+                        Expanded(
+                          child: RadioListTile<String>(
+                            title: Text('Teman Tuli'),
+                            value: 'Teman Tuli',
+                            groupValue: role,
+                            onChanged: (value) {
+                              setState(() {
+                                role = value;
+                              });
+                            },
+                          ),
+                        ),
+                      ],
+                    ),
+                    RadioListTile<String>(
+                      title: Text('Teman Dengar'),
+                      value: 'Teman Dengar',
+                      groupValue: role,
                       onChanged: (value) {
                         setState(() {
-                          gender = value;
+                          role = value;
                         });
                       },
                     ),
-                    Text('Laki-Laki'),
-                    Radio<String>(
-                      value: 'P',
-                      groupValue: gender,
-                      onChanged: (value) {
-                        setState(() {
-                          gender = value;
-                        });
-                      },
-                    ),
-                    Text('Perempuan'),
                   ],
                 ),
 
@@ -222,8 +280,7 @@ class sign_up extends State<Sign_Up_Page> {
                           try {
                             // Kirim POST request ke server
                             var response = await http.post(
-                              Uri.parse(
-                                  'http://10.0.2.2:8000/api/teman-tuli'), 
+                              Uri.parse('http://10.0.2.2:8000/api/teman-tuli'),
                               headers: {
                                 'Content-Type': 'application/json',
                               },
@@ -280,6 +337,7 @@ class sign_up extends State<Sign_Up_Page> {
                   },
                   child: Text('Cancel', style: TextStyle(fontSize: 16)),
                 ),
+                SizedBox(height: 30,)
               ],
             ),
           ),
