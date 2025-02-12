@@ -14,8 +14,8 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       title: 'YouTube Style Splash',
-      theme: ThemeData.dark(), // Optional: Dark theme like YouTube
-      home: Sign_In_Page(), // Start with SplashScreen
+      theme: ThemeData.light(), // Optional: Dark theme like YouTube
+      home: SplashScreen(), // Start with SplashScreen
     );
   }
 }
