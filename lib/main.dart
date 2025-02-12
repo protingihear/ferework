@@ -1,5 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:reworkmobile/view/postberita.dart';
 import 'package:reworkmobile/view/sign_in.dart';
+import 'package:reworkmobile/view/home.dart';
+import 'package:reworkmobile/view/berita.dart';
+
 import 'view/animation/splash_screen.dart'; // Import the splash screen file
 
 void main() {
@@ -16,6 +20,7 @@ class MyApp extends StatelessWidget {
       title: 'YouTube Style Splash',
       theme: ThemeData.light(), // Optional: Dark theme like YouTube
       home: SplashScreen(), // Start with SplashScreen
+
     );
   }
 }
