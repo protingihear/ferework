@@ -25,6 +25,7 @@ class _HomeScreenState extends State<HomeScreen> {
   List<dynamic> _beritaList = [];
   bool _isLoading = true;
   bool _hasError = false;
+  int _errorCode = 0;
 
   @override
   void initState() {
@@ -35,25 +36,27 @@ class _HomeScreenState extends State<HomeScreen> {
   Future<void> fetchBerita() async {
     try {
       final response = await http.get(Uri.parse("http://localhost:5000/api/berita"));
-      
+
       if (response.statusCode == 200) {
         setState(() {
           _beritaList = json.decode(response.body);
           _isLoading = false;
           _hasError = false;
+          _errorCode = 0;
         });
       } else {
-        throw Exception("Gagal mengambil data");
+        throw Exception("Error Code: ${response.statusCode}");
       }
     } catch (e) {
       setState(() {
         _isLoading = false;
         _hasError = true;
+        _errorCode = 500; // Simpan error default 500 jika tidak diketahui
       });
 
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text("Berita tidak dapat dimuat"),
+          content: Text("Error: $_errorCode - Berita tidak dapat dimuat"),
           backgroundColor: Colors.red,
         ),
       );
@@ -74,7 +77,7 @@ class _HomeScreenState extends State<HomeScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Bagian Atas dengan Background Image dan Teks
+            // Header dengan Background Image
             Stack(
               children: [
                 Container(
@@ -95,7 +98,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         children: [
                           CircleAvatar(),
                           SizedBox(width: 10),
-                          Text("naraya"),
+                          Text("Naraya"),
                         ],
                       ),
                       SizedBox(height: 40),
@@ -134,16 +137,33 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
             ),
 
-            // Bagian Informasi (Menampilkan Berita dari Server)
+            // Bagian Berita dalam Row (Horizontal Scroll)
             Padding(
               padding: const EdgeInsets.all(16.0),
-              child: _isLoading
-                  ? Center(child: CircularProgressIndicator())
-                  : _hasError
-                      ? Center(child: Text("Berita tidak dapat dimuat"))
-                      : Column(
-                          children: _beritaList.map((berita) => _buildBeritaCard(berita)).toList(),
-                        ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    "Berita Terbaru",
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                  ),
+                  SizedBox(height: 10),
+                  _isLoading
+                      ? Center(child: CircularProgressIndicator())
+                      : _hasError
+                          ? Center(child: Text("Error $_errorCode: Berita tidak dapat dimuat"))
+                          : SizedBox(
+                              height: 200, // Atur tinggi list berita agar tetap rapih
+                              child: ListView.builder(
+                                scrollDirection: Axis.horizontal, // **ROW MODE**
+                                itemCount: _beritaList.length,
+                                itemBuilder: (context, index) {
+                                  return _buildBeritaCard(_beritaList[index]);
+                                },
+                              ),
+                            ),
+                ],
+              ),
             ),
           ],
         ),
@@ -151,65 +171,122 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  // Widget untuk Menampilkan Card Berita
+  // Widget untuk Menampilkan Card Berita (ROW Style)
   Widget _buildBeritaCard(dynamic berita) {
-    return Card(
-      margin: EdgeInsets.symmetric(vertical: 10),
-      elevation: 5,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(10),
-      ),
-      child: Padding(
-        padding: EdgeInsets.all(16),
+     return Container(
+    width: 300, // Pastikan lebar card tetap
+    margin: EdgeInsets.symmetric(horizontal: 8),
+    child: GestureDetector(
+      onTap: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => DetailBeritaScreen(berita)),
+        );
+      },
+      child: Card(
+        elevation: 5,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(10),
+        ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            if (berita['foto'] != null)
-              Image.memory(base64Decode(berita['foto']), height: 150, fit: BoxFit.cover),
-            SizedBox(height: 10),
-            Text(
-              berita['judul'],
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-            ),
-            SizedBox(height: 5),
-            Text(
-              berita['isi'],
-              maxLines: 3,
-              overflow: TextOverflow.ellipsis,
-              style: TextStyle(fontSize: 14, color: Colors.grey[700]),
-            ),
-            SizedBox(height: 5),
-            Text(
-              "Tanggal: ${DateTime.parse(berita['tanggal']).toLocal()}",
-              style: TextStyle(fontSize: 12, color: Colors.grey),
+            // Gambar dengan tinggi tetap
+            berita['foto'] != null
+                ? ClipRRect(
+                    borderRadius: BorderRadius.vertical(top: Radius.circular(10)),
+                    child: Image.memory(
+                      base64Decode(berita['foto']),
+                      height: 120,
+                      width: double.infinity,
+                      fit: BoxFit.cover,
+                    ),
+                  )
+                : Container(
+                    height: 120,
+                    color: Colors.grey[300],
+                    child: Center(child: Icon(Icons.image, size: 50, color: Colors.grey)),
+                  ),
+            Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Judul berita
+                  Text(
+                    berita['judul'],
+                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  SizedBox(height: 5),
+                  // Isi berita dengan batas tinggi agar tidak overflow
+                  SizedBox(
+                    height: 40, 
+                    child: Text(
+                      berita['isi'].split(" ").take(10).join(" ") + "...",
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(fontSize: 14, color: Colors.grey[700]),
+                    ),
+                  ),
+                  SizedBox(height: 5),
+                  Text(
+                    "Tanggal: ${DateTime.parse(berita['tanggal']).toLocal()}",
+                    style: TextStyle(fontSize: 12, color: Colors.grey),
+                  ),
+                ],
+              ),
             ),
           ],
         ),
       ),
-    );
+    ),
+  );
+
   }
 
   // Widget untuk Tombol Fitur
   Widget _buildFeatureButton(String imagePath, String label) {
     return GestureDetector(
-      onTap: () {
-        // Nanti bisa diarahkan ke halaman lain
-      },
-      child: Container(
-        width: 100,
-        height: 120,
-        decoration: BoxDecoration(
-          color: Colors.blue,
-          borderRadius: BorderRadius.circular(15),
-        ),
+      onTap: () {},
+      child: Column(
+        children: [
+          Image.asset(imagePath, width: 50, height: 50),
+          SizedBox(height: 5),
+          Text(label, style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold)),
+        ],
+      ),
+    );
+  }
+}
+
+class DetailBeritaScreen extends StatelessWidget {
+  final dynamic berita;
+
+  DetailBeritaScreen(this.berita);
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: Text("Detail Berita")),
+      body: Padding(
+        padding: const EdgeInsets.all(16.0),
         child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Image.asset(imagePath, width: 50, height: 50),
+            berita['foto'] != null
+                ? Image.memory(base64Decode(berita['foto']), width: double.infinity, fit: BoxFit.cover)
+                : Container(height: 200, color: Colors.grey[300]),
             SizedBox(height: 10),
             Text(
-              label,
-              style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+              berita['judul'],
+              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+            ),
+            SizedBox(height: 10),
+            Text(
+              berita['isi'],
+              style: TextStyle(fontSize: 16),
             ),
           ],
         ),

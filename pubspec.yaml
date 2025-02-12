@@ -17,6 +17,7 @@ dependencies:
   permission_handler: ^10.2.0
   #http: any
   speech_to_text: ^7.0.0 # For voice-to-text functionality
+  image_picker: ^1.1.2
 
 dev_dependencies:
   flutter_test:
