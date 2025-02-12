@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
 
 void main() {
   runApp(MyApp());
@@ -14,7 +16,50 @@ class MyApp extends StatelessWidget {
   }
 }
 
-class HomeScreen extends StatelessWidget {
+class HomeScreen extends StatefulWidget {
+  @override
+  _HomeScreenState createState() => _HomeScreenState();
+}
+
+class _HomeScreenState extends State<HomeScreen> {
+  List<dynamic> _beritaList = [];
+  bool _isLoading = true;
+  bool _hasError = false;
+
+  @override
+  void initState() {
+    super.initState();
+    fetchBerita();
+  }
+
+  Future<void> fetchBerita() async {
+    try {
+      final response = await http.get(Uri.parse("http://localhost:5000/api/berita"));
+      
+      if (response.statusCode == 200) {
+        setState(() {
+          _beritaList = json.decode(response.body);
+          _isLoading = false;
+          _hasError = false;
+        });
+      } else {
+        throw Exception("Gagal mengambil data");
+      }
+    } catch (e) {
+      setState(() {
+        _isLoading = false;
+        _hasError = true;
+      });
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text("Berita tidak dapat dimuat"),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -50,24 +95,25 @@ class HomeScreen extends StatelessWidget {
                         children: [
                           CircleAvatar(),
                           SizedBox(width: 10),
-                          Text(
-                            "Naraya",
-                            style: TextStyle(
-  color: Color(0xFF195728), 
-  fontSize: 16, 
-  fontWeight: FontWeight.bold,
-),
-                          ),
+                          Text("naraya"),
                         ],
                       ),
                       SizedBox(height: 40),
                       Text(
-                        'Selamat datang, Naraya!',
-                        style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold),
+                        'Selamat datang Naraya!',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
                       Text(
                         'Yuk Jelajahi Dunia Tuli Bersama!',
-                        style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold),
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
                     ],
                   ),
@@ -75,26 +121,29 @@ class HomeScreen extends StatelessWidget {
               ],
             ),
 
-            // Bagian Fitur di Tengah
+            // Bagian Fitur
             Padding(
               padding: const EdgeInsets.all(16.0),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 children: [
-                  _buildFeatureButton(context, 'assets/scan_icon.png', 'Scan to Text'),
-                  _buildFeatureButton(context, 'assets/voice_icon.png', 'Voice to Text'),
-                  _buildFeatureButton(context, 'assets/lesson_icon.png', 'Lesson'),
+                  _buildFeatureButton('assets/scan_icon.png', 'Scan to Text'),
+                  _buildFeatureButton('assets/voice_icon.png', 'Voice to Text'),
+                  _buildFeatureButton('assets/lesson_icon.png', 'Lesson'),
                 ],
               ),
             ),
 
-            // Bagian Informasi
+            // Bagian Informasi (Menampilkan Berita dari Server)
             Padding(
               padding: const EdgeInsets.all(16.0),
-              child: Container(
-                height: 200,
-                color: Colors.grey[300], // Placeholder warna
-              ),
+              child: _isLoading
+                  ? Center(child: CircularProgressIndicator())
+                  : _hasError
+                      ? Center(child: Text("Berita tidak dapat dimuat"))
+                      : Column(
+                          children: _beritaList.map((berita) => _buildBeritaCard(berita)).toList(),
+                        ),
             ),
           ],
         ),
@@ -102,33 +151,68 @@ class HomeScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildFeatureButton(BuildContext context, String imagePath, String label) {
+  // Widget untuk Menampilkan Card Berita
+  Widget _buildBeritaCard(dynamic berita) {
+    return Card(
+      margin: EdgeInsets.symmetric(vertical: 10),
+      elevation: 5,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(10),
+      ),
+      child: Padding(
+        padding: EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            if (berita['foto'] != null)
+              Image.memory(base64Decode(berita['foto']), height: 150, fit: BoxFit.cover),
+            SizedBox(height: 10),
+            Text(
+              berita['judul'],
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            ),
+            SizedBox(height: 5),
+            Text(
+              berita['isi'],
+              maxLines: 3,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(fontSize: 14, color: Colors.grey[700]),
+            ),
+            SizedBox(height: 5),
+            Text(
+              "Tanggal: ${DateTime.parse(berita['tanggal']).toLocal()}",
+              style: TextStyle(fontSize: 12, color: Colors.grey),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // Widget untuk Tombol Fitur
+  Widget _buildFeatureButton(String imagePath, String label) {
     return GestureDetector(
       onTap: () {
-        // Nanti diisi navigasi ke halaman lain
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('$label belum tersedia')),
-        );
+        // Nanti bisa diarahkan ke halaman lain
       },
-      child: Column(
-        children: [
-          Container(
-            width: 100, // Lebih besar
-            height: 100, // Lebih besar
-            decoration: BoxDecoration(
-              color: Colors.blue[600],
-              borderRadius: BorderRadius.circular(20), // Lebih melengkung
+      child: Container(
+        width: 100,
+        height: 120,
+        decoration: BoxDecoration(
+          color: Colors.blue,
+          borderRadius: BorderRadius.circular(15),
+        ),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Image.asset(imagePath, width: 50, height: 50),
+            SizedBox(height: 10),
+            Text(
+              label,
+              style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
             ),
-            child: Center(
-              child: Image.asset(imagePath, width: 50, height: 50), // Perbesar ikon
-            ),
-          ),
-          SizedBox(height: 12),
-          Text(
-            label,
-            style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

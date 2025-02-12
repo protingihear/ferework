@@ -15,6 +15,7 @@ dependencies:
   shared_preferences: ^2.5.1
   flutter_tts: ^3.4.0 
   permission_handler: ^10.2.0
+  #http: any
   speech_to_text: ^7.0.0 # For voice-to-text functionality
 
 dev_dependencies:

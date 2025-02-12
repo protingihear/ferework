@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:reworkmobile/view/sign_in.dart';
+import 'package:reworkmobile/view/home.dart';
 import 'view/animation/splash_screen.dart'; // Import the splash screen file
 
 void main() {
@@ -15,7 +16,7 @@ class MyApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       title: 'YouTube Style Splash',
       theme: ThemeData.dark(), // Optional: Dark theme like YouTube
-      home: Sign_In_Page(), // Start with SplashScreen
+      home: HomeScreen(), // Start with SplashScreen
     );
   }
 }
