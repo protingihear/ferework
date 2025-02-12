@@ -29,3 +29,8 @@ flutter:
     - assets/ihear_logo.png
     - assets/hand_wave.png
     - assets/logo.png
+    - assets/bgatas.png
+    
+    - assets/scan_icon.png
+    - assets/lesson_icon.png
+    - assets/voice_icon.png
