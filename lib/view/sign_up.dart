@@ -18,6 +18,7 @@ class sign_up extends State<Sign_Up_Page> {
       TextEditingController();
   final TextEditingController confirmPasswordController =
       TextEditingController();
+  final TextEditingController nameController = TextEditingController();
   String? gender; // Jenis kelamin ("L" atau "P")
   String? role;
   bool isAgreed = false;
@@ -36,13 +37,32 @@ class sign_up extends State<Sign_Up_Page> {
                 //   'assets/logo.png',
                 //   height: 100,
                 // ),
-                SizedBox(height: 16),
+                SizedBox(height: 30),
                 Text(
                   'Sign Up',
                   style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
                 ),
                 Text('Create your account'),
                 SizedBox(height: 16),
+
+                // Name Field
+                Container(
+                  decoration: BoxDecoration(
+                    color: Colors.green[100],
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: TextField(
+                    controller: nameController,
+                    decoration: InputDecoration(
+                      hintText: 'Name',
+                      border: InputBorder.none,
+                      filled: true,
+                      fillColor: Colors.green[100],
+                      prefixIcon: Icon(Icons.person),
+                    ),
+                  ),
+                ),
+                SizedBox(height: 12),
 
                 // Username Field
                 Container(
@@ -132,7 +152,7 @@ class sign_up extends State<Sign_Up_Page> {
                   children: [
                     Expanded(
                       child: RadioListTile<String>(
-                        title: Text('Laki-Laki'),
+                        title: Text('Pria'),
                         value: 'L',
                         groupValue: gender,
                         onChanged: (value) {
@@ -144,7 +164,7 @@ class sign_up extends State<Sign_Up_Page> {
                     ),
                     Expanded(
                       child: RadioListTile<String>(
-                        title: Text('Perempuan'),
+                        title: Text('Wanita'),
                         value: 'P',
                         groupValue: gender,
                         onChanged: (value) {
@@ -172,7 +192,7 @@ class sign_up extends State<Sign_Up_Page> {
                         Expanded(
                           child: RadioListTile<String>(
                             title: Text('Ahli Bahasa'),
-                            value: 'Ahli Bahasa',
+                            value: 'ahli_bahasa',
                             groupValue: role,
                             onChanged: (value) {
                               setState(() {
@@ -184,7 +204,7 @@ class sign_up extends State<Sign_Up_Page> {
                         Expanded(
                           child: RadioListTile<String>(
                             title: Text('Teman Tuli'),
-                            value: 'Teman Tuli',
+                            value: 'teman_tuli',
                             groupValue: role,
                             onChanged: (value) {
                               setState(() {
@@ -197,7 +217,7 @@ class sign_up extends State<Sign_Up_Page> {
                     ),
                     RadioListTile<String>(
                       title: Text('Teman Dengar'),
-                      value: 'Teman Dengar',
+                      value: 'teman_dengar',
                       groupValue: role,
                       onChanged: (value) {
                         setState(() {
@@ -247,15 +267,14 @@ class sign_up extends State<Sign_Up_Page> {
                   ),
                   onPressed: isAgreed && gender != null
                       ? () async {
-                          // Ambil input user
                           String inputUsername = usernameController.text;
                           String inputEmail = registEmailController.text;
                           String inputPassword = registPasswordController.text;
                           String confirmPassword =
                               confirmPasswordController.text;
+                          String fullName = nameController.text;
 
                           if (inputPassword != confirmPassword) {
-                            // Tampilkan pesan error jika password tidak cocok
                             ScaffoldMessenger.of(context).showSnackBar(
                               SnackBar(
                                 content: Text(
@@ -266,28 +285,34 @@ class sign_up extends State<Sign_Up_Page> {
                             return;
                           }
 
-                          // Data yang akan dikirim ke server
+                          List<String> nameParts =
+                              fullName.split(" "); 
+                          String firstname =
+                              nameParts.first;
+                          String lastname =
+                              nameParts.skip(1).join(" ");
+
                           Map<String, dynamic> requestData = {
-                            'username': inputUsername,
+                            'firstname': firstname,
+                            'lastname': lastname,
                             'email': inputEmail,
+                            'username': inputUsername,
                             'password': inputPassword,
-                            'gender': gender,
-                            'firstName':
-                                'John', // Contoh data tambahan, sesuaikan dengan kebutuhan
-                            'lastName': 'Doe'
+                            'role': role ?? 'user',
                           };
 
+                          print("Request Data: ${jsonEncode(requestData)}");
+
                           try {
-                            // Kirim POST request ke server
                             var response = await http.post(
-                              Uri.parse('http://10.0.2.2:8000/api/teman-tuli'),
+                              Uri.parse(
+                                  'https://berework-production.up.railway.app/auth/register'),
                               headers: {
                                 'Content-Type': 'application/json',
                               },
                               body: jsonEncode(requestData),
                             );
 
-                            // Tangani response dari server
                             if (response.statusCode == 201) {
                               ScaffoldMessenger.of(context).showSnackBar(
                                 SnackBar(
@@ -295,21 +320,18 @@ class sign_up extends State<Sign_Up_Page> {
                                   backgroundColor: Colors.green,
                                 ),
                               );
-                              Navigator.pop(
-                                  context); // Kembali ke halaman sebelumnya
+                              Navigator.pop(context);
                             } else {
-                              // Tangani error dari server
                               var errorResponse = jsonDecode(response.body);
                               ScaffoldMessenger.of(context).showSnackBar(
                                 SnackBar(
-                                  content:
-                                      Text('Error: ${errorResponse['errors']}'),
+                                  content: Text(
+                                      'Error: ${errorResponse['message'] ?? 'Terjadi kesalahan'}'),
                                   backgroundColor: Colors.red,
                                 ),
                               );
                             }
                           } catch (e) {
-                            // Tangani error jaringan
                             ScaffoldMessenger.of(context).showSnackBar(
                               SnackBar(
                                 content: Text('Terjadi kesalahan jaringan: $e'),
@@ -337,7 +359,9 @@ class sign_up extends State<Sign_Up_Page> {
                   },
                   child: Text('Cancel', style: TextStyle(fontSize: 16)),
                 ),
-                SizedBox(height: 30,)
+                SizedBox(
+                  height: 30,
+                )
               ],
             ),
           ),

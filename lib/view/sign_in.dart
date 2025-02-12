@@ -185,42 +185,57 @@ class _Sign_In_Page extends State<Sign_In_Page> {
 
   // Fungsi login untuk mengecek email dan password
   Future<void> login() async {
-    final email = Uri.encodeComponent(_emailController.text);
-    final password = Uri.encodeComponent(_passwordController.text);
+    final email = _emailController.text;
+    final password = _passwordController.text;
 
-    final url = 'http://10.0.2.2:8000/api/auth?email=$email&password=$password';
+    final url =
+        'https://berework-production.up.railway.app/auth/login'; // Pakai endpoint login, bukan register
 
     try {
-      // Menggunakan http.get untuk fetch request
-      final response = await http.get(Uri.parse(url));
+      final response = await http.post(
+        Uri.parse(url),
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: jsonEncode({
+          "email": email,
+          "password": password,
+        }),
+      );
+
+      final data = jsonDecode(response.body);
 
       if (response.statusCode == 200) {
-        final data = jsonDecode(response.body);
-        final userId = data['userId']; // Ambil userId dari response
+        if (data.containsKey('userId')) {
+          final userId = data['userId'];
 
-        // Simpan userId ke SharedPreferences
-        final prefs = await SharedPreferences.getInstance();
-        await prefs.setInt('userId', userId);
+          // Simpan userId ke SharedPreferences
+          final prefs = await SharedPreferences.getInstance();
+          await prefs.setInt('userId', userId);
 
-        // Tampilkan pesan sukses dan navigasi ke Homepage
-        setState(() {
-          _responseMessage = "Login successful: ${data['message']}";
-        });
+          setState(() {
+            _responseMessage = "Login successful: ${data['message']}";
+          });
 
-        Navigator.pushReplacement(
-
-          context,
-          MaterialPageRoute(builder: (context) => SplashScreen()),
-        );
+          // Navigasi ke halaman berikutnya
+          // Navigator.pushReplacement(
+          //   context,
+          //   MaterialPageRoute(builder: (context) => SplashScreen()),
+          // );
+        } else {
+          setState(() {
+            _responseMessage = "Login failed: User ID not found.";
+          });
+        }
       } else {
-        final message = jsonDecode(response.body)['message'];
         setState(() {
-          _responseMessage = "Login failed: $message";
+          _responseMessage =
+              "Login failed: ${data['message'] ?? 'Unknown error'}";
         });
       }
     } catch (error) {
       setState(() {
-        _responseMessage = "Error: $error";
+        _responseMessage = "Request failed: $error";
       });
     }
   }
