@@ -35,7 +35,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Future<void> fetchBerita() async {
     try {
-      final response = await http.get(Uri.parse("http://localhost:5000/api/berita"));
+      final response = await http.get(Uri.parse("https://berework-production.up.railway.app/api/berita"));
 
       if (response.statusCode == 200) {
         setState(() {

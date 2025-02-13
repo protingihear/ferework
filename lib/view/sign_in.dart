@@ -1,5 +1,6 @@
 // import 'package:bisadenger/information.dart';
 import 'package:reworkmobile/view/animation/splash_screen.dart';
+import 'package:reworkmobile/view/home.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 // import 'home_page.dart';
 import 'package:flutter/material.dart';
@@ -62,7 +63,7 @@ class _Sign_In_Page extends State<Sign_In_Page> {
                     child: TextField(
                       controller: _emailController,
                       decoration: InputDecoration(
-                        hintText: 'Email',
+                        hintText: 'Username',
                         border: InputBorder.none,
                         filled: true,
                         fillColor: Colors.green[100],
@@ -198,7 +199,7 @@ class _Sign_In_Page extends State<Sign_In_Page> {
           "Content-Type": "application/json",
         },
         body: jsonEncode({
-          "email": email,
+          "username": email,
           "password": password,
         }),
       );
@@ -206,22 +207,22 @@ class _Sign_In_Page extends State<Sign_In_Page> {
       final data = jsonDecode(response.body);
 
       if (response.statusCode == 200) {
-        if (data.containsKey('userId')) {
-          final userId = data['userId'];
-
+        if (data.containsKey('user')) {
+          final user = data['user'];
+          final userId = user['id'];
           // Simpan userId ke SharedPreferences
           final prefs = await SharedPreferences.getInstance();
           await prefs.setInt('userId', userId);
 
           setState(() {
-            _responseMessage = "Login successful: ${data['message']}";
+            _responseMessage = "${data['message']}";
           });
 
-          // Navigasi ke halaman berikutnya
-          // Navigator.pushReplacement(
-          //   context,
-          //   MaterialPageRoute(builder: (context) => SplashScreen()),
-          // );
+          //Navigasi ke halaman berikutnya
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (context) => HomeScreen()),
+          );
         } else {
           setState(() {
             _responseMessage = "Login failed: User ID not found.";
