@@ -1,6 +1,7 @@
 // import 'package:bisadenger/information.dart';
 import 'package:reworkmobile/view/animation/splash_screen.dart';
 import 'package:reworkmobile/view/home.dart';
+import 'package:reworkmobile/view/view_profile.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 // import 'home_page.dart';
 import 'package:flutter/material.dart';
@@ -184,60 +185,71 @@ class _Sign_In_Page extends State<Sign_In_Page> {
     );
   }
 
+  Future<bool> hasSessionCookie() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.containsKey('session_cookie'); // ✅ Check if cookie exists
+  }
+
   // Fungsi login untuk mengecek email dan password
   Future<void> login() async {
-    final email = _emailController.text;
-    final password = _passwordController.text;
+  final email = _emailController.text;
+  final password = _passwordController.text;
 
-    final url =
-        'https://berework-production.up.railway.app/auth/login'; // Pakai endpoint login, bukan register
+  final url = 'http://10.0.2.2:5000/auth/login';
 
-    try {
-      final response = await http.post(
-        Uri.parse(url),
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: jsonEncode({
-          "username": email,
-          "password": password,
-        }),
-      );
+  try {
+    final response = await http.post(
+      Uri.parse(url),
+      headers: {"Content-Type": "application/json"},
+      body: jsonEncode({"username": email, "password": password}),
+    );
 
-      final data = jsonDecode(response.body);
+    if (response.statusCode == 200) {
+      final cookies = response.headers['set-cookie'];
+      if (cookies != null) {
+        final prefs = await SharedPreferences.getInstance();
 
-      if (response.statusCode == 200) {
-        if (data.containsKey('user')) {
-          final user = data['user'];
-          final userId = user['id'];
-          // Simpan userId ke SharedPreferences
-          final prefs = await SharedPreferences.getInstance();
-          await prefs.setInt('userId', userId);
+        // Extract session_id
+        final sessionMatch = RegExp(r'session_id=([^;]+)').firstMatch(cookies);
+        final sessionId = sessionMatch?.group(1);
 
-          setState(() {
-            _responseMessage = "${data['message']}";
-          });
+        // Extract tt
+        final ttMatch = RegExp(r'tt=([^;]+)').firstMatch(cookies);
+        final tt = ttMatch?.group(1);
 
-          //Navigasi ke halaman berikutnya
-          Navigator.pushReplacement(
-            context,
-            MaterialPageRoute(builder: (context) => HomeScreen()),
-          );
-        } else {
-          setState(() {
-            _responseMessage = "Login failed: User ID not found.";
-          });
+        if (sessionId != null) {
+          await prefs.setString('session_cookie', sessionId);
         }
+        if (tt != null) {
+          await prefs.setString('tt_cookie', tt);
+        }
+
+        print("📢 Full Set-Cookie Header: $cookies");
+        print("✅ Saved session_id: $sessionId");
+        print("✅ Saved tt: $tt");
+
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => ProfilePage()),
+        );
       } else {
         setState(() {
-          _responseMessage =
-              "Login failed: ${data['message'] ?? 'Unknown error'}";
+          _responseMessage = "Login failed: No session cookie received.";
         });
       }
-    } catch (error) {
+    } else {
+      final data = jsonDecode(response.body);
       setState(() {
-        _responseMessage = "Request failed: $error";
+        _responseMessage =
+            "Login failed: ${data['message'] ?? 'Unknown error'}";
       });
     }
+  } catch (error) {
+    setState(() {
+      _responseMessage = "Request failed: $error";
+    });
   }
+}
+
+
 }
