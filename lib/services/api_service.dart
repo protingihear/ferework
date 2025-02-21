@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:io';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import '../models/user_profile.dart';
@@ -37,9 +38,7 @@ class ApiService {
 
   static Future<UserProfile> updateUserProfile(
       String id, String name, String bio, String gender, String email,
-      [String? password, String? imageUrl]) async {
-    // Added `imageUrl`
-
+      [String? password, File? imageFile, bool removeImage = false]) async {
     final url = Uri.parse('$_baseUrl/api/profile');
 
     final prefs = await SharedPreferences.getInstance();
@@ -50,56 +49,44 @@ class ApiService {
       throw Exception("Session ID or tt not found");
     }
 
-    final nameParts = name.split(' ');
-    final firstName = nameParts.isNotEmpty ? nameParts.first : '';
-    final lastName = nameParts.length > 1 ? nameParts.sublist(1).join(' ') : '';
+    final request = http.MultipartRequest('PUT', url);
 
-    final body = {
-      'firstname': firstName,
-      'lastname': lastName,
-      'email': email,
-      'bio': bio,
-      'gender': gender == 'Perempuan' ? 'P' : 'L',
-    };
+    request.headers.addAll({
+      "Cookie": "session_id=$sessionId; tt=$tt",
+    });
+
+    // Tambahkan form fields yang diperlukan
+    request.fields['firstname'] = name.split(' ').first;
+    request.fields['lastname'] =
+        name.contains(' ') ? name.split(' ').sublist(1).join(' ') : '';
+    request.fields['email'] = email;
+    request.fields['bio'] = bio;
+    request.fields['gender'] = gender; // Kirim langsung tanpa konversi
 
     if (password != null && password.isNotEmpty) {
-      body['password'] = password;
+      if (password.length < 6)
+        throw Exception("Password must be at least 6 characters long");
+      request.fields['password'] = password;
     }
 
-    if (imageUrl != null && imageUrl.isNotEmpty) {
-      // Add image if available
-      body['picture'] = imageUrl;
-    }
+    // ✅ Send "" to remove image
+    if (imageFile != null) {
+    request.files.add(await http.MultipartFile.fromPath('Image', imageFile.path));
+  } else if (removeImage) {  // ✅ Only remove if explicitly requested
+    request.fields['Image'] = "";  
+  }
 
-    print("Updating profile with:");
-    print("URL: $url");
-    print("Headers: ${{
-      'Content-Type': 'application/json',
-      "Cookie": "session_id=$sessionId; tt=$tt",
-    }}");
-    print("Body: ${json.encode(body)}");
+    // Kirim request
+    final streamedResponse = await request.send();
+    final response = await http.Response.fromStream(streamedResponse);
 
-    try {
-      final response = await http.put(
-        url,
-        headers: {
-          'Content-Type': 'application/json',
-          "Cookie": "session_id=$sessionId; tt=$tt",
-        },
-        body: json.encode(body),
-      );
+    print("Response status: ${response.statusCode}");
+    print("Response body: ${response.body}");
 
-      print("Response status: ${response.statusCode}");
-      print("Response body: ${response.body}");
-
-      if (response.statusCode == 200) {
-        return UserProfile.fromJson(json.decode(response.body));
-      } else {
-        throw Exception('Failed to update profile: ${response.body}');
-      }
-    } catch (e) {
-      print("Error updating profile: $e");
-      throw Exception('Error updating profile: $e');
+    if (response.statusCode == 200) {
+      return UserProfile.fromJson(json.decode(response.body));
+    } else {
+      throw Exception('Failed to update profile: ${response.body}');
     }
   }
 }

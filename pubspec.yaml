@@ -18,6 +18,7 @@ dependencies:
   #http: any
   speech_to_text: ^7.0.0 # For voice-to-text functionality
   image_picker: ^1.1.2
+  image: ^4.5.2
 
 dev_dependencies:
   flutter_test:

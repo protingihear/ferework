@@ -1,7 +1,11 @@
+import 'dart:convert';
+import 'dart:io';
+import 'package:image/image.dart' as img;
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import '../models/user_profile.dart';
 import '../services/api_service.dart';
+import '../services/image_service.dart';
 
 class EditProfilePage extends StatefulWidget {
   final UserProfile profile;
@@ -20,7 +24,8 @@ class _EditProfilePageState extends State<EditProfilePage> {
   late TextEditingController emailController;
   late TextEditingController passwordController;
   String? selectedGender;
-  String profileImageUrl = '';
+  File? profileImageFile;
+  String profileImageUrl = "";
 
   @override
   void initState() {
@@ -28,9 +33,11 @@ class _EditProfilePageState extends State<EditProfilePage> {
     nameController = TextEditingController(text: widget.profile.name);
     bioController = TextEditingController(text: widget.profile.bio);
     emailController = TextEditingController(
-        text: widget.profile.emails.isNotEmpty ? widget.profile.emails.first : '');
+        text: widget.profile.emails.isNotEmpty
+            ? widget.profile.emails.first
+            : '');
     passwordController = TextEditingController();
-    selectedGender = widget.profile.gender == 'P' ? 'Perempuan' : 'Laki-Laki';
+    selectedGender = widget.profile.gender;
     profileImageUrl = widget.profile.imageUrl;
   }
 
@@ -42,22 +49,37 @@ class _EditProfilePageState extends State<EditProfilePage> {
       return;
     }
 
-    if (passwordController.text.isNotEmpty && passwordController.text.length < 6) {
+    if (passwordController.text.isNotEmpty &&
+        passwordController.text.length < 6) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Password must be at least 6 characters')),
       );
       return;
     }
 
+    File? imageFileToUpload = profileImageFile;
+
+    if (imageFileToUpload == null && profileImageUrl.isNotEmpty) {
+      File tempFile = File(profileImageUrl);
+      if (await tempFile.exists()) {
+        imageFileToUpload = tempFile;
+      }
+    }
+
     try {
       final updatedProfile = await ApiService.updateUserProfile(
         widget.profile.id,
-        nameController.text.isNotEmpty ? nameController.text : widget.profile.name,
+        nameController.text.isNotEmpty
+            ? nameController.text
+            : widget.profile.name,
         bioController.text,
         selectedGender ?? 'Laki-Laki',
         emailController.text.trim(),
-        passwordController.text.isNotEmpty ? passwordController.text.trim() : null,
-        profileImageUrl,
+        passwordController.text.isNotEmpty
+            ? passwordController.text.trim()
+            : null,
+        profileImageFile, 
+        removeImage,
       );
 
       Navigator.pop(context, updatedProfile);
@@ -67,6 +89,8 @@ class _EditProfilePageState extends State<EditProfilePage> {
       );
     }
   }
+
+  bool removeImage = false;
 
   void showImagePicker() {
     showModalBottomSheet(
@@ -94,7 +118,9 @@ class _EditProfilePageState extends State<EditProfilePage> {
                 title: const Text('Remove Photo'),
                 onTap: () {
                   setState(() {
-                    profileImageUrl = 'https://via.placeholder.com/250';
+                    profileImageFile = null;
+                    profileImageUrl = ''; // Reset URL too
+                    removeImage = true;
                   });
                   Navigator.pop(context);
                 },
@@ -107,16 +133,19 @@ class _EditProfilePageState extends State<EditProfilePage> {
   }
 
   Future<void> pickImage(ImageSource source) async {
-    final picker = ImagePicker();
-    final pickedFile = await picker.pickImage(source: source);
-    
-    if (pickedFile != null) {
+    final imageFile = await ImageService.pickImage(source);
+    if (imageFile != null) {
       setState(() {
-        profileImageUrl = pickedFile.path;
+        profileImageFile = imageFile;
+        profileImageUrl = imageFile.path;
       });
     }
-    
     Navigator.pop(context);
+  }
+
+  void showSnackbar(String message) {
+    ScaffoldMessenger.of(context)
+        .showSnackBar(SnackBar(content: Text(message)));
   }
 
   @override
@@ -135,8 +164,21 @@ class _EditProfilePageState extends State<EditProfilePage> {
                   children: [
                     CircleAvatar(
                       radius: 75,
-                      backgroundImage: NetworkImage(profileImageUrl),
-                      onBackgroundImageError: (_, __) => const Icon(Icons.error),
+                      backgroundImage: profileImageFile != null
+                          ? FileImage(profileImageFile!)
+                          : (profileImageUrl.isNotEmpty &&
+                                  profileImageUrl.startsWith('http'))
+                              ? NetworkImage(profileImageUrl)
+                              : (profileImageUrl.startsWith('data:image'))
+                                  ? MemoryImage(base64Decode(
+                                      profileImageUrl.split(',')[1]))
+                                  : null,
+                      backgroundColor: Colors.grey[200],
+                      child:
+                          (profileImageFile == null && profileImageUrl.isEmpty)
+                              ? const Icon(Icons.person,
+                                  size: 50, color: Colors.grey)
+                              : null,
                     ),
                     IconButton(
                       onPressed: showImagePicker,
@@ -152,26 +194,30 @@ class _EditProfilePageState extends State<EditProfilePage> {
                 // Name
                 TextField(
                   controller: nameController,
-                  decoration: const InputDecoration(labelText: 'Name', border: OutlineInputBorder()),
+                  decoration: const InputDecoration(
+                      labelText: 'Name', border: OutlineInputBorder()),
                 ),
                 const SizedBox(height: 16),
                 // Bio
                 TextField(
                   controller: bioController,
-                  decoration: const InputDecoration(labelText: 'Bio', border: OutlineInputBorder()),
+                  decoration: const InputDecoration(
+                      labelText: 'Bio', border: OutlineInputBorder()),
                 ),
                 const SizedBox(height: 16),
                 // Email
                 TextField(
                   controller: emailController,
-                  decoration: const InputDecoration(labelText: 'Email', border: OutlineInputBorder()),
+                  decoration: const InputDecoration(
+                      labelText: 'Email', border: OutlineInputBorder()),
                 ),
                 const SizedBox(height: 16),
                 // Password
                 TextField(
                   controller: passwordController,
                   obscureText: true,
-                  decoration: const InputDecoration(labelText: 'Password', border: OutlineInputBorder()),
+                  decoration: const InputDecoration(
+                      labelText: 'Password', border: OutlineInputBorder()),
                 ),
                 const SizedBox(height: 16),
                 // Gender Selection
@@ -184,9 +230,11 @@ class _EditProfilePageState extends State<EditProfilePage> {
                         value: 'Perempuan',
                         groupValue: selectedGender,
                         onChanged: (value) {
-                          setState(() {
-                            selectedGender = value;
-                          });
+                          if (value != null) {
+                            setState(() {
+                              selectedGender = value;
+                            });
+                          }
                         },
                       ),
                     ),
@@ -196,21 +244,25 @@ class _EditProfilePageState extends State<EditProfilePage> {
                         value: 'Laki-Laki',
                         groupValue: selectedGender,
                         onChanged: (value) {
-                          setState(() {
-                            selectedGender = value;
-                          });
+                          if (value != null) {
+                            setState(() {
+                              selectedGender = value;
+                            });
+                          }
                         },
                       ),
                     ),
                   ],
                 ),
+
                 const SizedBox(height: 32),
                 // Save Button
                 ElevatedButton(
                   onPressed: saveProfile,
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.green,
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(20)),
                   ),
                   child: const Text('Save'),
                 ),
