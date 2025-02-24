@@ -1,10 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:reworkmobile/view/postberita.dart';
-import 'package:reworkmobile/view/sign_in.dart';
-import 'package:reworkmobile/view/home.dart';
-import 'package:reworkmobile/view/berita.dart';
-
-import 'view/animation/splash_screen.dart'; // Import the splash screen file
+import 'view/animation/splash_screen.dart';
 
 void main() {
   runApp(MyApp());
@@ -17,7 +12,7 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      title: 'YouTube Style Splash',
+      title: 'iHear',
       theme: ThemeData.light(), // Optional: Dark theme like YouTube
       home: HomeScreen(), // Start with SplashScreen
 

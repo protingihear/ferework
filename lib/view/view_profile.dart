@@ -1,5 +1,7 @@
 // profile.dart
 
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:reworkmobile/models/user_profile.dart';
 import 'package:reworkmobile/services/api_service.dart';
@@ -57,7 +59,7 @@ class _ProfilePageState extends State<ProfilePage> {
                 children: [
                   ProfileHeader(profile: profile, onUpdateProfile: _updateProfile),
                   const SizedBox(height: 15),
-                  AccountSettings(profile: profile),
+                  // AccountSettings(profile: profile),
                   const SizedBox(height: 8),
                   const FAQAndLogoutButtons(),
                 ],
@@ -90,13 +92,10 @@ class ProfileHeader extends StatelessWidget {
         children: [
           CircleAvatar(
             radius: 40,
-            child: ClipOval(
-              child: Image.network(
-                'http://192.168.100.37:8000/storage/profile-pictures/yVLwnYetathZAXY3MyE4jfsZ84W0Ihog4ffEhI9W.png',
-                fit: BoxFit.cover,
-                errorBuilder: (context, error, stackTrace) => Icon(Icons.error),
-              ),
-            ),
+            backgroundImage: profile.imageUrl.startsWith('data:image')
+                ? Image.memory(base64Decode(profile.imageUrl.split(',')[1])).image
+                : NetworkImage(profile.imageUrl),
+            onBackgroundImageError: (_, __) => Icon(Icons.error),
           ),
           const SizedBox(width: 16),
           Expanded(
@@ -120,14 +119,18 @@ class ProfileHeader extends StatelessWidget {
                 const SizedBox(height: 8),
                 ElevatedButton(
   onPressed: () async {
-  await Navigator.push(
+  final updatedProfile = await Navigator.push(
     context,
     MaterialPageRoute(
       builder: (context) => EditProfilePage(profile: profile),
     ),
   );
-  onUpdateProfile(profile); // ✅ Always refetch after returning
+
+  if (updatedProfile != null && updatedProfile is UserProfile) {
+    onUpdateProfile(updatedProfile); 
+  }
 },
+
 
 
                   style: ElevatedButton.styleFrom(
@@ -147,88 +150,6 @@ class ProfileHeader extends StatelessWidget {
               ],
             ),
           ),
-        ],
-      ),
-    );
-  }
-}
-
-class AccountSettings extends StatefulWidget {
-  final UserProfile profile;
-
-  const AccountSettings({Key? key, required this.profile}) : super(key: key);
-
-  @override
-  State<AccountSettings> createState() => _AccountSettingsState();
-}
-
-class _AccountSettingsState extends State<AccountSettings> {
-  bool _isExpanded = false;
-
-  void _navigateToEditEmailPassword() {
-    // Navigator.push(
-    //   // context,
-    //   // MaterialPageRoute(
-    //   //   builder: (context) => EditEmailPasswordPage(profile: widget.profile),
-    //   // ),
-    // );
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      margin: const EdgeInsets.only(top: 4),
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-      decoration: BoxDecoration(
-        color: Colors.green.shade100,
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Column(
-        children: [
-          Row(
-            children: [
-              Icon(Icons.settings, color: Colors.green),
-              const SizedBox(width: 8),
-              const Expanded(
-                child: Text(
-                  'Pengaturan Akun',
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ),
-              IconButton(
-                icon: Icon(
-                  _isExpanded ? Icons.expand_less : Icons.expand_more,
-                  color: Colors.green,
-                ),
-                onPressed: () {
-                  setState(() {
-                    _isExpanded = !_isExpanded;
-                  });
-                },
-              ),
-            ],
-          ),
-          if (_isExpanded)
-            Column(
-              children: [
-                for (var email in widget.profile.emails)
-                  Text(email, style: TextStyle(color: Colors.black)),
-                const SizedBox(height: 8),
-                ElevatedButton(
-                  onPressed: _navigateToEditEmailPassword,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.green,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(20),
-                    ),
-                  ),
-                  child: const Text('Edit Email & Password'),
-                ),
-              ],
-            ),
         ],
       ),
     );
@@ -292,3 +213,85 @@ class FAQAndLogoutButtons extends StatelessWidget {
     );
   }
 }
+
+// class AccountSettings extends StatefulWidget {
+//   final UserProfile profile;
+
+//   const AccountSettings({Key? key, required this.profile}) : super(key: key);
+
+//   @override
+//   State<AccountSettings> createState() => _AccountSettingsState();
+// }
+
+// class _AccountSettingsState extends State<AccountSettings> {
+//   bool _isExpanded = false;
+
+//   void _navigateToEditEmailPassword() {
+//     // Navigator.push(
+//     //   // context,
+//     //   // MaterialPageRoute(
+//     //   //   builder: (context) => EditEmailPasswordPage(profile: widget.profile),
+//     //   // ),
+//     // );
+//   }
+
+//   @override
+//   Widget build(BuildContext context) {
+//     return Container(
+//       margin: const EdgeInsets.only(top: 4),
+//       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+//       decoration: BoxDecoration(
+//         color: Colors.green.shade100,
+//         borderRadius: BorderRadius.circular(12),
+//       ),
+//       child: Column(
+//         children: [
+//           Row(
+//             children: [
+//               Icon(Icons.settings, color: Colors.green),
+//               const SizedBox(width: 8),
+//               const Expanded(
+//                 child: Text(
+//                   'Pengaturan Akun',
+//                   style: TextStyle(
+//                     fontSize: 16,
+//                     fontWeight: FontWeight.bold,
+//                   ),
+//                 ),
+//               ),
+//               IconButton(
+//                 icon: Icon(
+//                   _isExpanded ? Icons.expand_less : Icons.expand_more,
+//                   color: Colors.green,
+//                 ),
+//                 onPressed: () {
+//                   setState(() {
+//                     _isExpanded = !_isExpanded;
+//                   });
+//                 },
+//               ),
+//             ],
+//           ),
+//           if (_isExpanded)
+//             Column(
+//               children: [
+//                 for (var email in widget.profile.emails)
+//                   Text(email, style: TextStyle(color: Colors.black)),
+//                 const SizedBox(height: 8),
+//                 ElevatedButton(
+//                   onPressed: _navigateToEditEmailPassword,
+//                   style: ElevatedButton.styleFrom(
+//                     backgroundColor: Colors.green,
+//                     shape: RoundedRectangleBorder(
+//                       borderRadius: BorderRadius.circular(20),
+//                     ),
+//                   ),
+//                   child: const Text('Edit Email & Password'),
+//                 ),
+//               ],
+//             ),
+//         ],
+//       ),
+//     );
+//   }
+// }

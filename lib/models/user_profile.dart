@@ -21,21 +21,36 @@ class UserProfile {
   });
 
   factory UserProfile.fromJson(Map<String, dynamic> json) {
+    String firstname = json['firstname'] ?? '';
+    String lastname = json['lastname'] ?? '';
+
     return UserProfile(
       id: json['id'].toString(),
-      name: '${json['firstname'] ?? ''} ${json['lastname'] ?? ''}'.trim(),
+      name: '$firstname $lastname'.trim(),
       bio: json['bio'] ?? '',
-      imageUrl: json['picture'] != null && json['picture'].toString().isNotEmpty
-          ? (json['picture'].toString().startsWith('http')
-              ? json['picture']
-              : '$baseUrl${json['picture']}')
-          : 'https://via.placeholder.com/250',
+      imageUrl: _resolveImage(json['Image'] ?? json['picture']), // Check both keys
       emails: json['email'] != null ? [json['email']] : [],
       gender: json['gender'] ?? '',
     );
   }
 
-  void updateImage(String newImageUrl) {
-    imageUrl = newImageUrl;
+
+  static String _resolveImage(dynamic image) {
+    if (image == null || image.toString().isEmpty) {
+      return 'https://via.placeholder.com/250';
+    }
+
+    String imageStr = image.toString();
+
+    if (imageStr.startsWith('http')) {
+      return imageStr; // Already a full URL
+    }
+
+    if (imageStr.length > 100) {
+      return 'data:image/png;base64,$imageStr'; // Handle Base64 images
+    }
+
+    return '$baseUrl/storage/$imageStr'; // Ensure full path
   }
+
 }
