@@ -19,7 +19,7 @@ class MyApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       title: 'YouTube Style Splash',
       theme: ThemeData.light(), // Optional: Dark theme like YouTube
-      home: SplashScreen(), // Start with SplashScreen
+      home: HomeScreen(), // Start with SplashScreen
 
     );
   }
