@@ -1,12 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:reworkmobile/services/auth_service.dart';
 import 'package:reworkmobile/view/postberita.dart';
 import 'package:reworkmobile/view/sign_in.dart';
 import 'package:reworkmobile/view/home.dart';
 import 'package:reworkmobile/view/berita.dart';
 
-import 'view/animation/splash_screen.dart'; // Import the splash screen file
+import 'view/animation/splash_screen.dart';
 
-void main() {
+void main() async {
   runApp(MyApp());
 }
 

@@ -1,4 +1,5 @@
 // import 'package:bisadenger/information.dart';
+import 'package:reworkmobile/services/auth_service.dart';
 import 'package:reworkmobile/view/animation/splash_screen.dart';
 import 'package:reworkmobile/view/home.dart';
 import 'package:reworkmobile/view/view_profile.dart';
@@ -22,6 +23,32 @@ class _Sign_In_Page extends State<Sign_In_Page> {
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
   String? _responseMessage;
+  final AuthService _authService = AuthService();
+
+  void _handleLogin() async {
+    String email = _emailController.text;
+    String password = _passwordController.text;
+
+    if (email.isNotEmpty && password.isNotEmpty) {
+      String? errorMessage = await _authService.login(email, password);
+      if (errorMessage == null) {
+        // ✅ Login sukses, navigasi ke ProfilePage
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => ProfilePage()),
+        );
+      } else {
+        // ❌ Login gagal, tampilkan pesan error
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(errorMessage)),
+        );
+      }
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Email dan password tidak boleh kosong!')),
+      );
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -137,7 +164,7 @@ class _Sign_In_Page extends State<Sign_In_Page> {
                         borderRadius: BorderRadius.circular(8),
                       ),
                     ),
-                    onPressed: login,
+                    onPressed: _handleLogin,
                     child: Text('Sign In', style: TextStyle(fontSize: 16)),
                   ),
 
@@ -185,71 +212,5 @@ class _Sign_In_Page extends State<Sign_In_Page> {
     );
   }
 
-  Future<bool> hasSessionCookie() async {
-    final prefs = await SharedPreferences.getInstance();
-    return prefs.containsKey('session_cookie'); // ✅ Check if cookie exists
-  }
-
-  // Fungsi login untuk mengecek email dan password
-  Future<void> login() async {
-  final email = _emailController.text;
-  final password = _passwordController.text;
-
-  final url = 'http://10.0.2.2:5000/auth/login';
-
-  try {
-    final response = await http.post(
-      Uri.parse(url),
-      headers: {"Content-Type": "application/json"},
-      body: jsonEncode({"username": email, "password": password}),
-    );
-
-    if (response.statusCode == 200) {
-      final cookies = response.headers['set-cookie'];
-      if (cookies != null) {
-        final prefs = await SharedPreferences.getInstance();
-
-        // Extract session_id
-        final sessionMatch = RegExp(r'session_id=([^;]+)').firstMatch(cookies);
-        final sessionId = sessionMatch?.group(1);
-
-        // Extract tt
-        final ttMatch = RegExp(r'tt=([^;]+)').firstMatch(cookies);
-        final tt = ttMatch?.group(1);
-
-        if (sessionId != null) {
-          await prefs.setString('session_cookie', sessionId);
-        }
-        if (tt != null) {
-          await prefs.setString('tt_cookie', tt);
-        }
-
-        print("📢 Full Set-Cookie Header: $cookies");
-        print("✅ Saved session_id: $sessionId");
-        print("✅ Saved tt: $tt");
-
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (context) => ProfilePage()),
-        );
-      } else {
-        setState(() {
-          _responseMessage = "Login failed: No session cookie received.";
-        });
-      }
-    } else {
-      final data = jsonDecode(response.body);
-      setState(() {
-        _responseMessage =
-            "Login failed: ${data['message'] ?? 'Unknown error'}";
-      });
-    }
-  } catch (error) {
-    setState(() {
-      _responseMessage = "Request failed: $error";
-    });
-  }
-}
-
-
+  
 }

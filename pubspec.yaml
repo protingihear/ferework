@@ -18,6 +18,7 @@ dependencies:
   #http: any
   speech_to_text: ^7.0.0 # For voice-to-text functionality
   image_picker: ^1.1.2
+  google_fonts: ^6.2.1
 
 dev_dependencies:
   flutter_test:
@@ -36,3 +37,4 @@ flutter:
     - assets/scan_icon.png
     - assets/lesson_icon.png
     - assets/voice_icon.png
+    - assets/background_lesson1.png
