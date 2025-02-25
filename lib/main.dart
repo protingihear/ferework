@@ -1,11 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:reworkmobile/services/auth_service.dart';
-import 'package:reworkmobile/view/postberita.dart';
-import 'package:reworkmobile/view/sign_in.dart';
+import 'package:reworkmobile/view/Relation.dart';
 import 'package:reworkmobile/view/home.dart';
-import 'package:reworkmobile/view/berita.dart';
-
 import 'view/animation/splash_screen.dart';
+import 'package:google_fonts/google_fonts.dart';
+import 'view/home.dart';
+import 'package:reworkmobile/main_screen.dart';
 
 void main() async {
   runApp(MyApp());
@@ -18,9 +17,12 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      title: 'YouTube Style Splash',
-      theme: ThemeData.light(), // Optional: Dark theme like YouTube
-      home: SplashScreen(), // Start with SplashScreen
+      theme: ThemeData(
+       textTheme: GoogleFonts.poppinsTextTheme(ThemeData.dark().textTheme),  // Set Poppins globally
+      ),
+      title: 'iHear',
+     // Optional: Dark theme like YouTube
+      home: const MainScreen(), // Start with SplashScreen
 
     );
   }
