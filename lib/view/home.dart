@@ -1,6 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
 import 'dart:convert';
+import '../services/api_service.dart';
+import '../models/user_profile.dart';
+import '../widgets/berita_card.dart';
+import '../widgets/feature_button.dart';
+import '../widgets/berita_detail.dart';
 
 void main() {
   runApp(MyApp());
@@ -23,6 +27,7 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   List<dynamic> _beritaList = [];
+  UserProfile? _userProfile;
   bool _isLoading = true;
   bool _hasError = false;
   int _errorCode = 0;
@@ -30,116 +35,50 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   void initState() {
     super.initState();
-    fetchBerita();
+    _loadUserProfile();
+    _loadBerita();
   }
 
-  Future<void> fetchBerita() async {
+  Future<void> _loadUserProfile() async {
     try {
-      final uri = Uri.parse("http://localhost:5000/api/berita");
-      final response = await http.get(uri);
+      final user = await ApiService.fetchUserProfile();
+      setState(() {
+        _userProfile = user;
+      });
+    } catch (e) {
+      print("Error fetching user profile: $e");
+    }
+  }
 
-      if (response.statusCode == 200) {
-        final data = json.decode(response.body);
-        setState(() {
-          _beritaList = data;
-          _isLoading = false;
-          _hasError = false;
-        });
-      } else {
-        throw Exception("Error Code: ${response.statusCode}");
-      }
+  Future<void> _loadBerita() async {
+    try {
+      final berita = await ApiService.fetchBerita();
+      setState(() {
+        _beritaList = berita;
+        _isLoading = false;
+        _hasError = false;
+      });
     } catch (e) {
       setState(() {
         _isLoading = false;
         _hasError = true;
-        _errorCode = 500;
       });
-
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text("Error: $_errorCode - Berita tidak dapat dimuat"),
-          backgroundColor: Colors.red,
-        ),
-      );
     }
   }
 
-  
- void _showDetailBerita(dynamic berita) {
-  showModalBottomSheet(
-    context: context,
-    isScrollControlled: true,
-    backgroundColor: Colors.transparent, // Ubah background menjadi transparan
-    builder: (context) {
-      return Container(
-        height: MediaQuery.of(context).size.height,
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-        ),
-        child: Column(
-          children: [
-            Padding(
-              padding: EdgeInsets.all(16),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    berita['judul'],
-                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-                  ),
-                  IconButton(
-                    icon: Icon(Icons.close),
-                    onPressed: () => Navigator.pop(context),
-                  ),
-                ],
-              ),
-            ),
-            berita['foto'] != null
-                ? ClipRRect(
-                    borderRadius: BorderRadius.circular(10),
-                    child: Image.memory(
-                      base64Decode(berita['foto']),
-                      width: double.infinity,
-                      height: 250,
-                      fit: BoxFit.cover,
-                    ),
-                  )
-                : Container(
-                    height: 250,
-                    color: Colors.grey[300],
-                    child: Center(child: Icon(Icons.image, size: 50, color: Colors.grey)),
-                  ),
-            Expanded(
-              child: Padding(
-                padding: EdgeInsets.all(16),
-                child: SingleChildScrollView(
-                  child: Text(
-                    berita['isi'],
-                    style: TextStyle(fontSize: 16),
-                  ),
-                ),
-              ),
-            ),
-          ],
-        ),
-      );
-    },
-  );
-}
- 
+  void _showDetailBerita(dynamic berita) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => BeritaDetail(berita: berita),
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
     return SafeArea(
       child: Scaffold(
-        bottomNavigationBar: BottomNavigationBar(
-          items: [
-            BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
-            BottomNavigationBarItem(icon: Icon(Icons.people), label: 'Relations'),
-            BottomNavigationBarItem(icon: Icon(Icons.person), label: 'Profile'),
-          ],
-        ),
         body: SingleChildScrollView(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -157,25 +96,41 @@ class _HomeScreenState extends State<HomeScreen> {
                     ),
                   ),
                   Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 50.0),
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 16.0, vertical: 50.0),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Row(
                           children: [
-                            CircleAvatar(),
+                            CircleAvatar(
+                              radius: 40,
+                              backgroundImage: _userProfile?.imageUrl != null &&
+                                      _userProfile!.imageUrl.isNotEmpty
+                                  ? (_userProfile!.imageUrl
+                                          .startsWith('data:image')
+                                      ? Image.memory(base64Decode(_userProfile!
+                                              .imageUrl
+                                              .split(',')[1]))
+                                          .image
+                                      : NetworkImage(_userProfile!.imageUrl))
+                                  : null, // No backgroundImage if _userProfile.imageUrl is null or empty
+                              child: (_userProfile?.imageUrl == null ||
+                                      _userProfile!.imageUrl.isEmpty)
+                                  ? Icon(Icons.person, size: 40)
+                                  : null, // Show icon only if no image
+                            ),
                             SizedBox(width: 10),
-                            Text("Naraya"),
+                            Text(
+                              _userProfile?.name ?? "Loading...",
+                              style: TextStyle(fontSize: 16),
+                            ),
                           ],
                         ),
-                        SizedBox(height: 40),
                         Text(
-                          'Selamat datang Naraya!',
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
-                          ),
+                          _userProfile != null
+                              ? "Selamat datang, ${_userProfile!.name.split(' ').first}!"
+                              : "Welcome!",
                         ),
                         Text(
                           'Yuk Jelajahi Dunia Tuli Bersama!',
@@ -197,9 +152,34 @@ class _HomeScreenState extends State<HomeScreen> {
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                   children: [
-                    _buildFeatureButton('assets/scan_icon.png', 'Scan to Text'),
-                    _buildFeatureButton('assets/voice_icon.png', 'Voice to Text'),
-                    _buildFeatureButton('assets/lesson_icon.png', 'Lesson'),
+                    FeatureButtonRow(
+                      features: [
+                        {
+                          'imagePath': 'assets/scan_icon.png',
+                          'label': 'Scan to Text',
+                          'onTap': () {
+                            print("Scan to Text clicked");
+                            // TODO: Navigate to Scan page
+                          },
+                        },
+                        {
+                          'imagePath': 'assets/voice_icon.png',
+                          'label': 'Voice to Text',
+                          'onTap': () {
+                            print("Voice to Text clicked");
+                            // TODO: Navigate to Voice page
+                          },
+                        },
+                        {
+                          'imagePath': 'assets/lesson_icon.png',
+                          'label': 'Lesson',
+                          'onTap': () {
+                            print("Lesson clicked");
+                            // TODO: Navigate to Lesson page
+                          },
+                        },
+                      ],
+                    ),
                   ],
                 ),
               ),
@@ -212,20 +192,29 @@ class _HomeScreenState extends State<HomeScreen> {
                   children: [
                     Text(
                       "Berita Terbaru",
-                      style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                      style:
+                          TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                     ),
                     SizedBox(height: 10),
                     _isLoading
-                        ? Center(child: CircularProgressIndicator())
+                        ? Center(
+                            child: Text(
+                                "Error $_errorCode: Berita tidak dapat dimuat"))
                         : _hasError
-                            ? Center(child: Text("Error $_errorCode: Berita tidak dapat dimuat"))
+                            ? Center(
+                                child: Text(
+                                    "Error $_errorCode: Berita tidak dapat dimuat"))
                             : SizedBox(
                                 height: 200,
                                 child: ListView.builder(
                                   scrollDirection: Axis.horizontal,
                                   itemCount: _beritaList.length,
                                   itemBuilder: (context, index) {
-                                    return _buildBeritaCard(_beritaList[index]);
+                                    return BeritaCard(
+                                      berita: _beritaList[index],
+                                      onTap: () =>
+                                          _showDetailBerita(_beritaList[index]),
+                                    );
                                   },
                                 ),
                               ),
@@ -236,74 +225,6 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
         ),
       ),
-    );
-  }
-
-  // Widget untuk Menampilkan Card Berita (ROW Style)
-  Widget _buildBeritaCard(dynamic berita) {
-    return GestureDetector(
-      onTap: () => _showDetailBerita(berita),
-      child: Container(
-        width: 300,
-        margin: EdgeInsets.symmetric(horizontal: 8),
-        child: Card(
-          elevation: 5,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(10),
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              berita['foto'] != null
-                  ? ClipRRect(
-                      borderRadius: BorderRadius.vertical(top: Radius.circular(10)),
-                      child: Image.memory(
-                        base64Decode(berita['foto']),
-                        height: 120,
-                        width: double.infinity,
-                        fit: BoxFit.cover,
-                      ),
-                    )
-                  : Container(
-                      height: 120,
-                      color: Colors.grey[300],
-                      child: Center(child: Icon(Icons.image, size: 50, color: Colors.grey)),
-                    ),
-              Padding(
-                padding: const EdgeInsets.all(8.0),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      berita['judul'],
-                      style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    SizedBox(height: 5),
-                    Text(
-                      berita['isi'].split(" ").take(10).join(" ") + "...",
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                      style: TextStyle(fontSize: 14, color: Colors.grey[700]),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildFeatureButton(String imagePath, String label) {
-    return Column(
-      children: [
-        Image.asset(imagePath, width: 50, height: 50),
-        SizedBox(height: 5),
-        Text(label, style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold)),
-      ],
     );
   }
 }

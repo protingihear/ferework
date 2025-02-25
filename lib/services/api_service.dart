@@ -71,10 +71,12 @@ class ApiService {
 
     // ✅ Send "" to remove image
     if (imageFile != null) {
-    request.files.add(await http.MultipartFile.fromPath('Image', imageFile.path));
-  } else if (removeImage) {  // ✅ Only remove if explicitly requested
-    request.fields['Image'] = "";  
-  }
+    request.files
+          .add(await http.MultipartFile.fromPath('Image', imageFile.path));
+    } else if (removeImage) {
+      // ✅ Only remove if explicitly requested
+      request.fields['Image'] = "";
+    }
 
     // Kirim request
     final streamedResponse = await request.send();
@@ -87,6 +89,20 @@ class ApiService {
       return UserProfile.fromJson(json.decode(response.body));
     } else {
       throw Exception('Failed to update profile: ${response.body}');
+    }
+  }
+
+  static Future<List<dynamic>> fetchBerita() async {
+    try {
+      final response = await http.get(Uri.parse("$_baseUrl/api/berita"));
+
+      if (response.statusCode == 200) {
+        return json.decode(response.body);
+      } else {
+        throw Exception("Error fetching berita: ${response.statusCode}");
+      }
+    } catch (e) {
+      throw Exception("Failed to fetch berita: $e");
     }
   }
 }

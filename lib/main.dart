@@ -3,6 +3,8 @@ import 'package:reworkmobile/view/Relation.dart';
 import 'package:reworkmobile/view/home.dart';
 import 'view/animation/splash_screen.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'view/home.dart';
+import 'package:reworkmobile/main_screen.dart';
 
 void main() {
   runApp(MyApp());
@@ -20,7 +22,7 @@ class MyApp extends StatelessWidget {
       ),
       title: 'iHear',
      // Optional: Dark theme like YouTube
-      home: RelationsPage(), // Start with SplashScreen
+      home: const MainScreen(), // Start with SplashScreen
 
     );
   }
