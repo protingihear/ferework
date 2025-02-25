@@ -13,7 +13,6 @@ class _SplashScreenState extends State<SplashScreen> {
   void initState() {
     super.initState();
     
-    // Navigate to sign-in quickly
     Future.delayed(Duration(milliseconds: 800), () {
       Navigator.of(context).pushReplacement(
         MaterialPageRoute(builder: (_) => Sign_In_Page()),
@@ -27,7 +26,7 @@ class _SplashScreenState extends State<SplashScreen> {
       backgroundColor: Colors.black,
       body: Center(
         child: Transform.scale(
-          scale: 0.5, // Scale the image 2.5x its normal size
+          scale: 0.5,
           child: Image.asset(
             "assets/ihear_logo.png",
             width: MediaQuery.of(context).size.width * 0.5,

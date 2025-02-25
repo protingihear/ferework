@@ -6,6 +6,8 @@ import '../widgets/berita_card.dart';
 import '../widgets/feature_button.dart';
 import '../widgets/berita_detail.dart';
 
+import 'package:shared_preferences/shared_preferences.dart';
+
 void main() {
   runApp(MyApp());
 }
@@ -31,6 +33,17 @@ class _HomeScreenState extends State<HomeScreen> {
   bool _isLoading = true;
   bool _hasError = false;
   int _errorCode = 0;
+
+  Future<void> _checkSavedCookie() async {
+    final prefs = await SharedPreferences.getInstance();
+    final sessionId = prefs.getString('session_cookie');
+
+    if (sessionId != null) {
+      print("✅ Cookie tersimpan: $sessionId");
+    } else {
+      print("❌ Tidak ada cookie tersimpan.");
+    }
+  }
 
   @override
   void initState() {
@@ -145,7 +158,6 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
                 ],
               ),
-
               // Bagian Fitur
               Padding(
                 padding: const EdgeInsets.all(16.0),
@@ -183,7 +195,6 @@ class _HomeScreenState extends State<HomeScreen> {
                   ],
                 ),
               ),
-
               // Bagian Berita dalam Row (Horizontal Scroll)
               Padding(
                 padding: const EdgeInsets.all(16.0),
