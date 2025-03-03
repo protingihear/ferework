@@ -18,11 +18,11 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
-       textTheme: GoogleFonts.poppinsTextTheme(ThemeData.dark().textTheme),  // Set Poppins globally
+       textTheme: GoogleFonts.poppinsTextTheme(ThemeData.light().textTheme),  // Set Poppins globally
       ),
       title: 'iHear',
      // Optional: Dark theme like YouTube
-      home: const MainScreen(), // Start with SplashScreen
+      home: const SplashScreen(), // Start with SplashScreen
 
     );
   }

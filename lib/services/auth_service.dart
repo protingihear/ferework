@@ -44,6 +44,8 @@ class AuthService {
       if (response.statusCode == 200) {
         final cookies = response.headers['set-cookie'];
         print("📢 Full Set-Cookie Header: $cookies");
+        final json = jsonDecode(response.body); 
+        final user = json['user']; 
 
         if (cookies != null) {
           // Ambil session_id dan tt dari cookies
@@ -63,6 +65,10 @@ class AuthService {
           }
           if (tt != null) {
             await prefs.setString('tt_cookie', tt);
+          }
+          if (user != null) {
+            await prefs.setInt('user_id', user['id']);
+            print('user id berhasil disimpan');
           }
 
           //return sebagai akhir dari fungsi login ketika login berhasil

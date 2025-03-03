@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:reworkmobile/view/LessonAhliBahasa.dart';
+import 'package:reworkmobile/view/LessonKategori.dart';
 import 'dart:convert';
 import '../services/api_service.dart';
 import '../models/user_profile.dart';
@@ -187,6 +189,11 @@ class _HomeScreenState extends State<HomeScreen> {
                           'label': 'Lesson',
                           'onTap': () {
                             print("Lesson clicked");
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                  builder: (context) => Lessonkategori()),
+                            );
                             // TODO: Navigate to Lesson page
                           },
                         },

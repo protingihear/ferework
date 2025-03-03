@@ -35,7 +35,7 @@ class _Sign_In_Page extends State<Sign_In_Page> {
         // ✅ Login sukses, navigasi ke ProfilePage
         Navigator.pushReplacement(
           context,
-          MaterialPageRoute(builder: (context) => ProfilePage()),
+          MaterialPageRoute(builder: (context) => HomeScreen()),
         );
       } else {
         // ❌ Login gagal, tampilkan pesan error

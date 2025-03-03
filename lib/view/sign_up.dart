@@ -192,7 +192,7 @@ class sign_up extends State<Sign_Up_Page> {
                         Expanded(
                           child: RadioListTile<String>(
                             title: Text('Ahli Bahasa'),
-                            value: 'ahli_bahasa',
+                            value: 'admin',
                             groupValue: role,
                             onChanged: (value) {
                               setState(() {
@@ -204,7 +204,7 @@ class sign_up extends State<Sign_Up_Page> {
                         Expanded(
                           child: RadioListTile<String>(
                             title: Text('Teman Tuli'),
-                            value: 'teman_tuli',
+                            value: 'user',
                             groupValue: role,
                             onChanged: (value) {
                               setState(() {
@@ -217,7 +217,7 @@ class sign_up extends State<Sign_Up_Page> {
                     ),
                     RadioListTile<String>(
                       title: Text('Teman Dengar'),
-                      value: 'teman_dengar',
+                      value: 'user',
                       groupValue: role,
                       onChanged: (value) {
                         setState(() {
