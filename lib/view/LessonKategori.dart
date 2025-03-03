@@ -1,30 +1,28 @@
 import 'package:flutter/material.dart';
 import 'package:reworkmobile/services/method_service.dart';
-import 'package:reworkmobile/view/LessonTitle.dart';
+import 'package:reworkmobile/view/LessonSubKategori.dart';
 
-class Lessonkategori extends StatelessWidget {
-  final MethodService _methodService = MethodService();
+class Lessonkategori extends StatefulWidget {
+  @override
+  _LessonkategoriState createState() => _LessonkategoriState();
+}
 
-  final List<Map<String, dynamic>> lessons = [
-    {
-      'title': 'Alphabet',
-      'words': 'Learn A-Z in sign language',
-      'progress': 0.8,
-      'icon': Icons.language,
-    },
-    {
-      'title': 'Numbers',
-      'words': 'Understand numbers in sign language',
-      'progress': 0.5,
-      'icon': Icons.filter_9_plus,
-    },
-    {
-      'title': 'Greetings',
-      'words': 'Common phrases and greetings',
-      'progress': 0.3,
-      'icon': Icons.waving_hand,
-    },
-  ];
+class _LessonkategoriState extends State<Lessonkategori> {
+  String? userId;
+
+  @override
+  void initState() {
+    super.initState();
+    saveUser();
+  }
+
+  void saveUser() async {
+    userId = await MethodService.getUserId();
+    setState(() {});
+  }
+
+  final Future<List<Map<String, dynamic>>> lessons =
+      MethodService.fetchCategories();
 
   @override
   Widget build(BuildContext context) {
@@ -52,116 +50,159 @@ class Lessonkategori extends StatelessWidget {
         child: Column(
           children: [
             // Card utama di atas
-            Container(
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(16),
-                image: const DecorationImage(
-                  image: AssetImage('assets/background_lesson1.png'),
-                  fit: BoxFit.cover,
-                ),
-              ),
-              child: Padding(
-                padding: const EdgeInsets.all(16.0),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-                      decoration: BoxDecoration(
-                        color: Colors.green,
-                        borderRadius: BorderRadius.circular(16),
-                      ),
-                      child: const Text(
-                        '20 Points',
-                        style: TextStyle(color: Colors.white),
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    const Text(
-                      'Sign Language Learning',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontWeight: FontWeight.bold,
-                        fontSize: 24,
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    const Text(
-                      'Learn more',
-                      style: TextStyle(color: Colors.white),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-            const SizedBox(height: 24),
-            
-            // List dari pelajaran
-            ListView.builder(
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              itemCount: lessons.length,
-              itemBuilder: (context, index) {
-                final lesson = lessons[index];
-                return GestureDetector(
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => Lessontitle(
-                          categoryTitle: lesson['title'],
-                        ),
-                      ),
-                    );
-                  },
-                  child: Container(
-                    margin: const EdgeInsets.only(bottom: 16),
-                    padding: const EdgeInsets.all(16),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(16),
-                    ),
-                    child: Row(
-                      children: [
-                        CircleAvatar(
-                          backgroundColor: const Color(0xFFEFF4F9),
-                          child: Icon(lesson['icon'], color: Colors.blue),
-                        ),
-                        const SizedBox(width: 16),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                lesson['title'],
-                                style: const TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 16,
-                                ),
-                              ),
-                              const SizedBox(height: 8),
-                              Text(
-                                lesson['words'],
-                                style: const TextStyle(color: Colors.grey),
-                              ),
-                              const SizedBox(height: 8),
-                              LinearProgressIndicator(
-                                value: lesson['progress'],
-                                backgroundColor: Colors.grey[300],
-                                color: Colors.blue,
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
+            Center(
+              child: Container(
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(16),
+                  image: const DecorationImage(
+                    image: AssetImage('assets/background_lesson1.png'),
+                    fit: BoxFit.cover,
+                    colorFilter: ColorFilter.mode(
+                      Colors.black45, // Warna gelap
+                      BlendMode.darken, // Efek gelap
                     ),
                   ),
-                );
-              },
+                ),
+                child: Padding(
+                  padding: const EdgeInsets.all(26.0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 1, vertical: 4),
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(16),
+                        ),
+                        child: const Text(
+                          'Niatkan Belajar Untuk Kemajuan Bangsa',
+                          style: TextStyle(color: Colors.white),
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      const Text(
+                        'Sign Language Learning',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 24,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      const Text(
+                        'Learn more',
+                        style: TextStyle(color: Colors.white),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
             ),
+            const SizedBox(height: 12),
+
+            // List dari pelajaran
+            FutureBuilder<List<Map<String, dynamic>>>(
+              future: lessons,
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return CircularProgressIndicator(); // Tampilkan loading jika masih fetching data
+                } else if (snapshot.hasError) {
+                  return Text(
+                      "Error: ${snapshot.error}"); // Tampilkan error jika ada masalah
+                } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
+                  return Text("Tidak ada data."); // Jika list kosong
+                } else {
+                  return Container(
+                    margin:
+                        const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: ListView.builder(
+                      shrinkWrap: true,
+                      physics: NeverScrollableScrollPhysics(),
+                      itemCount: snapshot.data!.length,
+                      itemBuilder: (context, index) {
+                        var lesson = snapshot.data![index];
+
+                        return FutureBuilder<Map<String, dynamic>?>(
+                          future: MethodService.fetchProgress(
+                              lesson['id'].toString(), userId!),
+                          builder: (context, progressSnapshot) {
+                            if (progressSnapshot.connectionState ==
+                                ConnectionState.waiting) {
+                              return Center(child: CircularProgressIndicator());
+                            }
+
+                            var progress =
+                                progressSnapshot.data?['progress'] ?? 0.0;
+
+                            return GestureDetector(
+                              onTap: () {
+                                print("Card ditekan: ${lesson['name']}");
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                      builder: (context) => SubCategoryPage(
+                                          lesson['name'],
+                                          lesson['subcategories'])),
+                                );
+                              },
+                              child: Card(
+                                color: Colors.green.shade200,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(10),
+                                ),
+                                margin: const EdgeInsets.symmetric(
+                                    vertical: 6, horizontal: 8),
+                                child: ListTile(
+                                  leading: Icon(Icons.book,
+                                      color: Colors.white, size: 32),
+                                  title: Text(
+                                    lesson['name'] ?? 'Judul tidak tersedia',
+                                    style: TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.white,
+                                    ),
+                                  ),
+                                  subtitle: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        'Jumlah kata: ${lesson['subcategories']?.length}',
+                                        style: TextStyle(color: Colors.white70),
+                                      ),
+                                      SizedBox(height: 8),
+                                      LinearProgressIndicator(
+                                        value: (progress / 100).clamp(0.0,
+                                            1.0), // Biar gak lebih dari 1.0
+                                        backgroundColor: Colors.white38,
+                                        valueColor:
+                                            AlwaysStoppedAnimation<Color>(
+                                                Colors.white),
+                                      )
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            );
+                          },
+                        );
+                      },
+                    ),
+                  );
+                }
+              },
+            )
           ],
         ),
       ),
     );
   }
+}
+
+extension on Future<List<Map<String, dynamic>>> {
+  get length => null;
 }

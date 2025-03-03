@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 
+import 'package:shared_preferences/shared_preferences.dart';
+
 class MethodService {
   static Future<void> createCategory(
       BuildContext context, TextEditingController nameController) async {
@@ -15,55 +17,66 @@ class MethodService {
         body: jsonEncode({'name': nameController.text}),
       );
 
-      if (response.statusCode == 201) {
+      if (response.statusCode == 201 && context.mounted) {
         Navigator.of(context).pop();
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Kategori berhasil dibuat!')),
         );
-      } else {
+      } else if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Gagal membuat kategori: ${response.body}')),
         );
       }
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Terjadi kesalahan: $e')),
-      );
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Terjadi kesalahan: $e')),
+        );
+      }
     }
   }
 
   static Future<void> createSubCategory(BuildContext context,
-      String? categoryId, String name, String video) async {
+      String? categoryId, String name, String video, String description) async {
     if (categoryId == null || name.isEmpty || video.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Semua field harus diisi!')),
-      );
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Semua field harus diisi!')),
+        );
+      }
       return;
     }
 
     final String apiUrl =
-        'https://berework-production.up.railway.app/api/subcategories';
-    final response = await http.post(
-      Uri.parse(apiUrl),
-      headers: {'Content-Type': 'application/json'},
-      body: jsonEncode({
-        'categoryid': categoryId,
-        'name': name,
-        'video': video,
-        'done': false, // Sesuaikan dengan default di database
-      }),
-    );
+        'https://berework-production.up.railway.app/api/categories/$categoryId/subcategories';
+    try {
+      final response = await http.post(
+        Uri.parse(apiUrl),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({
+          'name': name,
+          'video': video,
+          'description': description,
+          'done': false,
+        }),
+      );
 
-    if (response.statusCode == 201) {
-      Navigator.of(context, rootNavigator: true)
-          .pop(); // Tutup dialog setelah sukses
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('SubKategori berhasil dibuat!')),
-      );
-    } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Gagal membuat SubKategori!')),
-      );
+      if (response.statusCode == 201 && context.mounted) {
+        Navigator.of(context, rootNavigator: true).pop();
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('SubKategori berhasil dibuat!')),
+        );
+      } else if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Gagal membuat SubKategori!')),
+        );
+      }
+    } catch (e) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Terjadi kesalahan: $e')),
+        );
+      }
     }
   }
 
@@ -74,14 +87,12 @@ class MethodService {
       final response = await http.get(Uri.parse(apiUrl));
       if (response.statusCode == 200) {
         List<dynamic> data = jsonDecode(response.body);
-        print("Kategori berhasil diambil: $data"); // Debugging
+        print(data);
         return List<Map<String, dynamic>>.from(data);
       } else {
-        print("Gagal mengambil kategori, status code: ${response.statusCode}");
         return [];
       }
     } catch (e) {
-      print("Error fetchCategories: $e");
       return [];
     }
   }
@@ -89,7 +100,7 @@ class MethodService {
   static void showChoiceDialog(BuildContext context) {
     showDialog(
       context: context,
-      builder: (context) {
+      builder: (dialogContext) {
         return AlertDialog(
           title: Text('Pilih Jenis Tambah'),
           content: Column(
@@ -97,7 +108,7 @@ class MethodService {
             children: [
               ElevatedButton(
                 onPressed: () {
-                  Navigator.of(context).pop();
+                  Navigator.of(dialogContext).pop();
                   showCategoryForm(context);
                 },
                 child: Text('Tambah Kategori'),
@@ -105,7 +116,7 @@ class MethodService {
               SizedBox(height: 10),
               ElevatedButton(
                 onPressed: () {
-                  Navigator.of(context).pop();
+                  Navigator.of(dialogContext).pop();
                   showSubCategoryForm(context);
                 },
                 child: Text('Tambah SubKategori'),
@@ -122,7 +133,7 @@ class MethodService {
 
     showDialog(
       context: context,
-      builder: (context) {
+      builder: (dialogContext) {
         return AlertDialog(
           title: Text('Buat Kategori Baru'),
           content: TextField(
@@ -131,11 +142,11 @@ class MethodService {
           ),
           actions: [
             TextButton(
-              onPressed: () => Navigator.of(context).pop(),
+              onPressed: () => Navigator.of(dialogContext).pop(),
               child: Text('Batal'),
             ),
             ElevatedButton(
-              onPressed: () => createCategory(context, nameController),
+              onPressed: () => createCategory(dialogContext, nameController),
               child: Text('Simpan'),
             ),
           ],
@@ -152,16 +163,14 @@ class MethodService {
 
     showDialog(
       context: context,
-      builder: (context) {
+      builder: (dialogContext) {
         return FutureBuilder<List>(
-          future:
-              fetchCategories(), // 🔥 Fetch kategori sebelum tampilkan dialog
+          future: fetchCategories(),
           builder: (context, snapshot) {
             if (snapshot.connectionState == ConnectionState.waiting) {
               return AlertDialog(
                 title: Text('Tambah SubKategori'),
-                content:
-                    Center(child: CircularProgressIndicator()), // ⏳ Loading
+                content: Center(child: CircularProgressIndicator()),
               );
             } else if (snapshot.hasError) {
               return AlertDialog(
@@ -179,7 +188,7 @@ class MethodService {
                     children: [
                       DropdownButtonFormField<String>(
                         decoration:
-                            InputDecoration(labelText: "Pilih Kategori"),
+                            InputDecoration(labelText: 'Pilih Kategori'),
                         items: categories
                             .map<DropdownMenuItem<String>>((category) {
                           return DropdownMenuItem<String>(
@@ -194,22 +203,22 @@ class MethodService {
                       TextField(
                         controller: nameController,
                         decoration:
-                            InputDecoration(labelText: "Nama SubKategori"),
+                            InputDecoration(labelText: 'Nama SubKategori'),
                       ),
                       TextField(
                         controller: videoController,
-                        decoration: InputDecoration(labelText: "Video (URL)"),
+                        decoration: InputDecoration(labelText: 'Video (URL)'),
                       ),
                       TextField(
                         controller: descriptionController,
-                        decoration: InputDecoration(labelText: "Deskripsi"),
+                        decoration: InputDecoration(labelText: 'Deskripsi'),
                       ),
                     ],
                   ),
                 ),
                 actions: [
                   TextButton(
-                    onPressed: () => Navigator.pop(context),
+                    onPressed: () => Navigator.of(dialogContext).pop(),
                     child: Text('Batal'),
                   ),
                   ElevatedButton(
@@ -218,13 +227,12 @@ class MethodService {
                           nameController.text.isNotEmpty &&
                           videoController.text.isNotEmpty &&
                           descriptionController.text.isNotEmpty) {
-                        // TODO: Kirim data ke backend
-                        print("Kategori ID: $selectedCategory");
-                        print("Nama: ${nameController.text}");
-                        print("Video: ${videoController.text}");
-                        print("Deskripsi: ${descriptionController.text}");
-
-                        Navigator.pop(context);
+                        createSubCategory(
+                            dialogContext,
+                            selectedCategory,
+                            nameController.text,
+                            videoController.text,
+                            descriptionController.text);
                       }
                     },
                     child: Text('Simpan'),
@@ -236,5 +244,70 @@ class MethodService {
         );
       },
     );
+  }
+
+  static Future<Map<String, dynamic>?> fetchProgress(
+      String categoryId, String userId) async {
+    try {
+      String url =
+          "https://berework-production.up.railway.app/api/categories/$categoryId/progress?userId=$userId";
+      final response = await http.get(Uri.parse(url));
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        print("Data berhasil diambil: $data");
+        return data; // Langsung return data JSON
+      } else {
+        print("Gagal mengambil data: ${response.statusCode}");
+        return null;
+      }
+    } catch (e) {
+      print("Error: $e");
+      return null;
+    }
+  }
+
+  static Future<bool> updateStatus(
+      String subCategoryId, bool done, String userId) async {
+    try {
+      String url =
+          "https://berework-production.up.railway.app/api/subcategories/$subCategoryId/status";
+      final response = await http.put(
+        Uri.parse(url),
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: jsonEncode({
+          "done": done,
+          "userId": userId,
+        }),
+      );
+
+      if (response.statusCode == 200) {
+        print("Status berhasil diupdate ✅");
+        return true; // Berhasil
+      } else {
+        print("Gagal update status ❌: ${response.statusCode}");
+        print(response.body);
+        return false; // Gagal
+      }
+    } catch (e) {
+      print("Error: $e");
+      return false; // Error
+    }
+  }
+
+  static Future<String?> getUserId() async {
+    final prefs = await SharedPreferences.getInstance();
+
+    // Coba ambil sebagai int dulu
+    int? userIdInt = prefs.getInt('user_id');
+    if (userIdInt != null) {
+      return userIdInt.toString();
+    }
+
+    // Jika bukan int, coba ambil sebagai string
+    String? userIdStr = prefs.getString('user_id');
+    return userIdStr;
   }
 }
