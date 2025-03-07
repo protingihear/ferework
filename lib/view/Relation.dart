@@ -17,12 +17,6 @@ class _RelationsPageState extends State<RelationsPage> {
     communities = ApiService.fetchCommunities();
   }
 
-  Future<void> _refreshCommunities() async {
-    setState(() {
-      communities = ApiService.fetchCommunities();
-    });
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -67,32 +61,29 @@ class _RelationsPageState extends State<RelationsPage> {
             Text("Community", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.black)),
             SizedBox(height: 8),
 
-            // Fetch data & show in ListView with RefreshIndicator
-            RefreshIndicator(
-              onRefresh: _refreshCommunities,
-              child: FutureBuilder<List<Community>>(
-                future: communities,
-                builder: (context, snapshot) {
-                  if (snapshot.connectionState == ConnectionState.waiting) {
-                    return Center(child: CircularProgressIndicator());
-                  } else if (snapshot.hasError) {
-                    return Text("Error: ${snapshot.error}");
-                  } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
-                    return Text("No communities found", style: TextStyle(color: Colors.black));
-                  } else {
-                    return SizedBox(
-                      height: 160,
-                      child: ListView.builder(
-                        scrollDirection: Axis.horizontal,
-                        itemCount: snapshot.data!.length,
-                        itemBuilder: (context, index) {
-                          return CommunityCard(community: snapshot.data![index]);
-                        },
-                      ),
-                    );
-                  }
-                },
-              ),
+            // Fetch data & show in ListView
+            FutureBuilder<List<Community>>(
+              future: communities,
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return Center(child: CircularProgressIndicator());
+                } else if (snapshot.hasError) {
+                  return Text("Error: ${snapshot.error}");
+                } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
+                  return Text("No communities found", style: TextStyle(color: Colors.black));
+                } else {
+                  return SizedBox(
+                    height: 160,
+                    child: ListView.builder(
+                      scrollDirection: Axis.horizontal,
+                      itemCount: snapshot.data!.length,
+                      itemBuilder: (context, index) {
+                        return CommunityCard(community: snapshot.data![index]);
+                      },
+                    ),
+                  );
+                }
+              },
             ),
 
             SizedBox(height: 16),
@@ -119,32 +110,25 @@ class _RelationsPageState extends State<RelationsPage> {
             ),
             SizedBox(height: 16),
 
-            // Placeholder Activity Feed with RefreshIndicator
+            // Placeholder Activity Feed
             Expanded(
-              child: RefreshIndicator(
-                onRefresh: _refreshCommunities,
-                child: ListView.builder(
-                  itemCount: 2,
-                  itemBuilder: (context, index) {
-                    return Container(
-                      margin: EdgeInsets.only(bottom: 8),
-                      padding: EdgeInsets.all(12),
-                      decoration: BoxDecoration(color: Colors.green[100], borderRadius: BorderRadius.circular(10)),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Row(children: [
-                            CircleAvatar(backgroundColor: Colors.grey, child: Icon(Icons.person, color: Colors.white)),
-                            SizedBox(width: 8),
-                            Text("User Name", style: TextStyle(fontWeight: FontWeight.bold, color: Colors.black))
-                          ]),
-                          SizedBox(height: 8),
-                          Text("This is a placeholder text for the post content.", style: TextStyle(color: Colors.black)),
-                        ],
-                      ),
-                    );
-                  },
-                ),
+              child: ListView.builder(
+                itemCount: 2,
+                itemBuilder: (context, index) {
+                  return Container(
+                    margin: EdgeInsets.only(bottom: 8),
+                    padding: EdgeInsets.all(12),
+                    decoration: BoxDecoration(color: Colors.green[100], borderRadius: BorderRadius.circular(10)),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(children: [CircleAvatar(backgroundColor: Colors.grey, child: Icon(Icons.person, color: Colors.white)), SizedBox(width: 8), Text("User Name", style: TextStyle(fontWeight: FontWeight.bold, color: Colors.black))]),
+                        SizedBox(height: 8),
+                        Text("This is a placeholder text for the post content.", style: TextStyle(color: Colors.black)),
+                      ],
+                    ),
+                  );
+                },
               ),
             ),
           ],
