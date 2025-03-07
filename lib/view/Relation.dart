@@ -10,11 +10,21 @@ class RelationsPage extends StatefulWidget {
 
 class _RelationsPageState extends State<RelationsPage> {
   late Future<List<Community>> communities;
+  Future<List<dynamic>>? posts;
+  int? selectedCommunityId; // Untuk melacak komunitas yang dipilih
 
   @override
   void initState() {
     super.initState();
     communities = ApiService.fetchCommunities();
+  }
+
+  // Fungsi untuk mengambil postingan saat komunitas dipilih
+  void loadPosts(int communityId) {
+    setState(() {
+      selectedCommunityId = communityId;
+      posts = ApiService.fetchCommunityPosts(communityId);
+    });
   }
 
   @override
@@ -78,7 +88,13 @@ class _RelationsPageState extends State<RelationsPage> {
                       scrollDirection: Axis.horizontal,
                       itemCount: snapshot.data!.length,
                       itemBuilder: (context, index) {
-                        return CommunityCard(community: snapshot.data![index]);
+                        final community = snapshot.data![index];
+                        return GestureDetector(
+                          onTap: () {
+                            loadPosts(community.id); // Ambil postingan komunitas
+                          },
+                          child: CommunityCard(community: community),
+                        );
                       },
                     ),
                   );
@@ -110,26 +126,56 @@ class _RelationsPageState extends State<RelationsPage> {
             ),
             SizedBox(height: 16),
 
-            // Placeholder Activity Feed
+            // Postingan komunitas berdasarkan yang dipilih
             Expanded(
-              child: ListView.builder(
-                itemCount: 2,
-                itemBuilder: (context, index) {
-                  return Container(
-                    margin: EdgeInsets.only(bottom: 8),
-                    padding: EdgeInsets.all(12),
-                    decoration: BoxDecoration(color: Colors.green[100], borderRadius: BorderRadius.circular(10)),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(children: [CircleAvatar(backgroundColor: Colors.grey, child: Icon(Icons.person, color: Colors.white)), SizedBox(width: 8), Text("User Name", style: TextStyle(fontWeight: FontWeight.bold, color: Colors.black))]),
-                        SizedBox(height: 8),
-                        Text("This is a placeholder text for the post content.", style: TextStyle(color: Colors.black)),
-                      ],
+              child: posts == null
+                  ? Center(
+                      child: Text(
+                        "Pilih komunitas untuk melihat postingan",
+                        style: TextStyle(color: Colors.black),
+                      ),
+                    )
+                  : FutureBuilder<List<dynamic>>(
+                      future: posts,
+                      builder: (context, snapshot) {
+                        if (snapshot.connectionState == ConnectionState.waiting) {
+                          return Center(child: CircularProgressIndicator());
+                        } else if (snapshot.hasError) {
+                          return Text("Error: ${snapshot.error}");
+                        } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
+                          return Text("Belum ada postingan", style: TextStyle(color: Colors.black));
+                        } else {
+                          return ListView.builder(
+                            itemCount: snapshot.data!.length,
+                            itemBuilder: (context, index) {
+                              final post = snapshot.data![index];
+                              return Container(
+                                margin: EdgeInsets.only(bottom: 8),
+                                padding: EdgeInsets.all(12),
+                                decoration: BoxDecoration(color: Colors.green[100], borderRadius: BorderRadius.circular(10)),
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Row(
+                                      children: [
+                                        CircleAvatar(
+                                          backgroundColor: Colors.grey,
+                                          child: Icon(Icons.person, color: Colors.white),
+                                        ),
+                                        SizedBox(width: 8),
+                                        Text(post['author']['username'], style: TextStyle(fontWeight: FontWeight.bold, color: Colors.black)),
+                                      ],
+                                    ),
+                                    SizedBox(height: 8),
+                                    Text(post['content'], style: TextStyle(color: Colors.black)),
+                                  ],
+                                ),
+                              );
+                            },
+                          );
+                        }
+                      },
                     ),
-                  );
-                },
-              ),
             ),
           ],
         ),
