@@ -27,6 +27,15 @@ class _RelationsPageState extends State<RelationsPage> {
     });
   }
 
+  // Fungsi untuk refresh data postingan
+  Future<void> refreshPosts() async {
+    if (selectedCommunityId != null) {
+      setState(() {
+        posts = ApiService.fetchCommunityPosts(selectedCommunityId!);
+      });
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -128,54 +137,57 @@ class _RelationsPageState extends State<RelationsPage> {
 
             // Postingan komunitas berdasarkan yang dipilih
             Expanded(
-              child: posts == null
-                  ? Center(
-                      child: Text(
-                        "Pilih komunitas untuk melihat postingan",
-                        style: TextStyle(color: Colors.black),
+              child: RefreshIndicator(
+                onRefresh: refreshPosts,
+                child: posts == null
+                    ? Center(
+                        child: Text(
+                          "Pilih komunitas untuk melihat postingan",
+                          style: TextStyle(color: Colors.black),
+                        ),
+                      )
+                    : FutureBuilder<List<dynamic>>(
+                        future: posts,
+                        builder: (context, snapshot) {
+                          if (snapshot.connectionState == ConnectionState.waiting) {
+                            return Center(child: CircularProgressIndicator());
+                          } else if (snapshot.hasError) {
+                            return Text("Error: ${snapshot.error}");
+                          } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
+                            return Text("Belum ada postingan", style: TextStyle(color: Colors.black));
+                          } else {
+                            return ListView.builder(
+                              itemCount: snapshot.data!.length,
+                              itemBuilder: (context, index) {
+                                final post = snapshot.data![index];
+                                return Container(
+                                  margin: EdgeInsets.only(bottom: 8),
+                                  padding: EdgeInsets.all(12),
+                                  decoration: BoxDecoration(color: Colors.green[100], borderRadius: BorderRadius.circular(10)),
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Row(
+                                        children: [
+                                          CircleAvatar(
+                                            backgroundColor: Colors.grey,
+                                            child: Icon(Icons.person, color: Colors.white),
+                                          ),
+                                          SizedBox(width: 8),
+                                          Text(post['author']['username'], style: TextStyle(fontWeight: FontWeight.bold, color: Colors.black)),
+                                        ],
+                                      ),
+                                      SizedBox(height: 8),
+                                      Text(post['content'], style: TextStyle(color: Colors.black)),
+                                    ],
+                                  ),
+                                );
+                              },
+                            );
+                          }
+                        },
                       ),
-                    )
-                  : FutureBuilder<List<dynamic>>(
-                      future: posts,
-                      builder: (context, snapshot) {
-                        if (snapshot.connectionState == ConnectionState.waiting) {
-                          return Center(child: CircularProgressIndicator());
-                        } else if (snapshot.hasError) {
-                          return Text("Error: ${snapshot.error}");
-                        } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
-                          return Text("Belum ada postingan", style: TextStyle(color: Colors.black));
-                        } else {
-                          return ListView.builder(
-                            itemCount: snapshot.data!.length,
-                            itemBuilder: (context, index) {
-                              final post = snapshot.data![index];
-                              return Container(
-                                margin: EdgeInsets.only(bottom: 8),
-                                padding: EdgeInsets.all(12),
-                                decoration: BoxDecoration(color: Colors.green[100], borderRadius: BorderRadius.circular(10)),
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Row(
-                                      children: [
-                                        CircleAvatar(
-                                          backgroundColor: Colors.grey,
-                                          child: Icon(Icons.person, color: Colors.white),
-                                        ),
-                                        SizedBox(width: 8),
-                                        Text(post['author']['username'], style: TextStyle(fontWeight: FontWeight.bold, color: Colors.black)),
-                                      ],
-                                    ),
-                                    SizedBox(height: 8),
-                                    Text(post['content'], style: TextStyle(color: Colors.black)),
-                                  ],
-                                ),
-                              );
-                            },
-                          );
-                        }
-                      },
-                    ),
+              ),
             ),
           ],
         ),
