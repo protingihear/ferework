@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:reworkmobile/view/LessonAhliBahasa.dart';
 import 'package:reworkmobile/view/LessonKategori.dart';
+import 'package:reworkmobile/view/Relation.dart';
 import 'dart:convert';
 import '../services/api_service.dart';
 import '../models/user_profile.dart';
@@ -181,7 +182,12 @@ class _HomeScreenState extends State<HomeScreen> {
                           'label': 'Voice to Text',
                           'onTap': () {
                             print("Voice to Text clicked");
-                            // TODO: Navigate to Voice page
+                             Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                  builder: (context) => RelationsPage()),
+                            );
+                           
                           },
                         },
                         {

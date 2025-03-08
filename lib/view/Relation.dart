@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../services/comumnity_service.dart';
 import '../models/community.dart';
 import '../widgets/community_card.dart';
+import './CreatePostPage.dart';
 
 class RelationsPage extends StatefulWidget {
   @override
@@ -11,7 +12,8 @@ class RelationsPage extends StatefulWidget {
 class _RelationsPageState extends State<RelationsPage> {
   late Future<List<Community>> communities;
   Future<List<dynamic>>? posts;
-  int? selectedCommunityId; // Untuk melacak komunitas yang dipilih
+  int? selectedCommunityId;
+  Map<int, bool> joinedCommunities = {}; // Status keanggotaan komunitas
 
   @override
   void initState() {
@@ -19,7 +21,6 @@ class _RelationsPageState extends State<RelationsPage> {
     communities = ApiService.fetchCommunities();
   }
 
-  // Fungsi untuk mengambil postingan saat komunitas dipilih
   void loadPosts(int communityId) {
     setState(() {
       selectedCommunityId = communityId;
@@ -27,7 +28,6 @@ class _RelationsPageState extends State<RelationsPage> {
     });
   }
 
-  // Fungsi untuk refresh data postingan
   Future<void> refreshPosts() async {
     if (selectedCommunityId != null) {
       setState(() {
@@ -67,9 +67,7 @@ class _RelationsPageState extends State<RelationsPage> {
                 prefixIcon: Icon(Icons.search, color: Colors.black),
                 hintText: "Search",
                 hintStyle: TextStyle(color: Colors.black54),
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: BorderSide(color: Colors.blue)),
-                enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: BorderSide(color: Colors.blue)),
-                focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: BorderSide(color: Colors.blue, width: 2)),
+                border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
                 filled: true,
                 fillColor: Colors.white,
               ),
@@ -98,11 +96,44 @@ class _RelationsPageState extends State<RelationsPage> {
                       itemCount: snapshot.data!.length,
                       itemBuilder: (context, index) {
                         final community = snapshot.data![index];
+                        final bool isJoined = joinedCommunities[community.id] ?? false;
+
                         return GestureDetector(
                           onTap: () {
-                            loadPosts(community.id); // Ambil postingan komunitas
+                            loadPosts(community.id);
                           },
-                          child: CommunityCard(community: community),
+                          child: Stack(
+                            children: [
+                              CommunityCard(community: community),
+                              Positioned(
+                                bottom: 10,
+                                right: 10,
+                                child: ElevatedButton(
+                                  onPressed: isJoined
+                                      ? null
+                                      : () async {
+                                          try {
+                                            await ApiService.joinCommunity(community.id);
+                                            setState(() {
+                                              joinedCommunities[community.id] = true;
+                                            });
+                                            ScaffoldMessenger.of(context).showSnackBar(
+                                              SnackBar(content: Text("Berhasil bergabung ke komunitas")),
+                                            );
+                                          } catch (e) {
+                                            ScaffoldMessenger.of(context).showSnackBar(
+                                              SnackBar(content: Text("Gagal bergabung: $e")),
+                                            );
+                                          }
+                                        },
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: isJoined ? Colors.grey : Colors.blue,
+                                  ),
+                                  child: Text(isJoined ? "Joined" : "Join"),
+                                ),
+                              ),
+                            ],
+                          ),
                         );
                       },
                     ),
@@ -113,26 +144,21 @@ class _RelationsPageState extends State<RelationsPage> {
 
             SizedBox(height: 16),
 
-            // Tabs: Community & My Activity
-            Row(
-              children: [
-                Expanded(
-                  child: ElevatedButton(
-                    onPressed: () {},
-                    style: ElevatedButton.styleFrom(backgroundColor: Colors.blue),
-                    child: Text("Community", style: TextStyle(color: Colors.white)),
-                  ),
-                ),
-                SizedBox(width: 8),
-                Expanded(
-                  child: OutlinedButton(
-                    onPressed: () {},
-                    style: OutlinedButton.styleFrom(side: BorderSide(color: Colors.black)),
-                    child: Text("My Activity", style: TextStyle(color: Colors.black)),
-                  ),
-                ),
-              ],
-            ),
+            // Tombol buat postingan
+            if (selectedCommunityId != null)
+              ElevatedButton(
+                onPressed: () async {
+                  final result = await Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => CreatePostPage(communityId: selectedCommunityId!)),
+                  );
+
+                  if (result == true) {
+                    refreshPosts();
+                  }
+                },
+                child: Text("Buat Post"),
+              ),
             SizedBox(height: 16),
 
             // Postingan komunitas berdasarkan yang dipilih

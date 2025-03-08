@@ -22,7 +22,7 @@ class MyApp extends StatelessWidget {
       ),
       title: 'iHear',
      // Optional: Dark theme like YouTube
-      home:RelationsPage(), // Start with SplashScreen
+      home:const SplashScreen(), // Start with SplashScreen
 
     );
   }
