@@ -18,7 +18,7 @@ jobs:
       - name: Setup Flutter
         uses: subosito/flutter-action@v2
         with:
-          flutter-version: '3.16.3'
+          flutter-version: '3.29.1'
 
       # Install the latest Dart version (if necessary)
       - name: Install Dart SDK
