@@ -129,7 +129,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                               .split(',')[1]))
                                           .image
                                       : NetworkImage(_userProfile!.imageUrl))
-                                  : null, // No backgroundImage if _userProfile.imageUrl is null or empty
+                                  : null, // No backgroundImage if _userProfile.imageUrl is null or emptyaa
                               child: (_userProfile?.imageUrl == null ||
                                       _userProfile!.imageUrl.isEmpty)
                                   ? Icon(Icons.person, size: 40)
