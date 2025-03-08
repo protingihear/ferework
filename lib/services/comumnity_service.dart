@@ -39,21 +39,43 @@ static Future<List<dynamic>> fetchCommunityPosts(int communityId) async {
       throw Exception('Failed to load community posts');
     }
   }
-  static Future<Post> createPost(int communityId, String author, String content) async {
-  // Pastikan user sudah join komunitas sebelum membuat post
-  await http.post(Uri.parse('$baseUrl/communities/$communityId/join'));
 
-  final response = await http.post(
-    Uri.parse('$baseUrl/communities/$communityId/posts'),
-    headers: {"Content-Type": "application/json"},
-    body: jsonEncode({"author": author, "content": content}),
-  );
+static Future<void> createPost(int communityId, String content) async {
+  final url = Uri.parse('https://berework-production.up.railway.app/api/communities/$communityId/posts');
 
-  if (response.statusCode == 201) {
+  try {
+    final prefs = await SharedPreferences.getInstance();
+    final sessionCookie = prefs.getString('session_cookie');
+    final ttCookie = prefs.getString('tt_cookie');
 
-    return Post.fromJson(jsonDecode(response.body));
-  } else {
-    throw Exception("Gagal membuat post");
+    if (sessionCookie == null || ttCookie == null) {
+      throw Exception("❌ Gagal membuat post: Session tidak ditemukan. Harap login terlebih dahulu.");
+    }
+
+    final response = await http.post(
+      url,
+      headers: {
+        "Content-Type": "application/json",
+        "Cookie": "session_id=$sessionCookie; tt=$ttCookie",
+      },
+      body: jsonEncode({
+        "communityId": communityId, 
+        "content": content,
+      }),
+    );
+
+    print("📤 Payload: ${jsonEncode({"communityId": communityId, "content": content})}");
+    print("📥 Response Code: ${response.statusCode}");
+    print("📥 Response Body: ${response.body}");
+
+    if (response.statusCode == 201) {
+      print('✅ Post berhasil dibuat: ${response.body}');
+    } else {
+      throw Exception("❌ Gagal membuat post: ${response.body}");
+    }
+  } catch (e) {
+    print("⚠️ Terjadi kesalahan: $e");
+    throw Exception("Terjadi kesalahan saat membuat post: $e");
   }
 }
   static Future<void> joinCommunity(int communityId) async {

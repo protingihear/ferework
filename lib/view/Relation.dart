@@ -42,17 +42,11 @@ class _RelationsPageState extends State<RelationsPage> {
       appBar: AppBar(
         backgroundColor: Colors.white,
         elevation: 0,
-        leading: Padding(
-          padding: const EdgeInsets.all(8.0),
-          child: Container(
-            decoration: BoxDecoration(shape: BoxShape.circle, color: Colors.green),
-            child: IconButton(
-              icon: Icon(Icons.arrow_back, color: Colors.white),
-              onPressed: () => Navigator.pop(context),
-            ),
-          ),
+        leading: IconButton(
+          icon: Icon(Icons.arrow_back, color: Colors.black),
+          onPressed: () => Navigator.pop(context),
         ),
-        title: Text("Relations", style: TextStyle(color: Colors.black, fontWeight: FontWeight.w900)),
+        title: Text("Relations", style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold)),
         centerTitle: true,
       ),
       body: Padding(
@@ -150,7 +144,9 @@ class _RelationsPageState extends State<RelationsPage> {
                 onPressed: () async {
                   final result = await Navigator.push(
                     context,
-                    MaterialPageRoute(builder: (context) => CreatePostPage(communityId: selectedCommunityId!)),
+                    MaterialPageRoute(
+                      builder: (context) => CreatePostPage(communityId: selectedCommunityId!),
+                    ),
                   );
 
                   if (result == true) {
@@ -166,12 +162,7 @@ class _RelationsPageState extends State<RelationsPage> {
               child: RefreshIndicator(
                 onRefresh: refreshPosts,
                 child: posts == null
-                    ? Center(
-                        child: Text(
-                          "Pilih komunitas untuk melihat postingan",
-                          style: TextStyle(color: Colors.black),
-                        ),
-                      )
+                    ? Center(child: Text("Pilih komunitas untuk melihat postingan", style: TextStyle(color: Colors.black)))
                     : FutureBuilder<List<dynamic>>(
                         future: posts,
                         builder: (context, snapshot) {
@@ -193,16 +184,7 @@ class _RelationsPageState extends State<RelationsPage> {
                                   child: Column(
                                     crossAxisAlignment: CrossAxisAlignment.start,
                                     children: [
-                                      Row(
-                                        children: [
-                                          CircleAvatar(
-                                            backgroundColor: Colors.grey,
-                                            child: Icon(Icons.person, color: Colors.white),
-                                          ),
-                                          SizedBox(width: 8),
-                                          Text(post['author']['username'], style: TextStyle(fontWeight: FontWeight.bold, color: Colors.black)),
-                                        ],
-                                      ),
+                                      Text(post['author']['username'], style: TextStyle(fontWeight: FontWeight.bold, color: Colors.black)),
                                       SizedBox(height: 8),
                                       Text(post['content'], style: TextStyle(color: Colors.black)),
                                     ],
