@@ -14,24 +14,28 @@ jobs:
         with:
           fetch-depth: 0  # Ensure full clone for better analysis
 
-      # Set up Flutter
+      # Setup Flutter
       - name: Setup Flutter
         uses: subosito/flutter-action@v2
         with:
-          flutter-version: 'stable'  # Change if needed
+          flutter-version: 'stable'
 
-      # Get dependencies
+      # Accept Android Licenses (if needed)
+      - name: Accept Android Licenses
+        run: yes | flutter doctor --android-licenses
+
+      # Get Dependencies
       - name: Get dependencies
         run: flutter pub get
 
       # Build APK
       - name: Build APK
-        run: flutter build apk
+        run: flutter build apk --release
 
       # Run SonarQube Scan
       - name: SonarQube Scan
         uses: SonarSource/sonarqube-scan-action@v5
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-          # Uncomment the following line if using self-hosted SonarQube
+          # Uncomment the following if using self-hosted SonarQube
           # SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
