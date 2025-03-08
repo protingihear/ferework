@@ -1,10 +1,12 @@
 name: Build
+
 on:
   push:
     branches:
-      - main
+      - master
   pull_request:
     types: [opened, synchronize, reopened]
+
 jobs:
   sonarqube:
     name: SonarQube
@@ -12,43 +14,40 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          fetch-depth: 0
+          fetch-depth: 0  # Shallow clones should be disabled for a better relevancy of analysis
+      
+      - name: Setup Java
+        uses: actions/setup-java@v3
+        with:
+          distribution: 'temurin'
+          java-version: '17'
 
-      # Install the latest Flutter version
       - name: Setup Flutter
         uses: subosito/flutter-action@v2
         with:
           flutter-version: '3.29.1'
 
-      # Install the latest Dart version (if necessary)
-      - name: Install Dart SDK
-        run: |
-          sudo apt-get update
-          sudo apt-get install apt-transport-https
-          sudo sh -c 'wget -qO- https://dl-ssl.google.com/linux/linux_signing_key.pub | apt-key add -'
-          sudo sh -c 'wget -qO- https://storage.googleapis.com/download.dartlang.org/linux/debian/dart_stable.list > /etc/apt/sources.list.d/dart_stable.list'
-          sudo apt-get update
-          sudo apt-get install dart
-          echo "export PATH=\$PATH:/usr/lib/dart/bin" >> ~/.bashrc
-          source ~/.bashrc
-          dart --version
-
-      # Debug Flutter & Dart versions
-      - name: Check Flutter & Dart Versions
-        run: |
-          flutter --version
-          dart --version
-
-      - name: Accept Android Licenses
-        run: yes | flutter doctor --android-licenses
-
-      - name: Get dependencies
+      - name: Install Dependencies
         run: flutter pub get
 
-      - name: Build APK
-        run: flutter build apk --release
+      - name: Generate SonarQube Properties
+        run: |
+          echo "sonar.projectKey=protingihear_ferework" > sonar-project.properties
+          echo "sonar.organization=protingihear" >> sonar-project.properties
+          echo "sonar.host.url=https://sonarcloud.io" >> sonar-project.properties
+          echo "sonar.sources=lib" >> sonar-project.properties
+          echo "sonar.tests=test" >> sonar-project.properties
+          echo "sonar.exclusions=/*.g.dart" >> sonar-project.properties
+          echo "sonar.coverage.exclusions=/*.g.dart" >> sonar-project.properties
+          echo "sonar.flutter.reportPaths=coverage/lcov.info" >> sonar-project.properties
+          echo "sonar.java.binaries=build" >> sonar-project.properties
 
       - name: SonarQube Scan
         uses: SonarSource/sonarqube-scan-action@v5
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+
+      - name: Verify Quality Gate
+        uses: SonarSource/sonarqube-quality-gate-action@v1
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
