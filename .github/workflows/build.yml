@@ -14,15 +14,30 @@ jobs:
         with:
           fetch-depth: 0
 
-      # Setup Flutter with an explicit version
+      # Install the latest Flutter version
       - name: Setup Flutter
         uses: subosito/flutter-action@v2
         with:
-          flutter-version: '3.16.3'  # Use latest stable
+          flutter-version: '3.16.3'
 
-      # Debug Flutter Installation
-      - name: Debug Flutter Installation
-        run: flutter doctor -v
+      # Install the latest Dart version (if necessary)
+      - name: Install Dart SDK
+        run: |
+          sudo apt-get update
+          sudo apt-get install apt-transport-https
+          sudo sh -c 'wget -qO- https://dl-ssl.google.com/linux/linux_signing_key.pub | apt-key add -'
+          sudo sh -c 'wget -qO- https://storage.googleapis.com/download.dartlang.org/linux/debian/dart_stable.list > /etc/apt/sources.list.d/dart_stable.list'
+          sudo apt-get update
+          sudo apt-get install dart
+          echo "export PATH=\$PATH:/usr/lib/dart/bin" >> ~/.bashrc
+          source ~/.bashrc
+          dart --version
+
+      # Debug Flutter & Dart versions
+      - name: Check Flutter & Dart Versions
+        run: |
+          flutter --version
+          dart --version
 
       - name: Accept Android Licenses
         run: yes | flutter doctor --android-licenses
