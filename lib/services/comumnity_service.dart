@@ -10,7 +10,7 @@ class ApiService {
     final response = await http.get(Uri.parse('https://berework-production.up.railway.app/api/communities'));
 
     if (response.statusCode == 200) {
-      List<dynamic> data = jsonDecode(response.body)['communities']; 
+      List<dynamic> data = jsonDecode(response.body); 
       return data.map((json) => Community.fromJson(json)).toList();
     } else {
       throw Exception('Failed to load communities');
