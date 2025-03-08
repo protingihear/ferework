@@ -12,30 +12,11 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          fetch-depth: 0  # Ensure full clone for better analysis
-
-      # Setup Flutter
-      - name: Setup Flutter
-        uses: subosito/flutter-action@v2
-        with:
-          flutter-version: 'stable'
-
-      # Accept Android Licenses (if needed)
-      - name: Accept Android Licenses
-        run: yes | flutter doctor --android-licenses
-
-      # Get Dependencies
-      - name: Get dependencies
-        run: flutter pub get
-
-      # Build APK
-      - name: Build APK
-        run: flutter build apk --release
-
-      # Run SonarQube Scan
+          fetch-depth: 0  # Shallow clones should be disabled for a better relevancy of analysis
+      # The analysis requires to retrieve dependencies and build successfully
+      - name: Build
+        run: flutter build apk
       - name: SonarQube Scan
         uses: SonarSource/sonarqube-scan-action@v5
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-          # Uncomment the following if using self-hosted SonarQube
-          # SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
