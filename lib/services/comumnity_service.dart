@@ -68,11 +68,11 @@ static Future<void> createPost(int communityId, String content) async {
     print("📥 Response Code: ${response.statusCode}");
     print("📥 Response Body: ${response.body}");
 
-    if (response.statusCode == 201) {
-      print('✅ Post berhasil dibuat: ${response.body}');
-    } else {
-      throw Exception("❌ Gagal membuat post: ${response.body}");
-    }
+  if (response.statusCode == 201 || response.statusCode == 200) {
+  print("✅ Post berhasil dibuat!");
+} else {
+  throw Exception("Gagal membuat post: ${response.body}");
+} 
   } catch (e) {
     print("⚠️ Terjadi kesalahan: $e");
     throw Exception("Terjadi kesalahan saat membuat post: $e");
@@ -111,5 +111,49 @@ static Future<void> createPost(int communityId, String content) async {
       throw Exception("Terjadi kesalahan: $e");
     }
   }
+ static Future<void> createCommunity(String name, String description, String imageBase64) async {
+    final url = Uri.parse('$baseUrl/communities');
 
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final sessionCookie = prefs.getString('session_cookie');
+      final ttCookie = prefs.getString('tt_cookie');
+
+      if (sessionCookie == null || ttCookie == null) {
+        throw Exception("❌ Gagal membuat komunitas: Session tidak ditemukan. Harap login terlebih dahulu.");
+      }
+
+      final Map<String, String> headers = {
+        "Content-Type": "application/json",
+        "Cookie": "session_id=$sessionCookie; tt=$ttCookie",
+      };
+
+      final Map<String, dynamic> body = {
+        "name": name,
+        "description": description,
+        "foto": imageBase64, // Sesuai API backend
+      };
+
+      final response = await http.post(
+        url,
+        headers: headers,
+        body: jsonEncode(body),
+      );
+
+      print("📤 Payload: ${jsonEncode(body)}");
+      print("📥 Response Code: ${response.statusCode}");
+      print("📥 Response Body: ${response.body}");
+
+      if (response.statusCode == 201 || response.statusCode == 200) {
+        print("✅ Komunitas berhasil dibuat!");
+      } else {
+        throw Exception("❌ Gagal membuat komunitas: ${response.body}");
+      }
+    } catch (e) {
+      print("⚠️ Error saat membuat komunitas: $e");
+      throw Exception("Terjadi kesalahan: $e");
+    }
+  }
 }
+
+
