@@ -6,6 +6,7 @@ import 'package:reworkmobile/view/home.dart';
 import 'package:reworkmobile/view/view_profile.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 // import 'home_page.dart';
+import 'chat_page.dart';
 import 'package:flutter/material.dart';
 import 'sign_up.dart';
 import 'package:http/http.dart' as http;
@@ -20,36 +21,63 @@ class Sign_In_Page extends StatefulWidget {
 
 class _Sign_In_Page extends State<Sign_In_Page> {
   bool isChecked = false;
+late SharedPreferences prefs; // Declare prefs
 
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
   String? _responseMessage;
   final AuthService _authService = AuthService();
 
-  void _handleLogin() async {
-    String email = _emailController.text;
-    String password = _passwordController.text;
+  @override
+  void initState() {
+    super.initState();
+    _initPrefs();
+  }
 
-    if (email.isNotEmpty && password.isNotEmpty) {
-      String? errorMessage = await _authService.login(email, password);
-      if (errorMessage == null) {
-        // ✅ Login sukses, navigasi ke ProfilePage
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (context) => MainScreen()),
-        );
-      } else {
-        // ❌ Login gagal, tampilkan pesan error
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(errorMessage)),
-        );
+  Future<void> _initPrefs() async {
+    prefs = await SharedPreferences.getInstance();
+  }
+
+  void _handleLogin() async {
+  await _initPrefs(); // Ensure prefs is initialized before using it
+
+  String email = _emailController.text;
+  String password = _passwordController.text;
+
+  if (email.isNotEmpty && password.isNotEmpty) {
+    String? errorMessage = await _authService.login(email, password);
+
+    if (errorMessage == null) {
+      final prefs = await SharedPreferences.getInstance();
+      int? userId = prefs.getInt('user_id'); // 🔥 Retrieve user_id
+
+      if (userId == null) {
+        print("❌ Error: user_id is null after login.");
+        return;
       }
+
+      // ✅ Login successful, navigate with correct userId
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(
+          builder: (context) => ChatPage(
+            roomId: "67ce7cb40a1e30fecfc44818",
+            userId: userId.toString(), // <-- Ensure this is not null
+          ),
+        ),
+      );
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Email dan password tidak boleh kosong!')),
+        SnackBar(content: Text(errorMessage)),
       );
     }
+  } else {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('Email dan password tidak boleh kosong!')),
+    );
   }
+}
+
 
   @override
   Widget build(BuildContext context) {
