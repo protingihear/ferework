@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:reworkmobile/view/Relation.dart';
 import 'package:reworkmobile/view/home.dart';
 import 'package:reworkmobile/view/view_profile.dart';
 
@@ -14,7 +15,7 @@ class _MainScreenState extends State<MainScreen> {
 
   final List<Widget> _pages = [
     HomeScreen(),
-    //relation
+    RelationsPage(),
     ProfilePage(),
   ];
 
@@ -31,11 +32,21 @@ class _MainScreenState extends State<MainScreen> {
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: _selectedIndex,
         onTap: _onItemTapped,
-        items: const [
-          BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
-          // BottomNavigationBarItem(
-          //       icon: Icon(Icons.people), label: 'Relations'),
-          BottomNavigationBarItem(icon: Icon(Icons.person), label: 'Profile')
+        selectedItemColor: Colors.green, // Warna ikon & label saat dipilih
+        unselectedItemColor: Colors.grey, // Warna ikon & label saat tidak dipilih
+        items: [
+          BottomNavigationBarItem(
+            icon: Icon(Icons.home),
+            label: 'Home',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.public), // Gunakan ikon globe
+            label: 'Relations',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.person),
+            label: 'Profile',
+          ),
         ],
       ),
     );

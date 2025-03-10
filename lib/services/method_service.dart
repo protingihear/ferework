@@ -310,4 +310,25 @@ class MethodService {
     String? userIdStr = prefs.getString('user_id');
     return userIdStr;
   }
+
+  static String convertDriveLink(String url) {
+    final regex = RegExp(r"\/d\/(.*)\/view");
+    final match = regex.firstMatch(url);
+    if (match != null && match.groupCount > 0) {
+      String fileId = match.group(1)!;
+      return "https://drive.google.com/uc?id=$fileId&export=download";
+    }
+    return url;
+  }
+
+  static List<dynamic> searchSubCategory(String query, List<dynamic> subCategories) {
+    if (query.isEmpty) {
+      return subCategories;
+    }
+    
+    return subCategories
+        .where((item) => item['name'].toString().toLowerCase().contains(query.toLowerCase()))
+        .toList();
+  }
+
 }

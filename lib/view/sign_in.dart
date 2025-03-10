@@ -1,4 +1,5 @@
 // import 'package:bisadenger/information.dart';
+import 'package:reworkmobile/main_screen.dart';
 import 'package:reworkmobile/services/auth_service.dart';
 import 'package:reworkmobile/view/animation/splash_screen.dart';
 import 'package:reworkmobile/view/home.dart';
@@ -35,7 +36,7 @@ class _Sign_In_Page extends State<Sign_In_Page> {
         // ✅ Login sukses, navigasi ke ProfilePage
         Navigator.pushReplacement(
           context,
-          MaterialPageRoute(builder: (context) => HomeScreen()),
+          MaterialPageRoute(builder: (context) => MainScreen()),
         );
       } else {
         // ❌ Login gagal, tampilkan pesan error
