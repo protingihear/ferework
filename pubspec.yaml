@@ -23,6 +23,11 @@ dependencies:
   web_socket_channel: ^3.0.2
   camera: ^0.11.1
   
+  lucide_icons: ^0.257.0
+  flutter_image_compress: ^2.4.0
+  video_player: ^2.9.3
+  webview_flutter: ^4.10.0
+
 dev_dependencies:
   flutter_test:
     sdk: flutter
@@ -40,3 +45,4 @@ flutter:
     - assets/scan_icon.png
     - assets/lesson_icon.png
     - assets/voice_icon.png
+    - assets/background_lesson1.png

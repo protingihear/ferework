@@ -6,7 +6,7 @@ import 'view/animation/splash_screen.dart';
 import 'view/home.dart';
 import 'package:reworkmobile/main_screen.dart';
 
-void main() {
+void main() async {
   runApp(MyApp());
 }
 
@@ -17,12 +17,14 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      // theme: ThemeData(
-      //  textTheme: GoogleFonts.poppinsTextTheme(ThemeData.dark().textTheme),  // Set Poppins globally
-      // ),
+
+      theme: ThemeData(
+       textTheme: GoogleFonts.poppinsTextTheme(ThemeData.light().textTheme),  // Set Poppins globally
+      ),
+
       title: 'iHear',
      // Optional: Dark theme like YouTube
-      home: const MainScreen(), // Start with SplashScreen
+      home:const SplashScreen(), // Start with SplashScreen
 
     );
   }
