@@ -5,6 +5,7 @@ import '../models/user_profile.dart';
 import '../widgets/berita_card.dart';
 import '../widgets/feature_button.dart';
 import '../widgets/berita_detail.dart';
+import '../view/sign_language_screen.dart';
 
 void main() {
   runApp(MyApp());
@@ -158,8 +159,11 @@ class _HomeScreenState extends State<HomeScreen> {
                           'imagePath': 'assets/scan_icon.png',
                           'label': 'Scan to Text',
                           'onTap': () {
-                            print("Scan to Text clicked");
-                            // TODO: Navigate to Scan page
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                  builder: (context) => SignLanguageScreen()),
+                            );
                           },
                         },
                         {
