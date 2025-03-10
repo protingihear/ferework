@@ -49,7 +49,6 @@ class _LessonkategoriState extends State<Lessonkategori> {
       body: SingleChildScrollView(
         child: Column(
           children: [
-            // Card utama di atas
             Center(
               child: Container(
                 decoration: BoxDecoration(
@@ -58,8 +57,8 @@ class _LessonkategoriState extends State<Lessonkategori> {
                     image: AssetImage('assets/background_lesson1.png'),
                     fit: BoxFit.cover,
                     colorFilter: ColorFilter.mode(
-                      Colors.black45, // Warna gelap
-                      BlendMode.darken, // Efek gelap
+                      Colors.black45,
+                      BlendMode.darken,
                     ),
                   ),
                 ),
@@ -99,19 +98,21 @@ class _LessonkategoriState extends State<Lessonkategori> {
               ),
             ),
             const SizedBox(height: 12),
-
-            // List dari pelajaran
             FutureBuilder<List<Map<String, dynamic>>>(
               future: lessons,
               builder: (context, snapshot) {
                 if (snapshot.connectionState == ConnectionState.waiting) {
-                  return CircularProgressIndicator(); // Tampilkan loading jika masih fetching data
+                  return CircularProgressIndicator();
                 } else if (snapshot.hasError) {
-                  return Text(
-                      "Error: ${snapshot.error}"); // Tampilkan error jika ada masalah
+                  return Text("Error: ${snapshot.error}");
                 } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
-                  return Text("Tidak ada data."); // Jika list kosong
+                  return Text("Tidak ada data.");
                 } else {
+                  List<Map<String, dynamic>> sortedLessons =
+                      List.from(snapshot.data!);
+                  sortedLessons.sort((a, b) =>
+                      (a['name'] ?? '').compareTo(b['name'] ?? ''));
+
                   return Container(
                     margin:
                         const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
@@ -122,9 +123,9 @@ class _LessonkategoriState extends State<Lessonkategori> {
                     child: ListView.builder(
                       shrinkWrap: true,
                       physics: NeverScrollableScrollPhysics(),
-                      itemCount: snapshot.data!.length,
+                      itemCount: sortedLessons.length,
                       itemBuilder: (context, index) {
-                        var lesson = snapshot.data![index];
+                        var lesson = sortedLessons[index];
 
                         return FutureBuilder<Map<String, dynamic>?>(
                           future: MethodService.fetchProgress(
@@ -176,8 +177,7 @@ class _LessonkategoriState extends State<Lessonkategori> {
                                       ),
                                       SizedBox(height: 8),
                                       LinearProgressIndicator(
-                                        value: (progress / 100).clamp(0.0,
-                                            1.0), // Biar gak lebih dari 1.0
+                                        value: (progress / 100).clamp(0.0, 1.0),
                                         backgroundColor: Colors.white38,
                                         valueColor:
                                             AlwaysStoppedAnimation<Color>(

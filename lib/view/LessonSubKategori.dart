@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import 'package:reworkmobile/services/method_service.dart';
+import 'package:reworkmobile/view/LessonDisplay.dart';
 
 class SubCategoryPage extends StatefulWidget {
   final String name;
@@ -14,16 +15,33 @@ class SubCategoryPage extends StatefulWidget {
 
 class _SubCategoryPageState extends State<SubCategoryPage> {
   String? userId;
+  List<dynamic> sortedSubCategory = [];
+  List<dynamic> filteredSubCategory = [];
+  final TextEditingController searchController = TextEditingController();
 
   @override
   void initState() {
     super.initState();
     saveUser();
+    sortSubCategories();
   }
 
   void saveUser() async {
     userId = await MethodService.getUserId();
     setState(() {});
+  }
+
+  void sortSubCategories() {
+    sortedSubCategory = List.from(widget.subCategory);
+    sortedSubCategory.sort((a, b) => a['name'].toString().compareTo(b['name'].toString()));
+    filteredSubCategory = List.from(sortedSubCategory); // Inisialisasi filter dengan daftar awal
+    setState(() {});
+  }
+
+  void search(String query) {
+    setState(() {
+      filteredSubCategory = MethodService.searchSubCategory(query, sortedSubCategory);
+    });
   }
 
   @override
@@ -61,6 +79,8 @@ class _SubCategoryPageState extends State<SubCategoryPage> {
                 ],
               ),
               child: TextField(
+                controller: searchController,
+                onChanged: search, // Memanggil fungsi search setiap kali teks berubah
                 decoration: InputDecoration(
                   hintText: 'Cari kategori yang kamu suka!',
                   border: OutlineInputBorder(
@@ -68,6 +88,15 @@ class _SubCategoryPageState extends State<SubCategoryPage> {
                     borderSide: BorderSide.none,
                   ),
                   prefixIcon: const Icon(Icons.search, color: Colors.blue),
+                  suffixIcon: searchController.text.isNotEmpty
+                      ? IconButton(
+                          icon: const Icon(Icons.close, color: Colors.red),
+                          onPressed: () {
+                            searchController.clear();
+                            search('');
+                          },
+                        )
+                      : null,
                   filled: true,
                   fillColor: Colors.white,
                   contentPadding: const EdgeInsets.symmetric(vertical: 14.0),
@@ -77,15 +106,15 @@ class _SubCategoryPageState extends State<SubCategoryPage> {
             const SizedBox(height: 16),
             Expanded(
               child: ListView.builder(
-                itemCount: widget.subCategory.length,
+                itemCount: filteredSubCategory.length,
                 itemBuilder: (context, index) {
                   return GestureDetector(
                     onTap: () async {
-                      print("aduh kamu nih megang-megang sembarangan");
-
                       if (userId != null) {
                         bool result = await MethodService.updateStatus(
-                          widget.subCategory[index]['id'].toString(), true, userId!,
+                          filteredSubCategory[index]['id'].toString(),
+                          true,
+                          userId!,
                         );
 
                         if (result) {
@@ -96,6 +125,18 @@ class _SubCategoryPageState extends State<SubCategoryPage> {
                       } else {
                         print("User ID belum tersedia!");
                       }
+
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => VideoPlayerPage(
+                            videoUrl: MethodService.convertDriveLink(
+                                filteredSubCategory[index]['video']),
+                            title: filteredSubCategory[index]['name'],
+                            description: filteredSubCategory[index]['description'],
+                          ),
+                        ),
+                      );
                     },
                     child: Container(
                       decoration: BoxDecoration(
@@ -112,7 +153,7 @@ class _SubCategoryPageState extends State<SubCategoryPage> {
                       ),
                       margin: const EdgeInsets.symmetric(vertical: 8),
                       child: ListTile(
-                        title: Text(widget.subCategory[index]['name'].toString()),
+                        title: Text(filteredSubCategory[index]['name'].toString()),
                         trailing: IconButton(
                           icon: const Icon(
                             LucideIcons.play,
