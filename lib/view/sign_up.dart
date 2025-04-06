@@ -68,15 +68,20 @@ class sign_up extends State<Sign_Up_Page> {
                 Container(
                   decoration: BoxDecoration(
                     color: Colors.green[100],
-                    borderRadius: BorderRadius.circular(8),
+                    borderRadius: BorderRadius.circular(20),
                   ),
                   child: TextField(
                     controller: usernameController,
                     decoration: InputDecoration(
                       hintText: 'Username',
-                      border: InputBorder.none,
+                      border: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(20),
+        borderSide: BorderSide.none,
+      ),
                       filled: true,
-                      fillColor: Colors.green[100],
+                      fillColor:Color(0xFFD3F0D0),
+                      
+                      
                       prefixIcon: Icon(Icons.person),
                     ),
                   ),
