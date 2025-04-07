@@ -49,15 +49,18 @@ class sign_up extends State<Sign_Up_Page> {
                 Container(
                   decoration: BoxDecoration(
                     color: Colors.green[100],
-                    borderRadius: BorderRadius.circular(8),
+                    borderRadius: BorderRadius.circular(20),
                   ),
                   child: TextField(
                     controller: nameController,
                     decoration: InputDecoration(
                       hintText: 'Name',
-                      border: InputBorder.none,
+                      border: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(20),
+        borderSide: BorderSide.none,
+      ),
                       filled: true,
-                      fillColor: Colors.green[100],
+                      fillColor: Color(0xFFD3F0D0),
                       prefixIcon: Icon(Icons.person),
                     ),
                   ),
@@ -92,15 +95,19 @@ class sign_up extends State<Sign_Up_Page> {
                 Container(
                   decoration: BoxDecoration(
                     color: Colors.green[100],
-                    borderRadius: BorderRadius.circular(8),
+                    borderRadius: BorderRadius.circular(20),
                   ),
                   child: TextField(
                     controller: registEmailController,
                     decoration: InputDecoration(
                       hintText: 'Email',
-                      border: InputBorder.none,
+                      //border: InputBorder.none,
+                      border: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(20),
+        borderSide: BorderSide.none,
+      ),
                       filled: true,
-                      fillColor: Colors.green[100],
+                      fillColor: Color(0xFFD3F0D0),
                       prefixIcon: Icon(Icons.email),
                     ),
                   ),
@@ -111,15 +118,19 @@ class sign_up extends State<Sign_Up_Page> {
                 Container(
                   decoration: BoxDecoration(
                     color: Colors.green[100],
-                    borderRadius: BorderRadius.circular(8),
+                    borderRadius: BorderRadius.circular(20),
                   ),
                   child: TextField(
                     controller: registPasswordController,
                     decoration: InputDecoration(
                       hintText: 'Password',
-                      border: InputBorder.none,
+                      //border: InputBorder.none,
+                      border: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(20),
+        borderSide: BorderSide.none,
+      ),
                       filled: true,
-                      fillColor: Colors.green[100],
+                      fillColor: Color(0xFFD3F0D0),
                       prefixIcon: Icon(Icons.lock),
                     ),
                     obscureText: true,
@@ -131,15 +142,19 @@ class sign_up extends State<Sign_Up_Page> {
                 Container(
                   decoration: BoxDecoration(
                     color: Colors.green[100],
-                    borderRadius: BorderRadius.circular(8),
+                    borderRadius: BorderRadius.circular(20),
                   ),
                   child: TextField(
                     controller: confirmPasswordController,
                     decoration: InputDecoration(
                       hintText: 'Confirm Password',
-                      border: InputBorder.none,
+                      //border: InputBorder.none,
                       filled: true,
-                      fillColor: Colors.green[100],
+                      border: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(20),
+        borderSide: BorderSide.none,
+      ),
+                      fillColor: Color(0xFFD3F0D0),
                       prefixIcon: Icon(Icons.lock),
                     ),
                     obscureText: true,
@@ -331,6 +346,7 @@ class sign_up extends State<Sign_Up_Page> {
                               ScaffoldMessenger.of(context).showSnackBar(
                                 SnackBar(
                                   content: Text(
+                                      
                                       'Error: ${errorResponse['message'] ?? 'Terjadi kesalahan'}'),
                                   backgroundColor: Colors.red,
                                 ),
@@ -339,6 +355,7 @@ class sign_up extends State<Sign_Up_Page> {
                           } catch (e) {
                             ScaffoldMessenger.of(context).showSnackBar(
                               SnackBar(
+                                
                                 content: Text('Terjadi kesalahan jaringan: $e'),
                                 backgroundColor: Colors.red,
                               ),
@@ -362,7 +379,9 @@ class sign_up extends State<Sign_Up_Page> {
                   onPressed: () {
                     Navigator.pop(context); // Kembali ke halaman sebelumnya
                   },
-                  child: Text('Cancel', style: TextStyle(fontSize: 16)),
+                  child: Text('Cancel', style: TextStyle(fontSize: 16,color: Colors.white)
+                  
+                  ),
                 ),
                 SizedBox(
                   height: 30,

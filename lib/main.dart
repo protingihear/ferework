@@ -24,7 +24,7 @@ class MyApp extends StatelessWidget {
 
       title: 'iHear',
      // Optional: Dark theme like YouTube
-      home:const SplashScreen(), // Start with SplashScreen
+      home: HomeScreen(), // Start with SplashScreen
 
     );
   }

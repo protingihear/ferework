@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:reworkmobile/view/LessonAhliBahasa.dart';
 import 'package:reworkmobile/view/LessonKategori.dart';
 import 'dart:convert';
 import '../services/api_service.dart';
@@ -7,22 +6,7 @@ import '../models/user_profile.dart';
 import '../widgets/berita_card.dart';
 import '../widgets/feature_button.dart';
 import '../widgets/berita_detail.dart';
-import '../view/sign_language_screen.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-
-void main() {
-  runApp(MyApp());
-}
-
-class MyApp extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      debugShowCheckedModeBanner: false,
-      home: HomeScreen(),
-    );
-  }
-}
+import 'package:reworkmobile/view/voice_to_text.dart'; // <-- Import VoiceToTextScreen
 
 class HomeScreen extends StatefulWidget {
   @override
@@ -34,7 +18,6 @@ class _HomeScreenState extends State<HomeScreen> {
   UserProfile? _userProfile;
   bool _isLoading = true;
   bool _hasError = false;
-  int _errorCode = 0;
 
   @override
   void initState() {
@@ -58,7 +41,6 @@ class _HomeScreenState extends State<HomeScreen> {
       setState(() {
         _beritaList = berita;
         _isLoading = false;
-        _hasError = false;
       });
     } catch (e) {
       setState(() {
@@ -86,7 +68,6 @@ class _HomeScreenState extends State<HomeScreen> {
               _buildHeader(),
               _buildFeatureButtons(),
               _buildBeritaSection(),
-
             ],
           ),
         ),
@@ -122,13 +103,16 @@ class _HomeScreenState extends State<HomeScreen> {
                         : null,
                   ),
                   SizedBox(width: 10),
-                  Text(_userProfile?.name ?? "Loading...",
-                      style: TextStyle(fontSize: 16, color: Color(0xFF195728), fontWeight: FontWeight.bold)),
+                  Text(
+                    _userProfile?.name ?? "Loading...",
+                    style: TextStyle(
+                        fontSize: 16,
+                        color: Color(0xFF195728),
+                        fontWeight: FontWeight.bold),
+                  ),
                 ],
               ),
-              SizedBox(
-                height: 80,
-              ),
+              SizedBox(height: 80),
               Text(
                 _userProfile != null
                     ? "Selamat datang, ${_userProfile!.name.split(' ').first}!"
@@ -178,14 +162,19 @@ class _HomeScreenState extends State<HomeScreen> {
               {
                 'imagePath': 'assets/voice_icon.png',
                 'label': 'Voice to Text',
-                'onTap': () {}
+                'onTap': () => Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                          builder: (context) => VoiceToTextScreen()),
+                    ),
               },
               {
                 'imagePath': 'assets/lesson_icon.png',
                 'label': 'Lesson',
                 'onTap': () => Navigator.push(
                       context,
-                      MaterialPageRoute(builder: (context) => Lessonkategori()),
+                      MaterialPageRoute(
+                          builder: (context) => Lessonkategori()),
                     ),
               },
             ],
@@ -207,9 +196,7 @@ class _HomeScreenState extends State<HomeScreen> {
           _isLoading
               ? Center(child: CircularProgressIndicator())
               : _hasError
-                  ? Center(
-                      child:
-                          Text("Error $_errorCode: Berita tidak dapat dimuat"))
+                  ? Center(child: Text("Gagal memuat berita"))
                   : SizedBox(
                       height: 200,
                       child: ListView.builder(
@@ -218,7 +205,8 @@ class _HomeScreenState extends State<HomeScreen> {
                         itemBuilder: (context, index) {
                           return BeritaCard(
                             berita: _beritaList[index],
-                            onTap: () => _showDetailBerita(_beritaList[index]),
+                            onTap: () =>
+                                _showDetailBerita(_beritaList[index]),
                           );
                         },
                       ),
