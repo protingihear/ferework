@@ -1,13 +1,14 @@
 import 'package:flutter/material.dart';
-import 'package:reworkmobile/view/LessonKategori.dart';
+import 'package:reworkmobile/view/lessonkategori.dart'; // Original import preserved
 import 'dart:convert';
 import '../services/api_service.dart';
 import '../models/user_profile.dart';
 import '../widgets/berita_card.dart';
 import '../widgets/feature_button.dart';
 import '../widgets/berita_detail.dart';
-import 'package:reworkmobile/view/voice_to_text.dart'; // <-- Import VoiceToTextScreen
+import 'package:reworkmobile/view/voice_to_text.dart';
 
+import 'package:reworkmobile/view/Relation.dart';
 class HomeScreen extends StatefulWidget {
   @override
   _HomeScreenState createState() => _HomeScreenState();
@@ -18,12 +19,26 @@ class _HomeScreenState extends State<HomeScreen> {
   UserProfile? _userProfile;
   bool _isLoading = true;
   bool _hasError = false;
+  final ScrollController _scrollController = ScrollController();
+  bool _showBackToTop = false;
 
   @override
   void initState() {
     super.initState();
     _loadUserProfile();
     _loadBerita();
+    
+    _scrollController.addListener(() {
+      setState(() {
+        _showBackToTop = _scrollController.offset > 400;
+      });
+    });
+  }
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
   }
 
   Future<void> _loadUserProfile() async {
@@ -47,6 +62,7 @@ class _HomeScreenState extends State<HomeScreen> {
         _isLoading = false;
         _hasError = true;
       });
+      print("Error fetching berita: $e");
     }
   }
 
@@ -57,19 +73,45 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
+  void _scrollToTop() {
+    _scrollController.animateTo(
+      0,
+      duration: Duration(milliseconds: 500),
+      curve: Curves.easeInOut,
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
-    return SafeArea(
-      child: Scaffold(
-        body: SingleChildScrollView(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              _buildHeader(),
-              _buildFeatureButtons(),
-              _buildBeritaSection(),
-            ],
-          ),
+    return Scaffold(
+      body: SafeArea(
+        child: Stack(
+          children: [
+            SingleChildScrollView(
+              controller: _scrollController,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  _buildHeader(),
+                  _buildFeatureButtons(),
+                  _buildBeritaSection(),
+                  SizedBox(height: 20),
+                ],
+              ),
+            ),
+            
+            if (_showBackToTop)
+              Positioned(
+                bottom: 20,
+                right: 20,
+                child: FloatingActionButton(
+                  mini: true,
+                  backgroundColor: Colors.blue[700],
+                  child: Icon(Icons.arrow_upward, color: Colors.white),
+                  onPressed: _scrollToTop,
+                ),
+              ),
+          ],
         ),
       ),
     );
@@ -139,9 +181,16 @@ class _HomeScreenState extends State<HomeScreen> {
 
   ImageProvider<Object>? _getUserProfileImage() {
     if (_userProfile?.imageUrl != null && _userProfile!.imageUrl.isNotEmpty) {
-      return _userProfile!.imageUrl.startsWith('data:image')
-          ? MemoryImage(base64Decode(_userProfile!.imageUrl.split(',')[1]))
-          : NetworkImage(_userProfile!.imageUrl);
+      if (_userProfile!.imageUrl.startsWith('data:image')) {
+        try {
+          return MemoryImage(base64Decode(_userProfile!.imageUrl.split(',')[1]));
+        } catch (e) {
+          print("Error decoding base64 image: $e");
+          return null;
+        }
+      } else {
+        return NetworkImage(_userProfile!.imageUrl);
+      }
     }
     return null;
   }
@@ -157,11 +206,17 @@ class _HomeScreenState extends State<HomeScreen> {
               {
                 'imagePath': 'assets/scan_icon.png',
                 'label': 'Scan to Text',
-                'onTap': () {}
+                'onTap': () =>Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                          builder: (context) => RelationsPage()),
+                    ),
+                'iconSize': 40.0,
               },
               {
                 'imagePath': 'assets/voice_icon.png',
                 'label': 'Voice to Text',
+                'iconSize': 40.0,
                 'onTap': () => Navigator.push(
                       context,
                       MaterialPageRoute(
@@ -171,10 +226,11 @@ class _HomeScreenState extends State<HomeScreen> {
               {
                 'imagePath': 'assets/lesson_icon.png',
                 'label': 'Lesson',
+                'iconSize': 40.0,
                 'onTap': () => Navigator.push(
                       context,
                       MaterialPageRoute(
-                          builder: (context) => Lessonkategori()),
+                           builder: (context) => Lessonkategori()), // Preserved original case
                     ),
               },
             ],
@@ -190,27 +246,34 @@ class _HomeScreenState extends State<HomeScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text("Berita Terbaru",
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-          SizedBox(height: 10),
+          Text(
+            "Berita Terbaru",
+            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+          ),
+          SizedBox(height: 16),
           _isLoading
               ? Center(child: CircularProgressIndicator())
               : _hasError
                   ? Center(child: Text("Gagal memuat berita"))
-                  : SizedBox(
-                      height: 200,
-                      child: ListView.builder(
-                        scrollDirection: Axis.horizontal,
-                        itemCount: _beritaList.length,
-                        itemBuilder: (context, index) {
-                          return BeritaCard(
-                            berita: _beritaList[index],
-                            onTap: () =>
-                                _showDetailBerita(_beritaList[index]),
-                          );
-                        },
-                      ),
-                    ),
+                  : _beritaList.isEmpty
+                      ? Center(
+                          child: Text(
+                            "Tidak ada berita tersedia",
+                            style: TextStyle(color: Colors.grey),
+                          ),
+                        )
+                      : ListView.separated(
+                          physics: NeverScrollableScrollPhysics(),
+                          shrinkWrap: true,
+                          itemCount: _beritaList.length,
+                          separatorBuilder: (context, index) => SizedBox(height: 16),
+                          itemBuilder: (context, index) {
+                            return BeritaCard(
+                              berita: _beritaList[index],
+                              onTap: () => _showDetailBerita(_beritaList[index]),
+                            );
+                          },
+                        ),
         ],
       ),
     );
