@@ -326,7 +326,7 @@ class sign_up extends State<Sign_Up_Page> {
                           try {
                             var response = await http.post(
                               Uri.parse(
-                                  'https://berework-production.up.railway.app/auth/register'),
+                                  'https://berework-production-ad0a.up.railway.app/auth/register'),
                               headers: {
                                 'Content-Type': 'application/json',
                               },

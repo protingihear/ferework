@@ -5,10 +5,10 @@ import '../models/post.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class ApiService {
-   static const String baseUrl = 'https://berework-production.up.railway.app/api';
+   static const String baseUrl = 'https://berework-production-ad0a.up.railway.app/api';
 
   static Future<List<Community>> fetchCommunities() async {
-    final response = await http.get(Uri.parse('https://berework-production.up.railway.app/api/communities'));
+    final response = await http.get(Uri.parse('https://berework-production-ad0a.up.railway.app/api/communities'));
 
     if (response.statusCode == 200) {
       List<dynamic> data = jsonDecode(response.body); 
@@ -20,7 +20,7 @@ class ApiService {
 
 
   static Future<List<Post>> fetchPosts(int communityId) async {
-    final response = await http.get(Uri.parse("https://berework-production.up.railway.app/api/communities/$communityId/posts"));
+    final response = await http.get(Uri.parse("https://berework-production-ad0a.up.railway.app/api/communities/$communityId/posts"));
     
     if (response.statusCode == 200) {
       final List<dynamic> data = json.decode(response.body);
@@ -41,7 +41,7 @@ static Future<List<dynamic>> fetchCommunityPosts(int communityId) async {
   }
 
 static Future<void> createPost(int communityId, String content) async {
-  final url = Uri.parse('https://berework-production.up.railway.app/api/communities/$communityId/posts');
+  final url = Uri.parse('https://berework-production-ad0a.up.railway.app/api/communities/$communityId/posts');
 
   try {
     final prefs = await SharedPreferences.getInstance();

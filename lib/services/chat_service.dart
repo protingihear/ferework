@@ -5,7 +5,7 @@ import '../models/chat_message.dart';
 import '../models/chat_room.dart';
 
 class ChatService {
-  static const String _baseUrl = 'https://berework-production.up.railway.app';
+  static const String _baseUrl = 'https://berework-production-ad0a.up.railway.app';
 
   Future<String?> _getSessionCookie() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();

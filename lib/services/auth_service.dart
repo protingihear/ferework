@@ -10,7 +10,7 @@ Future<void> initPrefs() async {
 }
 
 class AuthService {
-  static const String _baseUrl = 'https://berework-production.up.railway.app';
+  static const String _baseUrl = 'https://berework-production-ad0a.up.railway.app';
 
   // Pakai http.Client untuk persist cookie
   final http.Client _client = http.Client(); 

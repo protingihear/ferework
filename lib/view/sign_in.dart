@@ -38,7 +38,7 @@ late SharedPreferences prefs; // Declare prefs
     prefs = await SharedPreferences.getInstance();
   }
 
-  void _handleLogin() async {
+void _handleLogin() async {
   await _initPrefs(); // Ensure prefs is initialized before using it
 
   String email = _emailController.text;
@@ -48,23 +48,10 @@ late SharedPreferences prefs; // Declare prefs
     String? errorMessage = await _authService.login(email, password);
 
     if (errorMessage == null) {
-      final prefs = await SharedPreferences.getInstance();
-      int? userId = prefs.getInt('user_id'); // 🔥 Retrieve user_id
-
-      if (userId == null) {
-        print("❌ Error: user_id is null after login.");
-        return;
-      }
-
-      // ✅ Login successful, navigate with correct userId
+      // ✅ Login successful, navigate to HomeScreen
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(
-          builder: (context) => ChatPage(
-            roomId: "67ce7cb40a1e30fecfc44818",
-            userId: userId.toString(), // <-- Ensure this is not null
-          ),
-        ),
+        MaterialPageRoute(builder: (context) => HomeScreen()), // <-- Diubah ke HomeScreen
       );
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -77,7 +64,6 @@ late SharedPreferences prefs; // Declare prefs
     );
   }
 }
-
 
 @override
 Widget build(BuildContext context) {

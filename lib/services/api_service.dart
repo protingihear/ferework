@@ -5,7 +5,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../models/user_profile.dart';
 
 class ApiService {
-  static const String _baseUrl = 'https://berework-production.up.railway.app';
+  static const String _baseUrl = 'https://berework-production-ad0a.up.railway.app';
 
   static Future<UserProfile> fetchUserProfile() async {
     try {

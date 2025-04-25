@@ -5,7 +5,7 @@ import '../models/post.dart';
 
 class ApiService {
   static Future<List<Community>> fetchCommunities() async {
-    final response = await http.get(Uri.parse("https://berework-production.up.railway.app/api/communities"));
+    final response = await http.get(Uri.parse("https://berework-production-ad0a.up.railway.app/api/communities"));
     
     if (response.statusCode == 200) {
       final List<dynamic> data = json.decode(response.body);
@@ -16,7 +16,7 @@ class ApiService {
   }
 
   static Future<List<Post>> fetchPosts(int communityId) async {
-    final response = await http.get(Uri.parse("https://berework-production.up.railway.app/api/communities/$communityId/posts"));
+    final response = await http.get(Uri.parse("https://berework-production-ad0a.up.railway.app/api/communities/$communityId/posts"));
     
     if (response.statusCode == 200) {
       final List<dynamic> data = json.decode(response.body);
