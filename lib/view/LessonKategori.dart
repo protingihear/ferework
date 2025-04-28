@@ -102,7 +102,7 @@ class _LessonkategoriState extends State<Lessonkategori> {
               future: lessons,
               builder: (context, snapshot) {
                 if (snapshot.connectionState == ConnectionState.waiting) {
-                  return CircularProgressIndicator();
+                  return Text("");
                 } else if (snapshot.hasError) {
                   return Text("Error: ${snapshot.error}");
                 } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
@@ -131,10 +131,6 @@ class _LessonkategoriState extends State<Lessonkategori> {
                           future: MethodService.fetchProgress(
                               lesson['id'].toString(), userId!),
                           builder: (context, progressSnapshot) {
-                            if (progressSnapshot.connectionState ==
-                                ConnectionState.waiting) {
-                              return Center(child: CircularProgressIndicator());
-                            }
 
                             var progress =
                                 progressSnapshot.data?['progress'] ?? 0.0;

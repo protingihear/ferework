@@ -203,50 +203,6 @@ class sign_up extends State<Sign_Up_Page> {
                   child: Text('Pilih Peran*',
                       style: TextStyle(fontWeight: FontWeight.bold)),
                 ),
-                Column(
-                  children: [
-                    Row(
-                      mainAxisSize: MainAxisSize
-                          .min, // Mengurangi ruang kosong di antara children
-                      children: [
-                        Expanded(
-                          child: RadioListTile<String>(
-                            title: Text('Ahli Bahasa'),
-                            value: 'admin',
-                            groupValue: role,
-                            onChanged: (value) {
-                              setState(() {
-                                role = value;
-                              });
-                            },
-                          ),
-                        ),
-                        Expanded(
-                          child: RadioListTile<String>(
-                            title: Text('Teman Tuli'),
-                            value: 'user',
-                            groupValue: role,
-                            onChanged: (value) {
-                              setState(() {
-                                role = value;
-                              });
-                            },
-                          ),
-                        ),
-                      ],
-                    ),
-                    RadioListTile<String>(
-                      title: Text('Teman Dengar'),
-                      value: 'user',
-                      groupValue: role,
-                      onChanged: (value) {
-                        setState(() {
-                          role = value;
-                        });
-                      },
-                    ),
-                  ],
-                ),
 
                 // Terms and Conditions Checkbox
                 Row(
@@ -318,7 +274,8 @@ class sign_up extends State<Sign_Up_Page> {
                             'email': inputEmail,
                             'username': inputUsername,
                             'password': inputPassword,
-                            'role': role ?? 'user',
+                            'role': 'user',
+                            'bio': 'Hallo, aku adalah pengguna baru IHear'
                           };
 
                           print("Request Data: ${jsonEncode(requestData)}");
