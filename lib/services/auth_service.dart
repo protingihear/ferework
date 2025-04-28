@@ -86,9 +86,32 @@ class AuthService {
   }
 
   /// Fungsi Logout
-  Future<void> logout() async {
-    await prefs.remove('session_cookie');
-    await prefs.remove('tt_cookie');
-    print("❌ Session dihapus dari local storage.");
+  static Future<void> logout() async {
+    final prefs = await SharedPreferences.getInstance();
+    final sessionId = prefs.getString('session_cookie');
+
+    if (sessionId != null) {
+      try {
+        final response = await http.post(
+          Uri.parse('$_baseUrl/logout'),
+          headers: {
+            'Cookie': 'session_id=$sessionId',
+          },
+        );
+
+        if (response.statusCode == 200) {
+          // Clear cookies dari local storage
+          await prefs.remove('session_cookie');
+          await prefs.remove('tt_cookie');
+          print('Logout berhasil.');
+        } else {
+          print('Logout gagal. Status code: ${response.statusCode}');
+        }
+      } catch (e) {
+        print('Terjadi kesalahan saat logout: $e');
+      }
+    } else {
+      print('Session ID tidak ditemukan.');
+    }
   }
 }

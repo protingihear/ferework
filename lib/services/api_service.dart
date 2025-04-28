@@ -105,4 +105,5 @@ class ApiService {
       throw Exception("Failed to fetch berita: $e");
     }
   }
+  
 }

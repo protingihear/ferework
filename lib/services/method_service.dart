@@ -87,7 +87,7 @@ class MethodService {
       final response = await http.get(Uri.parse(apiUrl));
       if (response.statusCode == 200) {
         List<dynamic> data = jsonDecode(response.body);
-        print(data);
+        
         return List<Map<String, dynamic>>.from(data);
       } else {
         return [];

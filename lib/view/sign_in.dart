@@ -51,7 +51,7 @@ void _handleLogin() async {
       // ✅ Login successful, navigate to HomeScreen
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(builder: (context) => HomeScreen()), // <-- Diubah ke HomeScreen
+        MaterialPageRoute(builder: (context) => MainScreen()), // <-- Diubah ke HomeScreen
       );
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -121,7 +121,7 @@ Widget build(BuildContext context) {
   child: TextField(
     controller: _emailController,
     decoration: InputDecoration(
-      hintText: 'Email',
+      hintText: 'Username',
       filled: true,
       fillColor: Color(0xFFD3F0D0),
       prefixIcon: Icon(Icons.email),
