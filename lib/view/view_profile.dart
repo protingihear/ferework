@@ -4,6 +4,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:reworkmobile/models/user_profile.dart';
 import 'package:reworkmobile/services/api_service.dart';
+import 'package:reworkmobile/view/chat_view.dart';
 import 'package:reworkmobile/view/edit_profile.dart';
 import 'package:reworkmobile/view/view_setting.dart';
 import 'sign_in.dart';
@@ -74,7 +75,7 @@ class _ProfilePageState extends State<ProfilePage> {
     }
 
     return Scaffold(
-      backgroundColor: Colors.grey.shade100,
+      backgroundColor: Colors.white,
       body: FutureBuilder<UserProfile>(
         future: _profileFuture,
         builder: (context, snapshot) {
@@ -82,9 +83,10 @@ class _ProfilePageState extends State<ProfilePage> {
             return const Center(child: CircularProgressIndicator());
           } else if (snapshot.hasError) {
             return Center(
-                child: Text('Error loading profile: ${snapshot.error}'));
+                child: Text('⚠️ Waduh! Gagal muat profil: ${snapshot.error}'));
           } else if (!snapshot.hasData) {
-            return const Center(child: Text('No profile data found'));
+            return const Center(
+                child: Text('🤷‍♂️ Data profil nggak ketemu nih!'));
           }
 
           final profile = snapshot.data!;
@@ -115,8 +117,8 @@ class _ProfilePageState extends State<ProfilePage> {
                             mainAxisAlignment: MainAxisAlignment.spaceAround,
                             children: [
                               _buildStatColumn('Post', '0'),
-                              _buildStatColumn('Following', '0'),
-                              _buildStatColumn('Followers', '0'),
+                              _buildStatColumn('Teman', '0'),
+                              _buildStatColumn('Fans', '0'),
                             ],
                           ),
                         ),
@@ -132,15 +134,18 @@ class _ProfilePageState extends State<ProfilePage> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            profile.name,
+                            profile.name + ' 😎',
                             style: const TextStyle(
-                                fontSize: 18, fontWeight: FontWeight.bold),
+                              fontSize: 20,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.green,
+                            ),
                           ),
                           const SizedBox(height: 4),
                           Text(
                             '"${profile.bio}"',
                             style: const TextStyle(
-                                fontSize: 12, color: Colors.black54),
+                                fontSize: 13, color: Colors.black87),
                           ),
                         ],
                       ),
@@ -152,21 +157,27 @@ class _ProfilePageState extends State<ProfilePage> {
                     child: Row(
                       children: [
                         Expanded(
-                          child: OutlinedButton(
+                          child: OutlinedButton.icon(
                             onPressed: () {
                               Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (context) => SettingsPage(
-                                        profile: profile,
-                                        onUpdateProfile: _updateProfile),
-                                  ));
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => SettingsPage(
+                                    profile: profile,
+                                    onUpdateProfile: _updateProfile,
+                                  ),
+                                ),
+                              );
                             },
-                            style: OutlinedButton.styleFrom(
-                              side: BorderSide(color: Colors.grey.shade400),
+                            icon:
+                                const Icon(Icons.settings, color: Colors.green),
+                            label: const Text(
+                              'Atur Profil 💼',
+                              style: TextStyle(color: Colors.green),
                             ),
-                            child: const Text('Pengaturan',
-                                style: TextStyle(color: Colors.black)),
+                            style: OutlinedButton.styleFrom(
+                              side: BorderSide(color: Colors.green.shade400),
+                            ),
                           ),
                         ),
                       ],
@@ -182,10 +193,10 @@ class _ProfilePageState extends State<ProfilePage> {
                             currentView = 'add';
                           });
                         },
-                        icon: const Icon(Icons.add_box_outlined),
+                        icon: const Icon(Icons.add_reaction_outlined),
                         iconSize: 32,
+                        color: Colors.green.shade700,
                       ),
-                      const SizedBox(width: 24),
                       IconButton(
                         onPressed: () async {
                           setState(() {
@@ -201,25 +212,26 @@ class _ProfilePageState extends State<ProfilePage> {
                         },
                         icon: const Icon(Icons.chat_bubble_outline),
                         iconSize: 32,
+                        color: Colors.green.shade700,
                       ),
                     ],
                   ),
-        
                   const Divider(thickness: 1),
-                  
                   if (currentView == 'add') ...[
                     const SizedBox(height: 16),
                     Center(
                       child: Column(
                         children: const [
                           Text(
-                            'Bagi Aktifitas Kamu',
+                            '📸 Bagi Aktifitas Kamu!',
                             style: TextStyle(
-                                fontSize: 16, fontWeight: FontWeight.bold),
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.green),
                           ),
                           SizedBox(height: 8),
                           Text(
-                            'Saat anda membagikan postingan,\nakan muncul di aktivitas anda',
+                            'Belum ada postingan nih~\nYuk, bagikan momen seru kamu! 😄',
                             textAlign: TextAlign.center,
                             style:
                                 TextStyle(fontSize: 13, color: Colors.black54),
@@ -235,29 +247,44 @@ class _ProfilePageState extends State<ProfilePage> {
                       const SizedBox(height: 16),
                       ListView.builder(
                         shrinkWrap: true,
-                        physics:
-                            const NeverScrollableScrollPhysics(), // biar gak nabrak scroll utama
+                        physics: const NeverScrollableScrollPhysics(),
                         itemCount: users.length,
                         itemBuilder: (context, index) {
                           final user = users[index];
-                          return ListTile(
-                            leading: CircleAvatar(
-                              backgroundImage:
-                                  NetworkImage(user['imageUrl'] ?? ''),
+                          return Card(
+                            margin: const EdgeInsets.symmetric(
+                                horizontal: 16, vertical: 6),
+                            shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12)),
+                            child: ListTile(
+                              leading: CircleAvatar(
+                                backgroundImage:
+                                    NetworkImage(user['imageUrl'] ?? ''),
+                              ),
+                              title: Text(
+                                  user['firstname'] + " " + user['lastname']),
+                              subtitle: Text(user['bio'] ?? ''),
+                              trailing:
+                                  const Icon(Icons.chat, color: Colors.green),
+                              onTap: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) => ChatScreen(
+                                      id_user_receiver: user['id'],
+                                      name: user['firstname'] +
+                                          " " +
+                                          user['lastname'],
+                                    ),
+                                  ),
+                                );
+                              },
                             ),
-                            title: Text(
-                                user['firstname'] + " " + user['lastname'] ??
-                                    'Unknown'),
-                            subtitle: Text(user['bio'] ?? ''),
-                            onTap: () {
-                              // aksi kalau klik user
-                            },
                           );
                         },
                       ),
                     ]
                   ],
-                  
                 ],
               ),
             ),
@@ -295,86 +322,3 @@ class _ProfilePageState extends State<ProfilePage> {
     );
   }
 }
-
-
-// class AccountSettings extends StatefulWidget {
-//   final UserProfile profile;
-
-//   const AccountSettings({Key? key, required this.profile}) : super(key: key);
-
-//   @override
-//   State<AccountSettings> createState() => _AccountSettingsState();
-// }
-
-// class _AccountSettingsState extends State<AccountSettings> {
-//   bool _isExpanded = false;
-
-//   void _navigateToEditEmailPassword() {
-//     // Navigator.push(
-//     //   // context,
-//     //   // MaterialPageRoute(
-//     //   //   builder: (context) => EditEmailPasswordPage(profile: widget.profile),
-//     //   // ),
-//     // );
-//   }
-
-//   @override
-//   Widget build(BuildContext context) {
-//     return Container(
-//       margin: const EdgeInsets.only(top: 4),
-//       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-//       decoration: BoxDecoration(
-//         color: Colors.green.shade100,
-//         borderRadius: BorderRadius.circular(12),
-//       ),
-//       child: Column(
-//         children: [
-//           Row(
-//             children: [
-//               Icon(Icons.settings, color: Colors.green),
-//               const SizedBox(width: 8),
-//               const Expanded(
-//                 child: Text(
-//                   'Pengaturan Akun',
-//                   style: TextStyle(
-//                     fontSize: 16,
-//                     fontWeight: FontWeight.bold,
-//                   ),
-//                 ),
-//               ),
-//               IconButton(
-//                 icon: Icon(
-//                   _isExpanded ? Icons.expand_less : Icons.expand_more,
-//                   color: Colors.green,
-//                 ),
-//                 onPressed: () {
-//                   setState(() {
-//                     _isExpanded = !_isExpanded;
-//                   });
-//                 },
-//               ),
-//             ],
-//           ),
-//           if (_isExpanded)
-//             Column(
-//               children: [
-//                 for (var email in widget.profile.emails)
-//                   Text(email, style: TextStyle(color: Colors.black)),
-//                 const SizedBox(height: 8),
-//                 ElevatedButton(
-//                   onPressed: _navigateToEditEmailPassword,
-//                   style: ElevatedButton.styleFrom(
-//                     backgroundColor: Colors.green,
-//                     shape: RoundedRectangleBorder(
-//                       borderRadius: BorderRadius.circular(20),
-//                     ),
-//                   ),
-//                   child: const Text('Edit Email & Password'),
-//                 ),
-//               ],
-//             ),
-//         ],
-//       ),
-//     );
-//   }
-// }

@@ -6,7 +6,7 @@ import '../models/user_profile.dart';
 import '../widgets/berita_card.dart';
 import '../widgets/feature_button.dart';
 import '../widgets/berita_detail.dart';
-import 'package:reworkmobile/view/voice_to_text.dart'; // <-- Import VoiceToTextScreen
+import 'package:reworkmobile/view/voice_to_text.dart';
 
 class HomeScreen extends StatefulWidget {
   @override
@@ -61,6 +61,7 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget build(BuildContext context) {
     return SafeArea(
       child: Scaffold(
+        backgroundColor: Colors.white,
         body: SingleChildScrollView(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -80,54 +81,61 @@ class _HomeScreenState extends State<HomeScreen> {
       children: [
         Container(
           height: 200,
-          decoration: BoxDecoration(
+          decoration: const BoxDecoration(
             image: DecorationImage(
               image: AssetImage('assets/bgatas.png'),
               fit: BoxFit.cover,
             ),
           ),
         ),
-        Padding(
+        Container(
+          height: 200,
           padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 20.0),
+          decoration: BoxDecoration(
+            color: Colors.white.withOpacity(0.2),
+          ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Row(
                 children: [
                   CircleAvatar(
-                    radius: 25,
+                    radius: 28,
+                    backgroundColor: Color(0xFFD1F2EB),
                     backgroundImage: _getUserProfileImage(),
                     child: _userProfile?.imageUrl == null ||
                             _userProfile!.imageUrl.isEmpty
-                        ? Icon(Icons.person, size: 40)
+                        ? const Icon(Icons.person,
+                            size: 30, color: Color(0xFF27AE60))
                         : null,
                   ),
-                  SizedBox(width: 10),
+                  const SizedBox(width: 10),
                   Text(
                     _userProfile?.name ?? "Loading...",
-                    style: TextStyle(
-                        fontSize: 16,
-                        color: Color(0xFF195728),
+                    style: const TextStyle(
+                        fontSize: 18,
+                        color: Colors.white,
                         fontWeight: FontWeight.bold),
                   ),
                 ],
               ),
-              SizedBox(height: 80),
+              const Spacer(), // <-- Ini penting biar teks pindah ke bawah
               Text(
                 _userProfile != null
-                    ? "Selamat datang, ${_userProfile!.name.split(' ').first}!"
-                    : "Welcome!",
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 12,
-                ),
-              ),
-              Text(
-                'Yuk Jelajahi Dunia Tuli Bersama!',
-                style: TextStyle(
+                    ? "👋 Hai, ${_userProfile!.name.split(' ').first}!"
+                    : "👋 Selamat Datang!",
+                style: const TextStyle(
                   color: Colors.white,
                   fontSize: 16,
-                  fontWeight: FontWeight.bold,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+              const Text(
+                'Yuk jelajahi dunia tuli bersama 🎉',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 14,
+                  fontWeight: FontWeight.w400,
                 ),
               ),
             ],
@@ -156,12 +164,12 @@ class _HomeScreenState extends State<HomeScreen> {
             features: [
               {
                 'imagePath': 'assets/scan_icon.png',
-                'label': 'Scan to Text',
+                'label': '📷 Scan',
                 'onTap': () {}
               },
               {
                 'imagePath': 'assets/voice_icon.png',
-                'label': 'Voice to Text',
+                'label': '🎤 Voice',
                 'onTap': () => Navigator.push(
                       context,
                       MaterialPageRoute(
@@ -170,11 +178,10 @@ class _HomeScreenState extends State<HomeScreen> {
               },
               {
                 'imagePath': 'assets/lesson_icon.png',
-                'label': 'Lesson',
+                'label': '📘 Belajar',
                 'onTap': () => Navigator.push(
                       context,
-                      MaterialPageRoute(
-                          builder: (context) => Lessonkategori()),
+                      MaterialPageRoute(builder: (context) => Lessonkategori()),
                     ),
               },
             ],
@@ -190,13 +197,16 @@ class _HomeScreenState extends State<HomeScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text("Berita Terbaru",
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-          SizedBox(height: 10),
+          const Text("📰 Berita Terbaru",
+              style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: Color(0xFF27AE60))),
+          const SizedBox(height: 10),
           _isLoading
-              ? Center(child: CircularProgressIndicator())
+              ? const Center(child: CircularProgressIndicator())
               : _hasError
-                  ? Center(child: Text("Gagal memuat berita"))
+                  ? const Center(child: Text("Gagal memuat berita"))
                   : SizedBox(
                       height: 200,
                       child: ListView.builder(
@@ -205,8 +215,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         itemBuilder: (context, index) {
                           return BeritaCard(
                             berita: _beritaList[index],
-                            onTap: () =>
-                                _showDetailBerita(_beritaList[index]),
+                            onTap: () => _showDetailBerita(_beritaList[index]),
                           );
                         },
                       ),
