@@ -3,6 +3,7 @@ import 'package:reworkmobile/models/user_profile.dart';
 import 'package:reworkmobile/services/auth_service.dart';
 import 'package:reworkmobile/view/animation/splash_screen.dart';
 import 'package:reworkmobile/view/edit_profile.dart';
+import 'package:reworkmobile/view/view_verificationAhliBahasa.dart';
 
 class SettingsPage extends StatelessWidget {
   final UserProfile profile;
@@ -89,6 +90,34 @@ class SettingsPage extends StatelessWidget {
                 ),
                 onTap: () {
                   // Tambahkan navigasi FAQ
+                },
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
+            ),
+            const SizedBox(height: 12),
+            Material(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(12),
+              elevation: 2,
+              child: ListTile(
+                leading: Icon(Icons.verified_user, color: Colors.green),
+                title: Text(
+                  'Upgrade Role',
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) =>
+                          SignLanguageExpertFormPage(),
+                    ),
+                  );
                 },
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(12),

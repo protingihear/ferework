@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "654450765799",
+    "project_id": "ihear-frontend",
+    "storage_bucket": "ihear-frontend.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:654450765799:android:92bd559b5cd76577261742",
+        "android_client_info": {
+          "package_name": "com.example.reworkmobile"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCmkuFQopC5RM7r59K5c-XcBabLCZWsrEA"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

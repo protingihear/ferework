@@ -1,3 +1,5 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+
 class ChatRoom {
   final String id;
   final String name;
@@ -15,14 +17,26 @@ class ChatRoom {
     required this.createdAt,
   });
 
-  factory ChatRoom.fromJson(Map<String, dynamic> json) {
+  factory ChatRoom.fromFirestore(DocumentSnapshot doc) {
+    final data = doc.data() as Map<String, dynamic>;
+
     return ChatRoom(
-      id: json["_id"],
-      name: json["name"],
-      username: json["username"],
-      participants: List<String>.from(json["participants"]),
-      isGroup: json["isGroup"],
-      createdAt: DateTime.parse(json["createdAt"]),
+      id: doc.id,
+      name: data["name"] ?? '',
+      username: data["username"] ?? '',
+      participants: List<String>.from(data["participants"] ?? []),
+      isGroup: data["isGroup"] ?? false,
+      createdAt: (data["createdAt"] as Timestamp?)?.toDate() ?? DateTime.now(),
     );
+  }
+
+  Map<String, dynamic> toMap() {
+    return {
+      "name": name,
+      "username": username,
+      "participants": participants,
+      "isGroup": isGroup,
+      "createdAt": Timestamp.fromDate(createdAt),
+    };
   }
 }
