@@ -5,7 +5,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../models/user_profile.dart';
 
 class ApiService {
-  static const String _baseUrl = 'https://berework-production-ad0a.up.railway.app';
+  static const String _baseUrl =
+      'https://berework-production-ad0a.up.railway.app';
 
   static Future<UserProfile> fetchUserProfile() async {
     try {
@@ -36,59 +37,80 @@ class ApiService {
     }
   }
 
-  static Future<UserProfile> updateUserProfile(
-      String id, String name, String bio, String gender, String email,
-      [String? password, File? imageFile, bool removeImage = false]) async {
-    final url = Uri.parse('$_baseUrl/api/profile');
+  static Future<Map<String, dynamic>> updateUserProfile({
+    String? firstname,
+    String? lastname,
+    String? bio,
+    String? gender,
+    File? image, // File dari picker
+    bool removeImage = false, // Kalau true, akan set Image jadi ""
+  }) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final sessionId = prefs.getString('session_cookie');
+      final tt = prefs.getString('tt_cookie');
 
-    final prefs = await SharedPreferences.getInstance();
-    final sessionId = prefs.getString('session_cookie');
-    final tt = prefs.getString('tt_cookie');
+      print('--- DEBUG: Starting updateUserProfile ---');
+      print('sessionId: $sessionId');
+      print('tt: $tt');
 
-    if (sessionId == null || tt == null) {
-      throw Exception("Session ID or tt not found");
-    }
+      final uri = Uri.parse('$_baseUrl/api/profile');
+      final request = http.MultipartRequest('PUT', uri);
 
-    final request = http.MultipartRequest('PUT', url);
+      // Headers
+      request.headers['Cookie'] = "session_id=$sessionId; tt=$tt";
+      request.headers['Accept'] = 'application/json';
 
-    request.headers.addAll({
-      "Cookie": "session_id=$sessionId; tt=$tt",
-    });
+      print('Headers set: ${request.headers}');
 
-    // Tambahkan form fields yang diperlukan
-    request.fields['firstname'] = name.split(' ').first;
-    request.fields['lastname'] =
-        name.contains(' ') ? name.split(' ').sublist(1).join(' ') : '';
-    request.fields['email'] = email;
-    request.fields['bio'] = bio;
-    request.fields['gender'] = gender; // Kirim langsung tanpa konversi
+      // Fields
+      if (firstname != null) {
+        request.fields['firstname'] = firstname;
+        print('Field firstname: $firstname');
+      }
+      if (lastname != null) {
+        request.fields['lastname'] = lastname;
+        print('Field lastname: $lastname');
+      }
+      if (bio != null) {
+        request.fields['bio'] = bio;
+        print('Field bio: $bio');
+      }
+      if (gender != null) {
+        request.fields['gender'] = gender;
+        print('Field gender: $gender');
+      }
 
-    if (password != null && password.isNotEmpty) {
-      if (password.length < 6)
-        throw Exception("Password must be at least 6 characters long");
-      request.fields['password'] = password;
-    }
+      // Image file or remove flag
+      if (image != null) {
+        final multipartFile =
+            await http.MultipartFile.fromPath('Image', image.path);
+        request.files.add(multipartFile);
+        print('Image file added: ${image.path}');
+      } else if (removeImage) {
+        request.fields['Image'] = "";
+        print('Image removal requested');
+      }
 
-    // ✅ Send "" to remove image
-    if (imageFile != null) {
-    request.files
-          .add(await http.MultipartFile.fromPath('Image', imageFile.path));
-    } else if (removeImage) {
-      // ✅ Only remove if explicitly requested
-      request.fields['Image'] = "";
-    }
+      print('Sending request to: $uri');
+      final streamedResponse = await request.send();
 
-    // Kirim request
-    final streamedResponse = await request.send();
-    final response = await http.Response.fromStream(streamedResponse);
+      final response = await http.Response.fromStream(streamedResponse);
+      print('Response status code: ${response.statusCode}');
+      print('Response body: ${response.body}');
 
-    print("Response status: ${response.statusCode}");
-    print("Response body: ${response.body}");
-
-    if (response.statusCode == 200) {
-      return UserProfile.fromJson(json.decode(response.body));
-    } else {
-      throw Exception('Failed to update profile: ${response.body}');
+      if (response.statusCode == 200) {
+        final jsonResponse = jsonDecode(response.body);
+        print('Parsed JSON response: $jsonResponse');
+        return jsonResponse;
+      } else {
+        final errorResponse = jsonDecode(response.body);
+        print('Error from server: $errorResponse');
+        throw Exception(errorResponse['message'] ?? 'Gagal update user');
+      }
+    } catch (e) {
+      print('Exception caught in updateUserProfile: $e');
+      rethrow;
     }
   }
 
@@ -105,5 +127,4 @@ class ApiService {
       throw Exception("Failed to fetch berita: $e");
     }
   }
-  
 }

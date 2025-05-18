@@ -12,8 +12,9 @@ class BeritaCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return GestureDetector(
       onTap: onTap,
-      child: Container(
-        margin: const EdgeInsets.only(bottom: 16),
+      child: SizedBox(
+        width: 250,
+        height: 180,
         child: Card(
           elevation: 2,
           shape: RoundedRectangleBorder(
@@ -22,11 +23,12 @@ class BeritaCard extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Gambar Berita
+              // Gambar Berita, dengan tinggi dikurangi
               ClipRRect(
-                borderRadius: const BorderRadius.vertical(top: Radius.circular(12)),
+                borderRadius:
+                    const BorderRadius.vertical(top: Radius.circular(12)),
                 child: Container(
-                  height: 180,
+                  height: 140, // tinggi gambar dikurangi supaya pas
                   color: Colors.grey[200],
                   child: berita['foto'] != null
                       ? Image.memory(
@@ -40,51 +42,39 @@ class BeritaCard extends StatelessWidget {
                 ),
               ),
               // Konten Berita
-              Padding(
-                padding: const EdgeInsets.all(16),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // Judul
-                    Text(
-                      berita['judul'] ?? 'Judul Berita',
-                      style: const TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                        height: 1.3,
+              Expanded(
+                child: Padding(
+                  padding: const EdgeInsets.all(12),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // Judul berita
+                      Text(
+                        berita['judul'] ?? 'Judul Berita',
+                        style: const TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                          height: 1.3,
+                        ),
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
                       ),
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    const SizedBox(height: 8),
-                    // Deskripsi Singkat
-                    Text(
-                      _getShortDescription(berita['isi']),
-                      style: TextStyle(
-                        fontSize: 14,
-                        color: Colors.grey[700],
-                        height: 1.5,
-                      ),
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    const SizedBox(height: 8),
-                    // Read More
-                    Align(
-                      alignment: Alignment.centerRight,
-                      child: GestureDetector(
-                        onTap: onTap,
+                      const SizedBox(height: 6),
+                      // Deskripsi singkat
+                      Expanded(
                         child: Text(
-                          'Read More',
+                          _getShortDescription(berita['isi']),
                           style: TextStyle(
-                            color: Colors.blue[700],
-                            fontWeight: FontWeight.w500,
                             fontSize: 14,
+                            color: Colors.grey[700],
+                            height: 1.5,
                           ),
+                          maxLines: 3,
+                          overflow: TextOverflow.ellipsis,
                         ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
               ),
             ],
@@ -98,13 +88,13 @@ class BeritaCard extends StatelessWidget {
     if (fullDescription == null || fullDescription.isEmpty) {
       return 'Deskripsi tidak tersedia';
     }
-    
+
     // Ambil 50 kata pertama
     final words = fullDescription.split(' ');
-    final shortDesc = words.length > 50 
-        ? '${words.take(50).join(' ')}...' 
+    final shortDesc = words.length > 50
+        ? '${words.take(50).join(' ')}...'
         : fullDescription;
-    
+
     return shortDesc;
   }
 }

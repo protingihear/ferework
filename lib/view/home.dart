@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:reworkmobile/view/LessonKategori.dart';
+import 'package:reworkmobile/view/view_all_berita.dart';
 import 'dart:convert';
 import '../services/api_service.dart';
 import '../models/user_profile.dart';
@@ -18,6 +19,7 @@ class _HomeScreenState extends State<HomeScreen> {
   UserProfile? _userProfile;
   bool _isLoading = true;
   bool _hasError = false;
+  final List<String> _greetingsEmojis = ['🎉', '✨', '🦄', '🌈', '💫', '🎈'];
 
   @override
   void initState() {
@@ -57,8 +59,15 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
+  String _getRandomEmoji() {
+    _greetingsEmojis.shuffle();
+    return _greetingsEmojis.first;
+  }
+
   @override
   Widget build(BuildContext context) {
+    final screenWidth = MediaQuery.of(context).size.width;
+
     return SafeArea(
       child: Scaffold(
         backgroundColor: Colors.white,
@@ -67,7 +76,8 @@ class _HomeScreenState extends State<HomeScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               _buildHeader(),
-              _buildFeatureButtons(),
+              const SizedBox(height: 16),
+              _buildFeatureButtons(screenWidth),
               _buildBeritaSection(),
             ],
           ),
@@ -111,7 +121,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
                   const SizedBox(width: 10),
                   Text(
-                    _userProfile?.name ?? "Loading...",
+                    _userProfile?.name ?? "\u{1F464} Memuat...",
                     style: const TextStyle(
                         fontSize: 18,
                         color: Colors.white,
@@ -119,20 +129,20 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
                 ],
               ),
-              const Spacer(), // <-- Ini penting biar teks pindah ke bawah
+              const Spacer(),
               Text(
                 _userProfile != null
-                    ? "👋 Hai, ${_userProfile!.name.split(' ').first}!"
-                    : "👋 Selamat Datang!",
+                    ? "\u{1F44B} Hai, ${_userProfile!.name.split(' ').first}!"
+                    : "\u{1F44B} Selamat Datang!",
                 style: const TextStyle(
                   color: Colors.white,
                   fontSize: 16,
                   fontWeight: FontWeight.w500,
                 ),
               ),
-              const Text(
-                'Yuk jelajahi dunia tuli bersama 🎉',
-                style: TextStyle(
+              Text(
+                'Yuk jelajahi dunia tuli bersama ${_getRandomEmoji()}',
+                style: const TextStyle(
                   color: Colors.white,
                   fontSize: 14,
                   fontWeight: FontWeight.w400,
@@ -149,42 +159,40 @@ class _HomeScreenState extends State<HomeScreen> {
     if (_userProfile?.imageUrl != null && _userProfile!.imageUrl.isNotEmpty) {
       return _userProfile!.imageUrl.startsWith('data:image')
           ? MemoryImage(base64Decode(_userProfile!.imageUrl.split(',')[1]))
-          : NetworkImage(_userProfile!.imageUrl);
+          : NetworkImage(_userProfile!.imageUrl) as ImageProvider;
     }
     return null;
   }
 
-  Widget _buildFeatureButtons() {
+  Widget _buildFeatureButtons(double screenWidth) {
     return Padding(
-      padding: const EdgeInsets.all(16.0),
+      padding: const EdgeInsets.symmetric(horizontal: 16.0),
       child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          FeatureButtonRow(
-            features: [
-              {
-                'imagePath': 'assets/scan_icon.png',
-                'label': '📷 Scan',
-                'onTap': () {}
-              },
-              {
-                'imagePath': 'assets/voice_icon.png',
-                'label': '🎤 Voice',
-                'onTap': () => Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                          builder: (context) => VoiceToTextScreen()),
-                    ),
-              },
-              {
-                'imagePath': 'assets/lesson_icon.png',
-                'label': '📘 Belajar',
-                'onTap': () => Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (context) => Lessonkategori()),
-                    ),
-              },
-            ],
+          FeatureButton(
+            imagePath: 'assets/scan_icon.png',
+            label: 'Scan to Text',
+            onTap: () {},
+            width: screenWidth * 0.26,
+          ),
+          FeatureButton(
+            imagePath: 'assets/voice_icon.png',
+            label: 'Voice to Text',
+            onTap: () => Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => VoiceToTextScreen()),
+            ),
+            width: screenWidth * 0.26,
+          ),
+          FeatureButton(
+            imagePath: 'assets/lesson_icon.png',
+            label: 'Lesson',
+            onTap: () => Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => Lessonkategori()),
+            ),
+            width: screenWidth * 0.26,
           ),
         ],
       ),
@@ -197,29 +205,55 @@ class _HomeScreenState extends State<HomeScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text("📰 Berita Terbaru",
-              style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                  color: Color(0xFF27AE60))),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              const Text("📰 Berita Terbaru",
+                  style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: Color(0xFF27AE60))),
+              GestureDetector(
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => AllBeritaPage()),
+                  );
+                },
+                child: const Text("Lihat Semua",
+                    style: TextStyle(
+                      decoration: TextDecoration.underline,
+                      fontSize: 14,
+                      color: Colors.blue,
+                    )),
+              )
+            ],
+          ),
           const SizedBox(height: 10),
           _isLoading
               ? const Center(child: CircularProgressIndicator())
               : _hasError
-                  ? const Center(child: Text("Gagal memuat berita"))
+                  ? const Center(child: Text("⚠️ Gagal memuat berita"))
                   : SizedBox(
-                      height: 200,
-                      child: ListView.builder(
+                      height: 230,
+                      child: ListView.separated(
                         scrollDirection: Axis.horizontal,
+                        physics: const BouncingScrollPhysics(),
                         itemCount: _beritaList.length,
+                        separatorBuilder: (context, index) =>
+                            const SizedBox(width: 12),
                         itemBuilder: (context, index) {
-                          return BeritaCard(
-                            berita: _beritaList[index],
-                            onTap: () => _showDetailBerita(_beritaList[index]),
+                          return SizedBox(
+                            width: 300,
+                            child: BeritaCard(
+                              berita: _beritaList[index],
+                              onTap: () =>
+                                  _showDetailBerita(_beritaList[index]),
+                            ),
                           );
                         },
                       ),
-                    ),
+                    )
         ],
       ),
     );
