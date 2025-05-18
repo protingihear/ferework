@@ -1,6 +1,5 @@
 import 'dart:convert';
 import 'dart:io';
-import 'package:image/image.dart' as img;
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import '../models/user_profile.dart';
@@ -21,42 +20,21 @@ class EditProfilePage extends StatefulWidget {
 class _EditProfilePageState extends State<EditProfilePage> {
   late TextEditingController nameController;
   late TextEditingController bioController;
-  late TextEditingController emailController;
-  late TextEditingController passwordController;
   String? selectedGender;
   File? profileImageFile;
   String profileImageUrl = "";
+  bool removeImage = false;
 
   @override
   void initState() {
     super.initState();
     nameController = TextEditingController(text: widget.profile.name);
     bioController = TextEditingController(text: widget.profile.bio);
-    emailController = TextEditingController(
-        text: widget.profile.emails.isNotEmpty
-            ? widget.profile.emails.first
-            : '');
-    passwordController = TextEditingController();
     selectedGender = widget.profile.gender;
     profileImageUrl = widget.profile.imageUrl;
   }
 
   Future<void> saveProfile() async {
-    if (emailController.text.trim().isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Email cannot be empty')),
-      );
-      return;
-    }
-
-    if (passwordController.text.isNotEmpty &&
-        passwordController.text.length < 6) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Password must be at least 6 characters')),
-      );
-      return;
-    }
-
     File? imageFileToUpload = profileImageFile;
 
     if (imageFileToUpload == null && profileImageUrl.isNotEmpty) {
@@ -68,58 +46,46 @@ class _EditProfilePageState extends State<EditProfilePage> {
 
     try {
       final updatedProfile = await ApiService.updateUserProfile(
-        widget.profile.id,
-        nameController.text.isNotEmpty
-            ? nameController.text
-            : widget.profile.name,
-        bioController.text,
-        selectedGender ?? 'Laki-Laki',
-        emailController.text.trim(),
-        passwordController.text.isNotEmpty
-            ? passwordController.text.trim()
-            : null,
-        profileImageFile, 
-        removeImage,
+        firstname: nameController.text.isNotEmpty ? nameController.text : widget.profile.name,
+        lastname: "", // Opsional, bisa dikosongkan jika tidak digunakan
+        bio: bioController.text,
+        gender: selectedGender ?? 'Laki-Laki',
+        image: imageFileToUpload,
+        removeImage: removeImage,
       );
 
       Navigator.pop(context, updatedProfile);
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error updating profile: $e')),
-      );
+      showSnackbar('Gagal menyimpan: $e');
     }
   }
-
-  bool removeImage = false;
 
   void showImagePicker() {
     showModalBottomSheet(
       context: context,
+      shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
       builder: (context) {
         return SafeArea(
           child: Wrap(
             children: [
               ListTile(
-                leading: const Icon(Icons.camera_alt),
-                title: const Text('Take Photo'),
-                onTap: () {
-                  pickImage(ImageSource.camera);
-                },
+                leading: const Icon(Icons.camera_alt, color: Colors.teal),
+                title: const Text('Foto dengan Kamera'),
+                onTap: () => pickImage(ImageSource.camera),
               ),
               ListTile(
-                leading: const Icon(Icons.photo_library),
-                title: const Text('Choose from Gallery'),
-                onTap: () {
-                  pickImage(ImageSource.gallery);
-                },
+                leading: const Icon(Icons.photo_library, color: Colors.teal),
+                title: const Text('Pilih dari Galeri'),
+                onTap: () => pickImage(ImageSource.gallery),
               ),
               ListTile(
-                leading: const Icon(Icons.delete),
-                title: const Text('Remove Photo'),
+                leading: const Icon(Icons.delete_forever, color: Colors.red),
+                title: const Text('Hapus Foto'),
                 onTap: () {
                   setState(() {
                     profileImageFile = null;
-                    profileImageUrl = ''; // Reset URL too
+                    profileImageUrl = '';
                     removeImage = true;
                   });
                   Navigator.pop(context);
@@ -138,27 +104,30 @@ class _EditProfilePageState extends State<EditProfilePage> {
       setState(() {
         profileImageFile = imageFile;
         profileImageUrl = imageFile.path;
+        removeImage = false;
       });
     }
     Navigator.pop(context);
   }
 
   void showSnackbar(String message) {
-    ScaffoldMessenger.of(context)
-        .showSnackBar(SnackBar(content: Text(message)));
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
   }
 
   @override
   Widget build(BuildContext context) {
+    final greenSoft = Colors.green[100];
+    final borderRadius = BorderRadius.circular(20);
+
     return Scaffold(
+      backgroundColor: greenSoft,
       body: Stack(
         children: [
           SingleChildScrollView(
-            padding: const EdgeInsets.all(16.0),
+            padding: const EdgeInsets.all(20),
             child: Column(
               children: [
-                const SizedBox(height: 60), // Space for the back button
-                // Profile Image Section
+                const SizedBox(height: 70),
                 Stack(
                   alignment: Alignment.bottomRight,
                   children: [
@@ -173,110 +142,99 @@ class _EditProfilePageState extends State<EditProfilePage> {
                                   ? MemoryImage(base64Decode(
                                       profileImageUrl.split(',')[1]))
                                   : null,
-                      backgroundColor: Colors.grey[200],
-                      child:
-                          (profileImageFile == null && profileImageUrl.isEmpty)
-                              ? const Icon(Icons.person,
-                                  size: 50, color: Colors.grey)
-                              : null,
+                      backgroundColor: Colors.white,
+                      child: (profileImageFile == null && profileImageUrl.isEmpty)
+                          ? const Icon(Icons.person, size: 60, color: Colors.grey)
+                          : null,
                     ),
-                    IconButton(
-                      onPressed: showImagePicker,
-                      icon: const Icon(Icons.edit, color: Colors.white),
-                      style: IconButton.styleFrom(
-                        backgroundColor: Colors.black54,
+                    Positioned(
+                      right: 0,
+                      bottom: 0,
+                      child: Material(
+                        color: Colors.teal,
                         shape: const CircleBorder(),
+                        child: InkWell(
+                          customBorder: const CircleBorder(),
+                          onTap: showImagePicker,
+                          child: const Padding(
+                            padding: EdgeInsets.all(8),
+                            child: Icon(Icons.edit, color: Colors.white, size: 20),
+                          ),
+                        ),
                       ),
                     ),
                   ],
                 ),
+                const SizedBox(height: 20),
+                buildRoundedTextField(controller: nameController, label: 'Nama'),
                 const SizedBox(height: 16),
-                // Name
-                TextField(
-                  controller: nameController,
-                  decoration: const InputDecoration(
-                      labelText: 'Name', border: OutlineInputBorder()),
-                ),
+                buildRoundedTextField(controller: bioController, label: 'Bio'),
                 const SizedBox(height: 16),
-                // Bio
-                TextField(
-                  controller: bioController,
-                  decoration: const InputDecoration(
-                      labelText: 'Bio', border: OutlineInputBorder()),
-                ),
-                const SizedBox(height: 16),
-                // Email
-                TextField(
-                  controller: emailController,
-                  decoration: const InputDecoration(
-                      labelText: 'Email', border: OutlineInputBorder()),
-                ),
-                const SizedBox(height: 16),
-                // Password
-                TextField(
-                  controller: passwordController,
-                  obscureText: true,
-                  decoration: const InputDecoration(
-                      labelText: 'Password', border: OutlineInputBorder()),
-                ),
-                const SizedBox(height: 16),
-                // Gender Selection
-                Row(
-                  children: [
-                    const Text("Gender: "),
-                    Expanded(
-                      child: RadioListTile<String>(
-                        title: const Text('P'),
-                        value: 'Perempuan',
-                        groupValue: selectedGender,
-                        onChanged: (value) {
-                          if (value != null) {
-                            setState(() {
-                              selectedGender = value;
-                            });
-                          }
-                        },
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: borderRadius,
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text("Gender:", style: TextStyle(fontWeight: FontWeight.bold)),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: RadioListTile<String>(
+                              title: const Text('Laki-Laki'),
+                              value: 'Laki-Laki',
+                              groupValue: selectedGender,
+                              onChanged: (value) {
+                                if (value != null) {
+                                  setState(() {
+                                    selectedGender = value;
+                                  });
+                                }
+                              },
+                            ),
+                          ),
+                          Expanded(
+                            child: RadioListTile<String>(
+                              title: const Text('Perempuan'),
+                              value: 'Perempuan',
+                              groupValue: selectedGender,
+                              onChanged: (value) {
+                                if (value != null) {
+                                  setState(() {
+                                    selectedGender = value;
+                                  });
+                                }
+                              },
+                            ),
+                          ),
+                        ],
                       ),
-                    ),
-                    Expanded(
-                      child: RadioListTile<String>(
-                        title: const Text('L'),
-                        value: 'Laki-Laki',
-                        groupValue: selectedGender,
-                        onChanged: (value) {
-                          if (value != null) {
-                            setState(() {
-                              selectedGender = value;
-                            });
-                          }
-                        },
-                      ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
-
-                const SizedBox(height: 32),
-                // Save Button
-                ElevatedButton(
+                const SizedBox(height: 30),
+                ElevatedButton.icon(
+                  icon: const Icon(Icons.save),
                   onPressed: saveProfile,
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.green,
-                    shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(20)),
+                    backgroundColor: Colors.teal,
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 14),
+                    shape: RoundedRectangleBorder(borderRadius: borderRadius),
                   ),
-                  child: const Text('Save'),
+                  label: const Text('Simpan', style: TextStyle(fontSize: 16)),
                 ),
               ],
             ),
           ),
-
-          // Custom Back Button (Floating at Top Left)
           Positioned(
-            top: 40,
+            top: 30,
             left: 20,
             child: CircleAvatar(
-              radius: 22,
-              backgroundColor: Colors.green,
+              backgroundColor: Colors.teal,
               child: IconButton(
                 icon: const Icon(Icons.arrow_back, color: Colors.white),
                 onPressed: () => Navigator.pop(context),
@@ -284,6 +242,27 @@ class _EditProfilePageState extends State<EditProfilePage> {
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  Widget buildRoundedTextField({
+    required TextEditingController controller,
+    required String label,
+    bool obscureText = false,
+  }) {
+    return TextField(
+      controller: controller,
+      obscureText: obscureText,
+      decoration: InputDecoration(
+        filled: true,
+        fillColor: Colors.white,
+        labelText: label,
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(20)),
+        focusedBorder: OutlineInputBorder(
+          borderSide: const BorderSide(color: Colors.teal),
+          borderRadius: BorderRadius.circular(20),
+        ),
       ),
     );
   }

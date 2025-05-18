@@ -1,32 +1,26 @@
-// import 'package:bisadenger/information.dart';
+import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:reworkmobile/main_screen.dart';
 import 'package:reworkmobile/services/auth_service.dart';
-import 'package:reworkmobile/view/animation/splash_screen.dart';
-import 'package:reworkmobile/view/home.dart';
-import 'package:reworkmobile/view/view_profile.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-// import 'home_page.dart';
-import 'chat_page.dart';
-import 'package:flutter/material.dart';
 import 'sign_up.dart';
-import 'package:http/http.dart' as http;
-import 'dart:convert';
 
 class Sign_In_Page extends StatefulWidget {
   const Sign_In_Page({super.key});
 
   @override
-  _Sign_In_Page createState() => _Sign_In_Page();
+  _Sign_In_PageState createState() => _Sign_In_PageState();
 }
 
-class _Sign_In_Page extends State<Sign_In_Page> {
+class _Sign_In_PageState extends State<Sign_In_Page> {
   bool isChecked = false;
-late SharedPreferences prefs; // Declare prefs
+  bool _obscurePassword = true;
+  String? _responseMessage;
 
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
-  String? _responseMessage;
   final AuthService _authService = AuthService();
+
+  late SharedPreferences prefs;
 
   @override
   void initState() {
@@ -38,247 +32,228 @@ late SharedPreferences prefs; // Declare prefs
     prefs = await SharedPreferences.getInstance();
   }
 
-void _handleLogin() async {
-  await _initPrefs(); // Ensure prefs is initialized before using it
+  void _handleLogin() async {
+    await _initPrefs();
 
-  String email = _emailController.text;
-  String password = _passwordController.text;
+    String email = _emailController.text.trim();
+    String password = _passwordController.text;
 
-  if (email.isNotEmpty && password.isNotEmpty) {
+    if (email.isEmpty || password.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('username dan password tidak boleh kosong!')),
+      );
+      return;
+    }
+
     String? errorMessage = await _authService.login(email, password);
 
     if (errorMessage == null) {
-      // ✅ Login successful, navigate to HomeScreen
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(builder: (context) => MainScreen()), // <-- Diubah ke HomeScreen
+        MaterialPageRoute(builder: (context) => MainScreen()),
       );
     } else {
+      setState(() {
+        _responseMessage = errorMessage;
+      });
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(errorMessage)),
       );
     }
-  } else {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('Email dan password tidak boleh kosong!')),
-    );
   }
-}
 
-@override
-Widget build(BuildContext context) {
-  bool _obscurePassword = true;
+  @override
+  Widget build(BuildContext context) {
+    const Color primaryColor = Color(0xFFB7E4C7);
+    const Color accentColor = Color(0xFF2D6A4F);
 
-  return SafeArea(
-    child: Scaffold(
-      backgroundColor: Colors.grey[100],
-      body: Center(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.symmetric(horizontal: 24.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: <Widget>[
-              Center(
-                child: Column(
-                  children: [
-                    Image.asset(
-                      'assets/logo.png',
-                      height: 100,
-                    ),
-                    SizedBox(height: 8),
-                    Text(
-                      'IHear',
-                      style: TextStyle(
-                        fontSize: 28,
-                        color: Colors.green,
-                        fontWeight: FontWeight.bold,
+    return SafeArea(
+      child: Scaffold(
+        backgroundColor: primaryColor,
+        body: Center(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.symmetric(horizontal: 28.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: <Widget>[
+                Center(
+                  child: Column(
+                    children: [
+                      Image.asset(
+                        'assets/logo.png',
+                        height: 100,
+                        width: 100,
+                        fit: BoxFit
+                            .cover,
                       ),
-                    ),
-                    SizedBox(height: 16),
-                    Text(
-                      'Sign In for IHear',
-                      style: TextStyle(
-                        fontSize: 22,
-                        fontWeight: FontWeight.bold,
+                      const SizedBox(height: 12),
+                      const Text(
+                        'IHear',
+                        style: TextStyle(
+                          fontSize: 32,
+                          color: accentColor,
+                          fontWeight: FontWeight.w700,
+                          letterSpacing: 1.2,
+                        ),
                       ),
-                    ),
-                    SizedBox(height: 4),
-                    Text(
-                      'Welcome back!',
-                      style: TextStyle(color: Colors.grey[700]),
-                    ),
-                  ],
-                ),
-              ),
-              SizedBox(height: 40),
-
-              // Email Field  
-             Container(
-  decoration: BoxDecoration(
-    color: Color(0xFFD3F0D0),
-    borderRadius: BorderRadius.circular(30),
-  ),
-  child: TextField(
-    controller: _emailController,
-    decoration: InputDecoration(
-      hintText: 'Username',
-      filled: true,
-      fillColor: Color(0xFFD3F0D0),
-      prefixIcon: Icon(Icons.email),
-      contentPadding: EdgeInsets.symmetric(vertical: 18, horizontal: 20),
-      border: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(20),
-        borderSide: BorderSide.none,
-      ),
-    ),
-  ),
-),
-
-               
-              SizedBox(height: 12),
-
-              // Password Field with Visibility Toggle
-              Container(
-  decoration: BoxDecoration(
-    color: Color(0xFFD3F0D0),
-    borderRadius: BorderRadius.circular(30),
-  ),
-  child: TextField(
-    controller: _passwordController,
-    obscureText: _obscurePassword,
-    decoration: InputDecoration(
-      hintText: 'Password',
-      filled: true,
-      fillColor: Color(0xFFD3F0D0),
-      prefixIcon: Icon(Icons.lock),
-      suffixIcon: IconButton(
-        icon: Icon(
-          _obscurePassword ? Icons.visibility_off : Icons.visibility,
-        ),
-        onPressed: () {
-          setState(() {
-            _obscurePassword = !_obscurePassword;
-          });
-        },
-      ),
-      contentPadding: EdgeInsets.symmetric(vertical: 18, horizontal: 20),
-      border: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(20),
-        borderSide: BorderSide.none,
-      ),
-    ),
-  ),
-),
-
-            
-              SizedBox(height: 12),
-
-              // Forgot Password
-            
-Align(
-  alignment: Alignment.centerLeft,
-  child: GestureDetector(
-    onTap: () {
-      print('Forgot Password tapped');
-    },
-    child: Text(
-      'Forgot your password?',
-      style: TextStyle(
-        color: Color(0xFF489042),
-         fontWeight: FontWeight.bold,
-        
-        
-      ),
-    ),
-  ),
-),
-
-              SizedBox(height: 12),
-              // Remember Me
-              Row(
-                children: [
-                  Checkbox(
-                    value: isChecked,
-                    onChanged: (bool? value) {
-                      setState(() {
-                        isChecked = value ?? false;
-                      });
-                    },
+                      const SizedBox(height: 12),
+                      const Text(
+                        'Welcome Back',
+                        style: TextStyle(
+                          fontSize: 22,
+                          fontWeight: FontWeight.w500,
+                          color: Colors.black87,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        'Please sign in to continue',
+                        style: TextStyle(color: Colors.grey[700]),
+                      ),
+                    ],
                   ),
-                  Text('Remember Me'),
-                ],
-              ),
-              SizedBox(height: 16),
+                ),
+                const SizedBox(height: 40),
 
-              // Sign In Button
-              ElevatedButton(
-  style: ElevatedButton.styleFrom(
-    backgroundColor: Color(0xFF489042), // Warna hijau
-    foregroundColor: Colors.white, // Warna teks
-    minimumSize: Size(double.infinity, 48),
-    shape: RoundedRectangleBorder(
-      borderRadius: BorderRadius.circular(12), // Bisa ubah sesuai selera
-    ),
-  ),
-  onPressed: _handleLogin,
-  child: Text(
-    'Sign In',
-    style: TextStyle(
-      fontSize: 16,
-      fontWeight: FontWeight.bold, // Bold biar lebih tegas
-      color: Colors.white,
-    ),
-  ),
-),
-              // Error message
-              if (_responseMessage != null)
-                Padding(
-                  padding: const EdgeInsets.only(top: 16.0),
-                  child: Center(
-                    child: Text(
-                      _responseMessage!,
-                      style: TextStyle(color: Colors.red, fontSize: 14),
-                      textAlign: TextAlign.center,
+                // Username Field
+                Container(
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(16),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black12,
+                        blurRadius: 6,
+                        offset: Offset(0, 2),
+                      ),
+                    ],
+                  ),
+                  child: TextField(
+                    controller: _emailController,
+                    keyboardType: TextInputType.emailAddress,
+                    decoration: const InputDecoration(
+                      hintText: 'Username',
+                      prefixIcon: Icon(Icons.person_outline),
+                      border: InputBorder.none,
+                      contentPadding: EdgeInsets.all(16),
                     ),
                   ),
                 ),
+                const SizedBox(height: 16),
 
-              SizedBox(height: 16),
+                // Password Field
+                Container(
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(16),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black12,
+                        blurRadius: 6,
+                        offset: Offset(0, 2),
+                      ),
+                    ],
+                  ),
+                  child: TextField(
+                    controller: _passwordController,
+                    obscureText: _obscurePassword,
+                    decoration: InputDecoration(
+                      hintText: 'Password',
+                      prefixIcon: const Icon(Icons.lock_outline),
+                      suffixIcon: IconButton(
+                        icon: Icon(
+                          _obscurePassword
+                              ? Icons.visibility_off
+                              : Icons.visibility,
+                        ),
+                        onPressed: () {
+                          setState(() {
+                            _obscurePassword = !_obscurePassword;
+                          });
+                        },
+                      ),
+                      border: InputBorder.none,
+                      contentPadding: const EdgeInsets.all(16),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 24),
 
-              // Sign Up
-              OutlinedButton(
-  style: OutlinedButton.styleFrom(
-    backgroundColor: Colors.white, // Background putih
-    foregroundColor: Color(0xFF489042), // Warna teks hijau
-    side: BorderSide(color: Color(0xFF489042)), // Border hijau
-    minimumSize: Size(double.infinity, 48),
-    shape: RoundedRectangleBorder(
-      borderRadius: BorderRadius.circular(12), // Rounded
-    ),
-  ),
-  onPressed: () {
-    Navigator.push(
-      context,
-      MaterialPageRoute(builder: (context) => Sign_Up_Page()),
-    );
-  },
-  child: Text(
-    'Sign Up',
-    style: TextStyle(
-      fontSize: 16,
-      fontWeight: FontWeight.bold,
-      color: Color(0xFF489042),
-    ),
-  ),
-),
+                Align(
+                  alignment: Alignment.centerRight,
+                  child: GestureDetector(
+                    onTap: () => print('Forgot Password tapped'),
+                    child: const Text(
+                      'Forgot your password?',
+                      style: TextStyle(
+                        color: accentColor,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 24),
 
-             
-            ],
+                // Sign In Button
+                ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: accentColor,
+                    foregroundColor: Colors.white,
+                    minimumSize: const Size(double.infinity, 52),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(14),
+                    ),
+                    elevation: 2,
+                  ),
+                  onPressed: _handleLogin,
+                  child: const Text(
+                    'Sign In',
+                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                  ),
+                ),
+
+                if (_responseMessage != null)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 16.0),
+                    child: Center(
+                      child: Text(
+                        _responseMessage!,
+                        style: const TextStyle(color: Colors.red, fontSize: 14),
+                        textAlign: TextAlign.center,
+                      ),
+                    ),
+                  ),
+
+                const SizedBox(height: 24),
+
+                // Sign Up Button
+                OutlinedButton(
+                  style: OutlinedButton.styleFrom(
+                    minimumSize: const Size(double.infinity, 52),
+                    foregroundColor: accentColor,
+                    side: const BorderSide(color: accentColor, width: 1.4),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(14),
+                    ),
+                  ),
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                          builder: (context) => const Sign_Up_Page()),
+                    );
+                  },
+                  child: const Text(
+                    'Create an Account',
+                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                  ),
+                ),
+                const SizedBox(height: 30),
+              ],
+            ),
           ),
         ),
       ),
-    ),
-  );
-}
-
+    );
+  }
 }

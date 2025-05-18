@@ -114,4 +114,76 @@ class AuthService {
       print('Session ID tidak ditemukan.');
     }
   }
+
+  static Future<void> registerUser({
+    required BuildContext context,
+    required String username,
+    required String email,
+    required String password,
+    required String confirmPassword,
+    required String fullName,
+    required String gender,
+  }) async {
+    if (password != confirmPassword) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Password dan konfirmasi tidak cocok!'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
+
+    List<String> nameParts = fullName.split(" ");
+    String firstname = nameParts.first;
+    String lastname = nameParts.skip(1).join(" ");
+
+    Map<String, dynamic> requestData = {
+      'firstname': firstname,
+      'lastname': lastname,
+      'email': email,
+      'username': username,
+      'password': password,
+      'role': 'user',
+      'bio': 'Hallo, aku adalah pengguna baru IHear',
+      'gender': gender
+    };
+
+    print("Request Data: ${jsonEncode(requestData)}");
+
+    try {
+      var response = await http.post(
+        Uri.parse('https://berework-production-ad0a.up.railway.app/auth/register'),
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: jsonEncode(requestData),
+      );
+
+      if (response.statusCode == 201) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Sign Up Berhasil'),
+            backgroundColor: Colors.green,
+          ),
+        );
+        Navigator.pop(context);
+      } else {
+        var errorResponse = jsonDecode(response.body);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error: ${errorResponse['message'] ?? 'Terjadi kesalahan'}'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Terjadi kesalahan jaringan: $e'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
+  }
 }

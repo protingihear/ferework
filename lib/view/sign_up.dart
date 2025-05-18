@@ -1,17 +1,18 @@
 import 'package:flutter/material.dart';
+import 'package:reworkmobile/services/auth_service.dart';
 import '../services/data_user.dart';
-import 'package:http/http.dart' as http;
-import 'dart:convert';
 
 class Sign_Up_Page extends StatefulWidget {
   const Sign_Up_Page({super.key});
 
   @override
-  sign_up createState() => sign_up();
+  _SignUpPageState createState() => _SignUpPageState();
 }
 
-class sign_up extends State<Sign_Up_Page> {
+class _SignUpPageState extends State<Sign_Up_Page> {
+  final _formKey = GlobalKey<FormState>();
   final dataUser = Datauser();
+
   final TextEditingController usernameController = TextEditingController();
   final TextEditingController registEmailController = TextEditingController();
   final TextEditingController registPasswordController =
@@ -19,332 +20,277 @@ class sign_up extends State<Sign_Up_Page> {
   final TextEditingController confirmPasswordController =
       TextEditingController();
   final TextEditingController nameController = TextEditingController();
-  String? gender; // Jenis kelamin ("L" atau "P")
+
+  String? gender;
   String? role;
   bool isAgreed = false;
 
+  final Color softGreen = const Color(0xFFCCFFCC);
+  final Color greenAccent = const Color(0xFFB2F2BB);
+  final Color white = Colors.white;
+
+  InputDecoration _inputDecoration(String hint, IconData icon) {
+    return InputDecoration(
+      hintText: hint,
+      prefixIcon: Icon(icon),
+      filled: true,
+      fillColor: softGreen,
+      border: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(30),
+        borderSide: BorderSide.none,
+      ),
+    );
+  }
+
+  Widget _textField({
+    required TextEditingController controller,
+    required String hint,
+    required IconData icon,
+    bool obscure = false,
+    String? Function(String?)? validator,
+  }) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      child: TextFormField(
+        controller: controller,
+        obscureText: obscure,
+        decoration: _inputDecoration(hint, icon),
+        validator: validator,
+      ),
+    );
+  }
+  
   @override
   Widget build(BuildContext context) {
+
+    const Color primaryColor = Color(0xFFB7E4C7);
+    const Color accentColor = Color(0xFF2D6A4F);
+
     return Scaffold(
-      body: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 24.0),
-        child: Center(
-          child: SingleChildScrollView(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                // Image.asset(
-                //   'assets/logo.png',
-                //   height: 100,
-                // ),
-                SizedBox(height: 30),
-                Text(
-                  'Sign Up',
-                  style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-                ),
-                Text('Create your account'),
-                SizedBox(height: 16),
-
-                // Name Field
-                Container(
-                  decoration: BoxDecoration(
-                    color: Colors.green[100],
-                    borderRadius: BorderRadius.circular(20),
-                  ),
-                  child: TextField(
-                    controller: nameController,
-                    decoration: InputDecoration(
-                      hintText: 'Name',
-                      border: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(20),
-        borderSide: BorderSide.none,
-      ),
-                      filled: true,
-                      fillColor: Color(0xFFD3F0D0),
-                      prefixIcon: Icon(Icons.person),
-                    ),
-                  ),
-                ),
-                SizedBox(height: 12),
-
-                // Username Field
-                Container(
-                  decoration: BoxDecoration(
-                    color: Colors.green[100],
-                    borderRadius: BorderRadius.circular(20),
-                  ),
-                  child: TextField(
-                    controller: usernameController,
-                    decoration: InputDecoration(
-                      hintText: 'Username',
-                      border: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(20),
-        borderSide: BorderSide.none,
-      ),
-                      filled: true,
-                      fillColor:Color(0xFFD3F0D0),
-                      
-                      
-                      prefixIcon: Icon(Icons.person),
-                    ),
-                  ),
-                ),
-                SizedBox(height: 12),
-
-                // Email Field
-                Container(
-                  decoration: BoxDecoration(
-                    color: Colors.green[100],
-                    borderRadius: BorderRadius.circular(20),
-                  ),
-                  child: TextField(
-                    controller: registEmailController,
-                    decoration: InputDecoration(
-                      hintText: 'Email',
-                      //border: InputBorder.none,
-                      border: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(20),
-        borderSide: BorderSide.none,
-      ),
-                      filled: true,
-                      fillColor: Color(0xFFD3F0D0),
-                      prefixIcon: Icon(Icons.email),
-                    ),
-                  ),
-                ),
-                SizedBox(height: 12),
-
-                // Password Field
-                Container(
-                  decoration: BoxDecoration(
-                    color: Colors.green[100],
-                    borderRadius: BorderRadius.circular(20),
-                  ),
-                  child: TextField(
-                    controller: registPasswordController,
-                    decoration: InputDecoration(
-                      hintText: 'Password',
-                      //border: InputBorder.none,
-                      border: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(20),
-        borderSide: BorderSide.none,
-      ),
-                      filled: true,
-                      fillColor: Color(0xFFD3F0D0),
-                      prefixIcon: Icon(Icons.lock),
-                    ),
-                    obscureText: true,
-                  ),
-                ),
-                SizedBox(height: 12),
-
-                // Confirm Password Field
-                Container(
-                  decoration: BoxDecoration(
-                    color: Colors.green[100],
-                    borderRadius: BorderRadius.circular(20),
-                  ),
-                  child: TextField(
-                    controller: confirmPasswordController,
-                    decoration: InputDecoration(
-                      hintText: 'Confirm Password',
-                      //border: InputBorder.none,
-                      filled: true,
-                      border: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(20),
-        borderSide: BorderSide.none,
-      ),
-                      fillColor: Color(0xFFD3F0D0),
-                      prefixIcon: Icon(Icons.lock),
-                    ),
-                    obscureText: true,
-                  ),
-                ),
-                SizedBox(height: 16),
-
-                // Gender Selection
-                Align(
-                  alignment: Alignment.centerLeft,
-                  child: Text('Jenis Kelamin*',
-                      style: TextStyle(fontWeight: FontWeight.bold)),
-                ),
-                Row(
-                  children: [
-                    Expanded(
-                      child: RadioListTile<String>(
-                        title: Text('Pria'),
-                        value: 'L',
-                        groupValue: gender,
-                        onChanged: (value) {
-                          setState(() {
-                            gender = value;
-                          });
-                        },
+      backgroundColor: primaryColor,
+      body: SafeArea(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 24),
+          child: Column(
+            children: [
+              Image.asset(
+                        'assets/logo.png',
+                        height: 100,
+                        width: 100,
+                        fit: BoxFit
+                            .cover,
                       ),
-                    ),
-                    Expanded(
-                      child: RadioListTile<String>(
-                        title: Text('Wanita'),
-                        value: 'P',
-                        groupValue: gender,
-                        onChanged: (value) {
-                          setState(() {
-                            gender = value;
-                          });
-                        },
-                      ),
-                    ),
-                  ],
-                ),
-
-                //Role Selection
-                Align(
-                  alignment: Alignment.centerLeft,
-                  child: Text('Pilih Peran*',
-                      style: TextStyle(fontWeight: FontWeight.bold)),
-                ),
-
-                // Terms and Conditions Checkbox
-                Row(
-                  children: [
-                    Checkbox(
-                      value: isAgreed,
-                      onChanged: (value) {
-                        setState(() {
-                          isAgreed = value ?? false;
-                        });
-                      },
-                    ),
-                    Text('I agree with '),
-                    GestureDetector(
-                      onTap: () {
-                        // Buka halaman syarat dan ketentuan
-                      },
-                      child: Text(
-                        'terms and conditions',
+                      const SizedBox(height: 12),
+                      const Text(
+                        'IHear',
                         style: TextStyle(
-                            color: Colors.blue,
-                            decoration: TextDecoration.underline),
+                          fontSize: 32,
+                          color: accentColor,
+                          fontWeight: FontWeight.w700,
+                          letterSpacing: 1.2,
+                        ),
                       ),
-                    ),
-                  ],
+              const SizedBox(height: 8),
+              const Text(
+                'Sign Up for IHear',
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.w500),
+              ),
+              const Text(
+                'Create your account',
+                style: TextStyle(color: Colors.grey),
+              ),
+              const SizedBox(height: 24),
+              Container(
+                padding: const EdgeInsets.all(24),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(16),
                 ),
-
-                SizedBox(height: 16),
-
-                // Sign Up Button
-                ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.green,
-                    minimumSize: Size(double.infinity, 48),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                  ),
-                  onPressed: isAgreed && gender != null
-                      ? () async {
-                          String inputUsername = usernameController.text;
-                          String inputEmail = registEmailController.text;
-                          String inputPassword = registPasswordController.text;
-                          String confirmPassword =
-                              confirmPasswordController.text;
-                          String fullName = nameController.text;
-
-                          if (inputPassword != confirmPassword) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(
-                                content: Text(
-                                    'Password dan konfirmasi tidak cocok!'),
-                                backgroundColor: Colors.red,
-                              ),
-                            );
-                            return;
+                child: Form(
+                  key: _formKey,
+                  child: Column(
+                    children: [
+                      _textField(
+                        controller: nameController,
+                        hint: 'Nama Lengkap',
+                        icon: Icons.person,
+                        validator: (value) => value == null || value.isEmpty
+                            ? 'Nama lengkap mu'
+                            : null,
+                      ),
+                      _textField(
+                        controller: usernameController,
+                        hint: 'Username',
+                        icon: Icons.person_outline,
+                        validator: (value) => value == null || value.isEmpty
+                            ? 'Username wajib diisi'
+                            : null,
+                      ),
+                      _textField(
+                        controller: registEmailController,
+                        hint: 'Email',
+                        icon: Icons.email,
+                        validator: (value) {
+                          if (value == null || value.isEmpty)
+                            return 'Email wajib diisi';
+                          if (!RegExp(r'^[^@]+@[^@]+\.[^@]+').hasMatch(value))
+                            return 'Format email tidak valid';
+                          return null;
+                        },
+                      ),
+                      _textField(
+                        controller: registPasswordController,
+                        hint: 'Password',
+                        icon: Icons.lock,
+                        obscure: true,
+                        validator: (value) {
+                          if (value == null || value.isEmpty)
+                            return 'Password wajib diisi';
+                          final regex = RegExp(
+                              r'^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*#?&])[A-Za-z\d@$!%*#?&]{8,12}$');
+                          if (!regex.hasMatch(value)) {
+                            return '8-12 karakter, huruf besar, kecil, angka & simbol';
                           }
-
-                          List<String> nameParts =
-                              fullName.split(" "); 
-                          String firstname =
-                              nameParts.first;
-                          String lastname =
-                              nameParts.skip(1).join(" ");
-
-                          Map<String, dynamic> requestData = {
-                            'firstname': firstname,
-                            'lastname': lastname,
-                            'email': inputEmail,
-                            'username': inputUsername,
-                            'password': inputPassword,
-                            'role': 'user',
-                            'bio': 'Hallo, aku adalah pengguna baru IHear'
-                          };
-
-                          print("Request Data: ${jsonEncode(requestData)}");
-
-                          try {
-                            var response = await http.post(
-                              Uri.parse(
-                                  'https://berework-production-ad0a.up.railway.app/auth/register'),
-                              headers: {
-                                'Content-Type': 'application/json',
+                          return null;
+                        },
+                      ),
+                      _textField(
+                        controller: confirmPasswordController,
+                        hint: 'Confirm Password',
+                        icon: Icons.lock_outline,
+                        obscure: true,
+                        validator: (value) {
+                          if (value != registPasswordController.text)
+                            return 'Password tidak cocok';
+                          return null;
+                        },
+                      ),
+                      const SizedBox(height: 12),
+                      Align(
+                        alignment: Alignment.centerLeft,
+                        child: Text(
+                          'Jenis Kelamin*',
+                          style: TextStyle(fontWeight: FontWeight.bold),
+                        ),
+                      ),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: RadioListTile<String>(
+                              title: const Text('Laki-laki'),
+                              value: 'Laki-laki',
+                              groupValue: gender,
+                              activeColor: Colors.green,
+                              onChanged: (value) {
+                                setState(() {
+                                  gender = value!;
+                                });
                               },
-                              body: jsonEncode(requestData),
-                            );
-
-                            if (response.statusCode == 201) {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(
-                                  content: Text('Sign Up Berhasil'),
-                                  backgroundColor: Colors.green,
+                              dense: true,
+                              contentPadding: EdgeInsets.zero,
+                            ),
+                          ),
+                          Expanded(
+                            child: RadioListTile<String>(
+                              title: const Text('Perempuan'),
+                              value: 'Perempuan',
+                              groupValue: gender,
+                              activeColor: Colors.green,
+                              onChanged: (value) {
+                                setState(() {
+                                  gender = value!;
+                                });
+                              },
+                              dense: true,
+                              contentPadding: EdgeInsets.zero,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 8),
+                      Row(
+                        children: [
+                          Checkbox(
+                            value: isAgreed,
+                            activeColor: Colors.green,
+                            onChanged: (value) =>
+                                setState(() => isAgreed = value ?? false),
+                          ),
+                          Expanded(
+                            child: Wrap(
+                              crossAxisAlignment: WrapCrossAlignment.center,
+                              children: [
+                                const Text('I agree with '),
+                                GestureDetector(
+                                  onTap: () {
+                                    // open terms page
+                                  },
+                                  child: const Text(
+                                    'terms & conditions',
+                                    style: TextStyle(
+                                      color: Colors.blue,
+                                      decoration: TextDecoration.underline,
+                                    ),
+                                  ),
                                 ),
-                              );
-                              Navigator.pop(context);
-                            } else {
-                              var errorResponse = jsonDecode(response.body);
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(
-                                  content: Text(
-                                      
-                                      'Error: ${errorResponse['message'] ?? 'Terjadi kesalahan'}'),
-                                  backgroundColor: Colors.red,
-                                ),
-                              );
-                            }
-                          } catch (e) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(
-                                
-                                content: Text('Terjadi kesalahan jaringan: $e'),
-                                backgroundColor: Colors.red,
-                              ),
-                            );
-                          }
-                        }
-                      : null,
-                  child: Text('Sign Up', style: TextStyle(fontSize: 16)),
-                ),
-                SizedBox(height: 12),
-
-                // Cancel Button
-                ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.red,
-                    minimumSize: Size(double.infinity, 48),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8),
-                    ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 12),
+                      ElevatedButton(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.green,
+                          foregroundColor: Colors.white,
+                          minimumSize: const Size(double.infinity, 48),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(30),
+                          ),
+                        ),
+                        onPressed: (isAgreed && gender != null)
+                            ? () {
+                                if (_formKey.currentState!.validate()) {
+                                  if (gender != null) {
+                                    AuthService.registerUser(
+                                      context: context,
+                                      username: usernameController.text,
+                                      email: registEmailController.text,
+                                      password: registPasswordController.text,
+                                      confirmPassword:
+                                          confirmPasswordController.text,
+                                      fullName: nameController.text,
+                                      gender: gender!,
+                                    );
+                                  } else {
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      SnackBar(
+                                        content: Text(
+                                            'Silakan pilih jenis kelamin terlebih dahulu.'),
+                                        backgroundColor: Colors.red,
+                                      ),
+                                    );
+                                  }
+                                }
+                              }
+                            : null,
+                        child: const Text('Sign Up'),
+                      ),
+                      const SizedBox(height: 8),
+                      TextButton(
+                        onPressed: () {
+                          Navigator.pop(context);
+                        },
+                        child: const Text(
+                          'Cancel',
+                          style: TextStyle(color: Colors.red),
+                        ),
+                      ),
+                    ],
                   ),
-                  onPressed: () {
-                    Navigator.pop(context); // Kembali ke halaman sebelumnya
-                  },
-                  child: Text('Cancel', style: TextStyle(fontSize: 16,color: Colors.white)
-                  
-                  ),
                 ),
-                SizedBox(
-                  height: 30,
-                )
-              ],
-            ),
+              ),
+            ],
           ),
         ),
       ),
