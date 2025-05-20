@@ -37,7 +37,7 @@ class _CreatePostPageState extends State<CreatePostPage> {
       }
 
       print("📌 Posting ke Community ID: ${widget.communityId}");
-      await ApiService.createPost(widget.communityId, _contentController.text);
+      await ComumnityService.createPost(widget.communityId, _contentController.text);
 
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text("✅ Post berhasil dibuat!")),

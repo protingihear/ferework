@@ -1,9 +1,8 @@
-// profile.dart
-
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:reworkmobile/models/user_profile.dart';
 import 'package:reworkmobile/services/api_service.dart';
+import 'package:reworkmobile/services/comumnity_service.dart';
 import 'package:reworkmobile/view/chat_view.dart';
 import 'package:reworkmobile/view/edit_profile.dart';
 import 'package:reworkmobile/view/view_setting.dart';
@@ -21,8 +20,15 @@ class ProfilePage extends StatefulWidget {
 class _ProfilePageState extends State<ProfilePage> {
   late Future<UserProfile> _profileFuture;
   List<dynamic> users = [];
-  String currentView = 'add'; // default view = add
+  String currentView = 'add';
   bool isLoadingUsers = false;
+
+  List<dynamic> likedPosts = [];
+  bool isLoadingLikedPosts = false;
+  bool hasFetchedLikedPosts = false;
+
+  int itemsToShow = 10;
+  String searchQuery = '';
 
   @override
   void initState() {
@@ -66,14 +72,38 @@ class _ProfilePageState extends State<ProfilePage> {
     }
   }
 
-  @override
-  Widget build(BuildContext context) {
-    if (currentView == 'add') {
-      // tampil tulisan "bagi aktifitas kamu"
-    } else if (currentView == 'chat') {
-      // tampil ListView semua user
+  Future<void> loadLikedPosts() async {
+    setState(() {
+      isLoadingLikedPosts = true;
+    });
+
+    try {
+      likedPosts = await ComumnityService.getLikedPosts();
+    } catch (e) {
+      print("Failed to load liked posts: $e");
+      likedPosts = [];
     }
 
+    setState(() {
+      isLoadingLikedPosts = false;
+      hasFetchedLikedPosts = true;
+    });
+  }
+
+  List<Map<String, dynamic>> get filteredUsers {
+    final filtered = users
+        .where((user) {
+          final fullName =
+              '${user['firstname']} ${user['lastname']}'.toLowerCase();
+          return fullName.contains(searchQuery.toLowerCase());
+        })
+        .cast<Map<String, dynamic>>()
+        .toList();
+    return filtered.take(itemsToShow).toList();
+  }
+
+  @override
+  Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
       body: FutureBuilder<UserProfile>(
@@ -188,10 +218,13 @@ class _ProfilePageState extends State<ProfilePage> {
                     mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                     children: [
                       IconButton(
-                        onPressed: () {
+                        onPressed: () async {
                           setState(() {
                             currentView = 'add';
                           });
+                          if (!hasFetchedLikedPosts) {
+                            await loadLikedPosts();
+                          }
                         },
                         icon: const Icon(Icons.add_reaction_outlined),
                         iconSize: 32,
@@ -219,38 +252,105 @@ class _ProfilePageState extends State<ProfilePage> {
                   const Divider(thickness: 1),
                   if (currentView == 'add') ...[
                     const SizedBox(height: 16),
-                    Center(
-                      child: Column(
-                        children: const [
-                          Text(
-                            '📸 Bagi Aktifitas Kamu!',
-                            style: TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.bold,
-                                color: Colors.green),
-                          ),
-                          SizedBox(height: 8),
-                          Text(
-                            'Belum ada postingan nih~\nYuk, bagikan momen seru kamu! 😄',
-                            textAlign: TextAlign.center,
-                            style:
-                                TextStyle(fontSize: 13, color: Colors.black54),
-                          ),
-                        ],
+                    if (isLoadingLikedPosts)
+                      const Center(child: CircularProgressIndicator())
+                    else if (likedPosts.isEmpty) ...[
+                      Center(
+                        child: Column(
+                          children: const [
+                            Text(
+                              '📸 Bagi Aktifitas Kamu!',
+                              style: TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.green),
+                            ),
+                            SizedBox(height: 8),
+                            Text(
+                              'Belum ada postingan nih~\nYuk, bagikan momen seru kamu! 😄',
+                              textAlign: TextAlign.center,
+                              style: TextStyle(
+                                  fontSize: 13, color: Colors.black54),
+                            ),
+                          ],
+                        ),
                       ),
-                    ),
-                  ] else if (currentView == 'chat') ...[
-                    if (isLoadingUsers) ...[
-                      const SizedBox(height: 16),
-                      const Center(child: CircularProgressIndicator()),
                     ] else ...[
-                      const SizedBox(height: 16),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 16),
+                        child: Align(
+                          alignment: Alignment.centerLeft,
+                          child: Text(
+                            '❤️ Postingan yang Kamu Sukai',
+                            style: const TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.green,
+                            ),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 8),
                       ListView.builder(
                         shrinkWrap: true,
                         physics: const NeverScrollableScrollPhysics(),
-                        itemCount: users.length,
+                        itemCount: likedPosts.length,
                         itemBuilder: (context, index) {
-                          final user = users[index];
+                          final post = likedPosts[index];
+                          return Card(
+                            margin: const EdgeInsets.symmetric(
+                                horizontal: 16, vertical: 8),
+                            shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12)),
+                            child: ListTile(
+                              leading: post['imageUrl'] != null
+                                  ? ClipRRect(
+                                      borderRadius: BorderRadius.circular(8),
+                                      child: Image.network(
+                                        post['imageUrl'],
+                                        width: 48,
+                                        height: 48,
+                                        fit: BoxFit.cover,
+                                      ),
+                                    )
+                                  : const Icon(Icons.image_not_supported),
+                              title: Text(post['title'] ?? 'Tanpa Judul'),
+                              subtitle:
+                                  Text(post['description'] ?? 'Tanpa deskripsi'),
+                            ),
+                          );
+                        },
+                      )
+                    ]
+                  ] else if (currentView == 'chat') ...[
+                    const SizedBox(height: 16),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      child: TextField(
+                        decoration: InputDecoration(
+                          hintText: 'Search users...',
+                          prefixIcon: Icon(Icons.search),
+                          border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12)),
+                        ),
+                        onChanged: (value) {
+                          setState(() {
+                            searchQuery = value;
+                            itemsToShow = 10;
+                          });
+                        },
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    if (isLoadingUsers)
+                      const Center(child: CircularProgressIndicator())
+                    else ...[
+                      ListView.builder(
+                        shrinkWrap: true,
+                        physics: const NeverScrollableScrollPhysics(),
+                        itemCount: filteredUsers.length,
+                        itemBuilder: (context, index) {
+                          final user = filteredUsers[index];
                           return Card(
                             margin: const EdgeInsets.symmetric(
                                 horizontal: 16, vertical: 6),
@@ -262,7 +362,7 @@ class _ProfilePageState extends State<ProfilePage> {
                                     NetworkImage(user['imageUrl'] ?? ''),
                               ),
                               title: Text(
-                                  user['firstname'] + " " + user['lastname']),
+                                  '${user['firstname']} ${user['lastname']}'),
                               subtitle: Text(user['bio'] ?? ''),
                               trailing:
                                   const Icon(Icons.chat, color: Colors.green),
@@ -272,9 +372,8 @@ class _ProfilePageState extends State<ProfilePage> {
                                   MaterialPageRoute(
                                     builder: (context) => ChatScreen(
                                       id_user_receiver: user['id'],
-                                      name: user['firstname'] +
-                                          " " +
-                                          user['lastname'],
+                                      name:
+                                          '${user['firstname']} ${user['lastname']}',
                                     ),
                                   ),
                                 );
@@ -283,8 +382,26 @@ class _ProfilePageState extends State<ProfilePage> {
                           );
                         },
                       ),
+                      if (filteredUsers.length <
+                          users.where((user) {
+                            final fullName =
+                                '${user['firstname']} ${user['lastname']}'
+                                    .toLowerCase();
+                            return fullName.contains(searchQuery.toLowerCase());
+                          }).length)
+                        Padding(
+                          padding: const EdgeInsets.all(16),
+                          child: ElevatedButton(
+                            onPressed: () {
+                              setState(() {
+                                itemsToShow += 10;
+                              });
+                            },
+                            child: const Text('View More'),
+                          ),
+                        ),
                     ]
-                  ],
+                  ]
                 ],
               ),
             ),

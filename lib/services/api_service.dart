@@ -1,8 +1,12 @@
 import 'dart:convert';
 import 'dart:io';
 import 'package:http/http.dart' as http;
+import 'package:http_parser/http_parser.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../models/user_profile.dart';
+import 'dart:typed_data';
+import 'package:flutter/foundation.dart';
+import 'package:http_parser/http_parser.dart' as http_parser;
 
 class ApiService {
   static const String _baseUrl =
@@ -38,79 +42,51 @@ class ApiService {
   }
 
   static Future<Map<String, dynamic>> updateUserProfile({
-    String? firstname,
-    String? lastname,
+    required String firstname,
+    required String lastname,
     String? bio,
-    String? gender,
-    File? image, // File dari picker
-    bool removeImage = false, // Kalau true, akan set Image jadi ""
+    required String gender,
+    Uint8List? imageBytes,
+    String? sessionId,
   }) async {
-    try {
-      final prefs = await SharedPreferences.getInstance();
-      final sessionId = prefs.getString('session_cookie');
-      final tt = prefs.getString('tt_cookie');
+    final prefs = await SharedPreferences.getInstance();
+    final sessionCookie = prefs.getString('session_cookie');
+    final ttCookie = prefs.getString('tt_cookie');
 
-      print('--- DEBUG: Starting updateUserProfile ---');
-      print('sessionId: $sessionId');
-      print('tt: $tt');
+    if (sessionCookie == null || ttCookie == null) {
+      throw Exception(
+          "❌ Gagal membuat post: Session tidak ditemukan. Harap login terlebih dahulu.");
+    }
+    final url = Uri.parse('$_baseUrl/api/profile');
 
-      final uri = Uri.parse('$_baseUrl/api/profile');
-      final request = http.MultipartRequest('PUT', uri);
+    final request = http.MultipartRequest('PUT', url);
 
-      // Headers
-      request.headers['Cookie'] = "session_id=$sessionId; tt=$tt";
-      request.headers['Accept'] = 'application/json';
+    request.headers['Cookie'] = "session_id=$sessionCookie; tt=$ttCookie";
 
-      print('Headers set: ${request.headers}');
+    request.fields['firstname'] = firstname;
+    request.fields['lastname'] = lastname;
+    request.fields['gender'] = gender;
 
-      // Fields
-      if (firstname != null) {
-        request.fields['firstname'] = firstname;
-        print('Field firstname: $firstname');
-      }
-      if (lastname != null) {
-        request.fields['lastname'] = lastname;
-        print('Field lastname: $lastname');
-      }
-      if (bio != null) {
-        request.fields['bio'] = bio;
-        print('Field bio: $bio');
-      }
-      if (gender != null) {
-        request.fields['gender'] = gender;
-        print('Field gender: $gender');
-      }
+    if (bio != null) request.fields['bio'] = bio;
 
-      // Image file or remove flag
-      if (image != null) {
-        final multipartFile =
-            await http.MultipartFile.fromPath('Image', image.path);
-        request.files.add(multipartFile);
-        print('Image file added: ${image.path}');
-      } else if (removeImage) {
-        request.fields['Image'] = "";
-        print('Image removal requested');
-      }
+    if (imageBytes != null) {
+      request.files.add(http.MultipartFile.fromBytes(
+        'Image',
+        imageBytes,
+        filename: 'profile.jpg',
+        contentType: MediaType('image', 'jpeg'),
+      ));
+    } else {
+      request.fields['Image'] = '';
+    }
 
-      print('Sending request to: $uri');
-      final streamedResponse = await request.send();
+    final response = await request.send();
+    final resBody = await response.stream.bytesToString();
 
-      final response = await http.Response.fromStream(streamedResponse);
-      print('Response status code: ${response.statusCode}');
-      print('Response body: ${response.body}');
-
-      if (response.statusCode == 200) {
-        final jsonResponse = jsonDecode(response.body);
-        print('Parsed JSON response: $jsonResponse');
-        return jsonResponse;
-      } else {
-        final errorResponse = jsonDecode(response.body);
-        print('Error from server: $errorResponse');
-        throw Exception(errorResponse['message'] ?? 'Gagal update user');
-      }
-    } catch (e) {
-      print('Exception caught in updateUserProfile: $e');
-      rethrow;
+    if (response.statusCode == 200) {
+      return jsonDecode(resBody);
+    } else {
+      throw Exception('Failed to update profile: $resBody');
     }
   }
 
