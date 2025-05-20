@@ -1,7 +1,9 @@
 import 'dart:convert';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 
 late SharedPreferences prefs;
 
@@ -10,10 +12,11 @@ Future<void> initPrefs() async {
 }
 
 class AuthService {
-  static const String _baseUrl = 'https://berework-production-ad0a.up.railway.app';
+  static const String _baseUrl =
+      'https://berework-production-ad0a.up.railway.app';
 
   // Pakai http.Client untuk persist cookie
-  final http.Client _client = http.Client(); 
+  final http.Client _client = http.Client();
 
   /// Mengecek apakah session cookie ada di penyimpanan lokal
   Future<bool> hasSessionCookie() async {
@@ -36,7 +39,6 @@ class AuthService {
         body: jsonEncode({"username": email, "password": password}),
       );
 
-      //cek value kiriman backend ke front-end
       print("🔍 Status Code: ${response.statusCode}");
       print("📜 Headers: ${response.headers}");
       print("📜 Response Body: ${response.body}");
@@ -44,14 +46,15 @@ class AuthService {
       if (response.statusCode == 200) {
         final cookies = response.headers['set-cookie'];
         print("📢 Full Set-Cookie Header: $cookies");
-        final json = jsonDecode(response.body); 
-        final user = json['user']; 
+
+        final json = jsonDecode(response.body);
+        final user = json['user'];
 
         if (cookies != null) {
-          // Ambil session_id dan tt dari cookies
           final prefs = await SharedPreferences.getInstance();
 
-          final sessionMatch = RegExp(r'session_id=([^;]+)').firstMatch(cookies);
+          final sessionMatch =
+              RegExp(r'session_id=([^;]+)').firstMatch(cookies);
           final ttMatch = RegExp(r'tt=([^;]+)').firstMatch(cookies);
 
           final sessionId = sessionMatch?.group(1);
@@ -67,16 +70,31 @@ class AuthService {
             await prefs.setString('tt_cookie', tt);
           }
           if (user != null) {
-            await prefs.setInt('user_id', user['id']);
-            print('user id berhasil disimpan');
+            final userId = user['id'];
+            await prefs.setInt('user_id', userId);
+            print('✅ User ID berhasil disimpan: $userId');
+
+            // // ✅ Ambil FCM token
+            // final fcmToken = await FirebaseMessaging.instance.getToken();
+            // print('📱 FCM Token: $fcmToken');
+
+            // // ✅ Kirim token ke Firestore (atau ke backend kalau kamu pakai API)
+            // if (fcmToken != null) {
+            //   await FirebaseFirestore.instance
+            //       .collection('users')
+            //       .doc(userId.toString())
+            //       .set({'fcm_token': fcmToken}, SetOptions(merge: true));
+            //   print("✅ Token FCM berhasil disimpan ke Firestore.");
+            // } else {
+            //   print("⚠️ Token FCM null");
+            // }
           }
 
-          //return sebagai akhir dari fungsi login ketika login berhasil
-          return null; 
+          return null; // Login berhasil
         } else {
           return "Login gagal: Cookie tidak diterima dari server.";
         }
-      } else { 
+      } else {
         final data = jsonDecode(response.body);
         return "Login gagal: ${data['message'] ?? 'Kesalahan tidak diketahui'}";
       }
@@ -153,7 +171,8 @@ class AuthService {
 
     try {
       var response = await http.post(
-        Uri.parse('https://berework-production-ad0a.up.railway.app/auth/register'),
+        Uri.parse(
+            'https://berework-production-ad0a.up.railway.app/auth/register'),
         headers: {
           'Content-Type': 'application/json',
         },
@@ -172,7 +191,8 @@ class AuthService {
         var errorResponse = jsonDecode(response.body);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Error: ${errorResponse['message'] ?? 'Terjadi kesalahan'}'),
+            content: Text(
+                'Error: ${errorResponse['message'] ?? 'Terjadi kesalahan'}'),
             backgroundColor: Colors.red,
           ),
         );

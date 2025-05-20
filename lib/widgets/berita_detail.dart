@@ -8,42 +8,46 @@ class BeritaDetail extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    const softGreen = Color(0xFFD0F0C0);
+    const mainGreen = Color(0xFF98DFAF);
+
     return Scaffold(
-      body: SafeArea( // Ensures it doesn’t go under status bar
+      backgroundColor: softGreen,
+      body: SafeArea(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Close Button Row
+            // Tombol Close
             Padding(
-              padding: const EdgeInsets.all(16),
+              padding: const EdgeInsets.all(12),
               child: Row(
-                mainAxisAlignment: MainAxisAlignment.start,
                 children: [
                   GestureDetector(
                     onTap: () => Navigator.pop(context),
                     child: Container(
-                      padding: EdgeInsets.all(8),
-                      decoration: BoxDecoration(
-                        color: Colors.black.withOpacity(0.6),
+                      padding: const EdgeInsets.all(8),
+                      decoration: const BoxDecoration(
+                        color: mainGreen,
                         shape: BoxShape.circle,
                       ),
-                      child: Icon(Icons.close, color: Colors.white),
+                      child: const Icon(Icons.close, color: Colors.white),
                     ),
                   ),
                 ],
               ),
             ),
 
-            // Main Content
+            // Isi Berita
             Expanded(
               child: SingleChildScrollView(
-                padding: EdgeInsets.symmetric(horizontal: 16),
+                padding: const EdgeInsets.symmetric(horizontal: 20),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
+                    // Gambar
                     berita['foto'] != null
                         ? ClipRRect(
-                            borderRadius: BorderRadius.circular(10),
+                            borderRadius: BorderRadius.circular(16),
                             child: Image.memory(
                               base64Decode(berita['foto']),
                               width: double.infinity,
@@ -52,21 +56,37 @@ class BeritaDetail extends StatelessWidget {
                           )
                         : Container(
                             height: 150,
-                            color: Colors.grey[300],
-                            child: Center(
-                              child: Icon(Icons.image, size: 50, color: Colors.grey),
+                            decoration: BoxDecoration(
+                              color: Colors.green[100],
+                              borderRadius: BorderRadius.circular(16),
+                            ),
+                            child: const Center(
+                              child: Icon(Icons.image, size: 50, color: Colors.white),
                             ),
                           ),
-                    SizedBox(height: 10),
+                    const SizedBox(height: 20),
+
+                    // Judul
                     Text(
-                      berita['judul'],
-                      style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                      berita['judul'] ?? '',
+                      style: const TextStyle(
+                        fontSize: 22,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.black87,
+                      ),
                     ),
-                    SizedBox(height: 10),
+                    const SizedBox(height: 12),
+
+                    // Isi Berita
                     Text(
-                      berita['isi'],
-                      style: TextStyle(fontSize: 16),
+                      berita['isi'] ?? '',
+                      style: const TextStyle(
+                        fontSize: 16,
+                        height: 1.5,
+                        color: Colors.black87,
+                      ),
                     ),
+                    const SizedBox(height: 20),
                   ],
                 ),
               ),

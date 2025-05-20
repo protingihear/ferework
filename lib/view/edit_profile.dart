@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'dart:io';
+import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import '../models/user_profile.dart';
@@ -8,10 +9,11 @@ import '../services/image_service.dart';
 
 class EditProfilePage extends StatefulWidget {
   final UserProfile profile;
-  final Function(UserProfile)? onSave;
 
-  const EditProfilePage({Key? key, required this.profile, this.onSave})
-      : super(key: key);
+  const EditProfilePage({
+    Key? key,
+    required this.profile,
+  }) : super(key: key);
 
   @override
   _EditProfilePageState createState() => _EditProfilePageState();
@@ -23,7 +25,6 @@ class _EditProfilePageState extends State<EditProfilePage> {
   String? selectedGender;
   File? profileImageFile;
   String profileImageUrl = "";
-  bool removeImage = false;
 
   @override
   void initState() {
@@ -34,27 +35,33 @@ class _EditProfilePageState extends State<EditProfilePage> {
     profileImageUrl = widget.profile.imageUrl;
   }
 
-  Future<void> saveProfile() async {
-    File? imageFileToUpload = profileImageFile;
+  @override
+  void dispose() {
+    nameController.dispose();
+    bioController.dispose();
+    super.dispose();
+  }
 
-    if (imageFileToUpload == null && profileImageUrl.isNotEmpty) {
-      File tempFile = File(profileImageUrl);
-      if (await tempFile.exists()) {
-        imageFileToUpload = tempFile;
-      }
+  Future<void> saveProfile() async {
+    Uint8List? imageBytes;
+
+    if (profileImageFile != null) {
+      imageBytes = await profileImageFile!.readAsBytes();
+    } else if (profileImageUrl.isEmpty) {
+      imageBytes = null;
     }
 
     try {
-      final updatedProfile = await ApiService.updateUserProfile(
-        firstname: nameController.text.isNotEmpty ? nameController.text : widget.profile.name,
-        lastname: "", // Opsional, bisa dikosongkan jika tidak digunakan
+      final updated = await ApiService.updateUserProfile(
+        firstname: nameController.text,
+        lastname: '', // bisa dikosongkan atau di-split dari name jika kamu mau
         bio: bioController.text,
         gender: selectedGender ?? 'Laki-Laki',
-        image: imageFileToUpload,
-        removeImage: removeImage,
+        imageBytes: imageBytes,
       );
 
-      Navigator.pop(context, updatedProfile);
+      showSnackbar("Berhasil disimpan!");
+      Navigator.pop(context, updated);
     } catch (e) {
       showSnackbar('Gagal menyimpan: $e');
     }
@@ -64,7 +71,8 @@ class _EditProfilePageState extends State<EditProfilePage> {
     showModalBottomSheet(
       context: context,
       shape: const RoundedRectangleBorder(
-          borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
       builder: (context) {
         return SafeArea(
           child: Wrap(
@@ -86,7 +94,6 @@ class _EditProfilePageState extends State<EditProfilePage> {
                   setState(() {
                     profileImageFile = null;
                     profileImageUrl = '';
-                    removeImage = true;
                   });
                   Navigator.pop(context);
                 },
@@ -104,7 +111,6 @@ class _EditProfilePageState extends State<EditProfilePage> {
       setState(() {
         profileImageFile = imageFile;
         profileImageUrl = imageFile.path;
-        removeImage = false;
       });
     }
     Navigator.pop(context);

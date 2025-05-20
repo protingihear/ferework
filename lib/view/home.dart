@@ -10,6 +10,8 @@ import '../widgets/berita_detail.dart';
 import 'package:reworkmobile/view/voice_to_text.dart';
 
 class HomeScreen extends StatefulWidget {
+  const HomeScreen({Key? key}) : super(key: key);
+  
   @override
   _HomeScreenState createState() => _HomeScreenState();
 }

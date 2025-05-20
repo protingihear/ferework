@@ -1,194 +1,154 @@
-import 'dart:convert';
 import 'dart:io';
-
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:reworkmobile/services/comumnity_service.dart';
 import 'package:flutter_image_compress/flutter_image_compress.dart';
-import '../services/comumnity_service.dart';
+import 'package:path_provider/path_provider.dart';
 
 class AddCommunityPage extends StatefulWidget {
+  const AddCommunityPage({Key? key}) : super(key: key);
+
   @override
-  _AddCommunityPageState createState() => _AddCommunityPageState();
+  State<AddCommunityPage> createState() => _AddCommunityPageState();
 }
 
 class _AddCommunityPageState extends State<AddCommunityPage> {
+  final _formKey = GlobalKey<FormState>();
   final TextEditingController _nameController = TextEditingController();
-  final TextEditingController _descriptionController = TextEditingController();
-  bool _isLoading = false;
+  final TextEditingController _descController = TextEditingController();
+
   File? _selectedImage;
-  String? _base64Image;
+  bool _isLoading = false;
 
-  final ImagePicker _picker = ImagePicker();
+  Future<void> _pickImage() async {
+    final picker = ImagePicker();
+    final picked = await picker.pickImage(source: ImageSource.gallery);
 
-  // 🔹 Fungsi untuk memilih dan mengompres gambar
-  Future<void> _pickAndCompressImage(ImageSource source) async {
-    final pickedFile = await _picker.pickImage(source: source, imageQuality: 80);
-    if (pickedFile == null) return;
+    if (picked != null) {
+      final dir = await getTemporaryDirectory();
+      final targetPath =
+          '${dir.path}/img_${DateTime.now().millisecondsSinceEpoch}.jpg';
 
-    File imageFile = File(pickedFile.path);
-
-    // 🔹 Kompres gambar hingga kurang dari 2MB
-    File? compressedImage = await _compressImage(imageFile);
-
-    if (compressedImage != null) {
-      List<int> imageBytes = await compressedImage.readAsBytes();
-      String base64String = base64Encode(imageBytes);
-
-      setState(() {
-        _selectedImage = compressedImage;
-        _base64Image = base64String;
-      });
-    } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Gambar terlalu besar! Pilih gambar lain.")),
-      );
-    }
-  }
-
-  // 🔹 Fungsi untuk mengompres gambar hingga kurang dari 2MB
-  Future<File?> _compressImage(File file) async {
-    int fileSize = await file.length();
-    
-    if (fileSize <= 2 * 1024 * 1024) return file; // Jika sudah <2MB, langsung pakai
-
-    String targetPath = file.path.replaceAll(".jpg", "_compressed.jpg");
-
-    int quality = 90;
-    File? compressedFile;
-
-    while (fileSize > 2 * 1024 * 1024 && quality > 10) {
-      var result = await FlutterImageCompress.compressAndGetFile(
-        file.absolute.path, targetPath,
-        quality: quality,
+      // Kompres file
+      final compressed = await FlutterImageCompress.compressAndGetFile(
+        picked.path,
+        targetPath,
+        minWidth: 480,
+        minHeight: 640,
+        quality: 40,
       );
 
-      if (result != null) {
-        compressedFile = File(result.path);
-        fileSize = await compressedFile.length();
+      if (compressed != null) {
+        setState(() {
+          _selectedImage = File(compressed.path); // Fix: konversi ke File
+        });
       }
-
-      quality -= 10; // Kurangi kualitas jika masih terlalu besar
     }
-
-    return fileSize <= 2 * 1024 * 1024 ? compressedFile : null;
   }
 
-  void _submitCommunity() async {
-    if (_nameController.text.isEmpty || _descriptionController.text.isEmpty || _base64Image == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Semua field harus diisi!")),
-      );
-      return;
-    }
+  Future<void> _submit() async {
+    if (!_formKey.currentState!.validate()) return;
 
-    setState(() {
-      _isLoading = true;
-    });
+    setState(() => _isLoading = true);
 
     try {
-      await ApiService.createCommunity(
-        _nameController.text,
-        _descriptionController.text,
-        _base64Image!,
+      final response = await ComumnityService.createCommunity(
+        name: _nameController.text,
+        description: _descController.text,
+        imageFile: _selectedImage,
       );
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("✅ Komunitas berhasil dibuat!")),
-      );
-
-      Navigator.pop(context, true); // Tutup halaman dan refresh sebelumnya
+      if (response.statusCode == 201) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text("🎉 Komunitas berhasil dibuat!")),
+        );
+        Navigator.pop(context);
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text("❌ Gagal membuat komunitas.")),
+        );
+      }
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("❌ Gagal membuat komunitas: $e")),
+        SnackBar(content: Text("❗ Terjadi kesalahan: $e")),
       );
     } finally {
-      setState(() {
-        _isLoading = false;
-      });
+      setState(() => _isLoading = false);
     }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text("Buat Komunitas")),
-      body: SingleChildScrollView(
-        padding: EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            TextField(
-              controller: _nameController,
-              decoration: InputDecoration(
-                labelText: "Nama Komunitas",
-                border: OutlineInputBorder(),
+      appBar: AppBar(title: const Text("Tambah Komunitas")),
+      body: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Form(
+          key: _formKey,
+          child: ListView(
+            children: [
+              // Nama komunitas
+              TextFormField(
+                controller: _nameController,
+                decoration: const InputDecoration(
+                  labelText: 'Nama Komunitas',
+                  border: OutlineInputBorder(),
+                ),
+                validator: (val) =>
+                    val == null || val.isEmpty ? 'Wajib diisi' : null,
               ),
-            ),
-            SizedBox(height: 10),
-            TextField(
-              controller: _descriptionController,
-              decoration: InputDecoration(
-                labelText: "Deskripsi",
-                border: OutlineInputBorder(),
+              const SizedBox(height: 16),
+
+              // Deskripsi
+              TextFormField(
+                controller: _descController,
+                decoration: const InputDecoration(
+                  labelText: 'Deskripsi',
+                  border: OutlineInputBorder(),
+                ),
+                maxLines: 3,
+                validator: (val) =>
+                    val == null || val.isEmpty ? 'Wajib diisi' : null,
               ),
-              maxLines: 3,
-            ),
-            SizedBox(height: 10),
+              const SizedBox(height: 16),
 
-            // 🔹 Pratinjau gambar yang dipilih
-            _selectedImage != null
-                ? Column(
-                    children: [
-                      Stack(
-                        alignment: Alignment.topRight,
-                        children: [
-                          Image.file(_selectedImage!, height: 150),
-                          IconButton(
-                            icon: Icon(Icons.cancel, color: Colors.red),
-                            onPressed: () {
-                              setState(() {
-                                _selectedImage = null;
-                                _base64Image = null;
-                              });
-                            },
-                          ),
-                        ],
-                      ),
-                      SizedBox(height: 10),
-                    ],
-                  )
-                : Container(),
-
-            // 🔹 Tombol untuk memilih gambar
-            _selectedImage == null
-                ? Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                    children: [
-                      ElevatedButton.icon(
-                        onPressed: () => _pickAndCompressImage(ImageSource.camera),
-                        icon: Icon(Icons.camera_alt),
-                        label: Text("Kamera"),
-                      ),
-                      ElevatedButton.icon(
-                        onPressed: () => _pickAndCompressImage(ImageSource.gallery),
-                        icon: Icon(Icons.image),
-                        label: Text("Galeri"),
-                      ),
-                    ],
-                  )
-                : Container(),
-
-            SizedBox(height: 16),
-            _isLoading
-                ? Center(child: CircularProgressIndicator())
-                : SizedBox(
-                    width: double.infinity,
-                    child: ElevatedButton(
-                      onPressed: _submitCommunity,
-                      child: Text("Buat Komunitas"),
-                    ),
+              // Gambar
+              GestureDetector(
+                onTap: _pickImage,
+                child: Container(
+                  height: 180,
+                  decoration: BoxDecoration(
+                    border: Border.all(color: Colors.grey),
+                    borderRadius: BorderRadius.circular(8),
+                    color: Colors.grey[100],
                   ),
-          ],
+                  child: _selectedImage != null
+                      ? ClipRRect(
+                          borderRadius: BorderRadius.circular(8),
+                          child: Image.file(
+                            _selectedImage!,
+                            width: double.infinity,
+                            height: 180,
+                            fit: BoxFit.cover,
+                          ),
+                        )
+                      : const Center(child: Text('Klik untuk pilih gambar')),
+                ),
+              ),
+              const SizedBox(height: 24),
+
+              // Tombol submit
+              ElevatedButton.icon(
+                onPressed: _isLoading ? null : _submit,
+                icon: const Icon(Icons.send),
+                label: Text(_isLoading ? "Mengirim..." : "Buat Komunitas"),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.green[600],
+                  padding: const EdgeInsets.symmetric(vertical: 14),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
