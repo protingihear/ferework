@@ -9,9 +9,14 @@ import '../widgets/feature_button.dart';
 import '../widgets/berita_detail.dart';
 import 'package:reworkmobile/view/voice_to_text.dart';
 
+const Color kGreenSoft = Color(0xFFE8F5E9);
+const Color kGreenMid = Color(0xFF81C784);
+const Color kGreenDark = Color(0xFF388E3C);
+const Color kGreenLightAccent = Color(0xFFB3E5FC);
+
 class HomeScreen extends StatefulWidget {
   const HomeScreen({Key? key}) : super(key: key);
-  
+
   @override
   _HomeScreenState createState() => _HomeScreenState();
 }
@@ -72,7 +77,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
     return SafeArea(
       child: Scaffold(
-        backgroundColor: Colors.white,
+        backgroundColor: kGreenSoft,
         body: SingleChildScrollView(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -104,7 +109,7 @@ class _HomeScreenState extends State<HomeScreen> {
           height: 200,
           padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 20.0),
           decoration: BoxDecoration(
-            color: Colors.white.withOpacity(0.2),
+            color: kGreenMid.withOpacity(0.85),
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -113,21 +118,22 @@ class _HomeScreenState extends State<HomeScreen> {
                 children: [
                   CircleAvatar(
                     radius: 28,
-                    backgroundColor: Color(0xFFD1F2EB),
+                    backgroundColor: kGreenLightAccent,
                     backgroundImage: _getUserProfileImage(),
                     child: _userProfile?.imageUrl == null ||
                             _userProfile!.imageUrl.isEmpty
                         ? const Icon(Icons.person,
-                            size: 30, color: Color(0xFF27AE60))
+                            size: 30, color: kGreenDark)
                         : null,
                   ),
                   const SizedBox(width: 10),
                   Text(
                     _userProfile?.name ?? "\u{1F464} Memuat...",
                     style: const TextStyle(
-                        fontSize: 18,
-                        color: Colors.white,
-                        fontWeight: FontWeight.bold),
+                      fontSize: 18,
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                 ],
               ),
@@ -177,6 +183,7 @@ class _HomeScreenState extends State<HomeScreen> {
             label: 'Scan to Text',
             onTap: () {},
             width: screenWidth * 0.26,
+            color: kGreenLightAccent,
           ),
           FeatureButton(
             imagePath: 'assets/voice_icon.png',
@@ -186,6 +193,7 @@ class _HomeScreenState extends State<HomeScreen> {
               MaterialPageRoute(builder: (context) => VoiceToTextScreen()),
             ),
             width: screenWidth * 0.26,
+            color: kGreenLightAccent,
           ),
           FeatureButton(
             imagePath: 'assets/lesson_icon.png',
@@ -195,6 +203,7 @@ class _HomeScreenState extends State<HomeScreen> {
               MaterialPageRoute(builder: (context) => Lessonkategori()),
             ),
             width: screenWidth * 0.26,
+            color: kGreenLightAccent,
           ),
         ],
       ),
@@ -210,11 +219,14 @@ class _HomeScreenState extends State<HomeScreen> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              const Text("📰 Berita Terbaru",
-                  style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                      color: Color(0xFF27AE60))),
+              const Text(
+                "📰 Berita Terbaru",
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: kGreenDark,
+                ),
+              ),
               GestureDetector(
                 onTap: () {
                   Navigator.push(
@@ -222,20 +234,27 @@ class _HomeScreenState extends State<HomeScreen> {
                     MaterialPageRoute(builder: (context) => AllBeritaPage()),
                   );
                 },
-                child: const Text("Lihat Semua",
-                    style: TextStyle(
-                      decoration: TextDecoration.underline,
-                      fontSize: 14,
-                      color: Colors.blue,
-                    )),
-              )
+                child: const Text(
+                  "Lihat Semua",
+                  style: TextStyle(
+                    decoration: TextDecoration.underline,
+                    fontSize: 14,
+                    color: Colors.blue,
+                  ),
+                ),
+              ),
             ],
           ),
           const SizedBox(height: 10),
           _isLoading
               ? const Center(child: CircularProgressIndicator())
               : _hasError
-                  ? const Center(child: Text("⚠️ Gagal memuat berita"))
+                  ? const Center(
+                      child: Text(
+                        "😢 Gagal memuat berita. Coba lagi ya!",
+                        style: TextStyle(color: Colors.redAccent),
+                      ),
+                    )
                   : SizedBox(
                       height: 230,
                       child: ListView.separated(
@@ -255,7 +274,7 @@ class _HomeScreenState extends State<HomeScreen> {
                           );
                         },
                       ),
-                    )
+                    ),
         ],
       ),
     );

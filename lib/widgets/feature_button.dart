@@ -4,13 +4,15 @@ class FeatureButton extends StatelessWidget {
   final String imagePath;
   final String label;
   final VoidCallback onTap;
-  final double? width; 
+  final double? width;
+  final Color? color; // ✅ Tambahkan parameter color
 
   const FeatureButton({
     required this.imagePath,
     required this.label,
     required this.onTap,
-    this.width, 
+    this.width,
+    this.color,
     Key? key,
   }) : super(key: key);
 
@@ -19,12 +21,13 @@ class FeatureButton extends StatelessWidget {
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        width: width ?? 100, 
+        width: width ?? 100,
         padding: const EdgeInsets.symmetric(vertical: 12),
         decoration: BoxDecoration(
-          color: Colors.lightBlue,
+          color:
+              color ?? Colors.lightBlue, 
           borderRadius: BorderRadius.circular(16),
-          boxShadow: [
+          boxShadow: const [
             BoxShadow(
               color: Colors.black12,
               blurRadius: 6,
@@ -72,6 +75,8 @@ class FeatureButtonRow extends StatelessWidget {
             label: feature['label'],
             onTap: feature['onTap'],
             width: buttonWidth,
+            color: feature[
+                'color'], 
           );
         }).toList(),
       ),

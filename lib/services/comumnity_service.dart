@@ -204,4 +204,137 @@ class ComumnityService {
       rethrow;
     }
   }
+
+  static Future<List<dynamic>> fetchMyPosts() async {
+    final url = Uri.parse('$baseUrl/posts/mine');
+
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final sessionId = prefs.getString('session_cookie');
+      final tt = prefs.getString('tt_cookie');
+
+      if (sessionId == null || tt == null) {
+        throw Exception("Session ID or tt not found");
+      }
+      final response = await http.get(
+        url,
+        headers: {
+          'Content-Type': 'application/json',
+          'Cookie': "session_id=$sessionId; tt=$tt",
+        },
+      );
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        return data['posts'];
+      } else {
+        throw Exception('Gagal memuat data post: ${response.statusCode}');
+      }
+    } catch (e) {
+      throw Exception('Terjadi kesalahan: $e');
+    }
+  }
+
+  static Future<void> likeContent({
+    required String communityId,
+    required String postId,
+    String? replyId,
+  }) async {
+    final prefs = await SharedPreferences.getInstance();
+    final sessionId = prefs.getString('session_cookie');
+    final tt = prefs.getString('tt_cookie');
+
+    if (sessionId == null || tt == null) {
+      throw Exception("Session ID or tt not found");
+    }
+
+    final uri = Uri.parse(
+      'https://berework-production-ad0a.up.railway.app/api/communities/$communityId/posts/$postId/likes${replyId != null ? '?replyId=$replyId' : ''}',
+    );
+
+    final response = await http.post(
+      uri,
+      headers: {
+        'Content-Type': 'application/json',
+        'Cookie': 'session_id=$sessionId; tt=$tt',
+      },
+    );
+
+    if (response.statusCode == 200) {
+      print("Liked successfully");
+    } else {
+      print("Failed to like: ${response.statusCode} ${response.body}");
+      throw Exception("Failed to like content");
+    }
+  }
+
+  static Future<void> unlikeContent({
+    required String communityId,
+    required String postId,
+    String? replyId,
+  }) async {
+    final prefs = await SharedPreferences.getInstance();
+    final sessionId = prefs.getString('session_cookie');
+    final tt = prefs.getString('tt_cookie');
+
+    if (sessionId == null || tt == null) {
+      throw Exception("Session ID or tt not found");
+    }
+
+    final uri = Uri.parse(
+      'https://berework-production-ad0a.up.railway.app/api/communities/$communityId/posts/$postId/likes${replyId != null ? '?replyId=$replyId' : ''}',
+    );
+
+    final response = await http.delete(
+      uri,
+      headers: {
+        'Content-Type': 'application/json',
+        'Cookie': 'session_id=$sessionId; tt=$tt',
+      },
+    );
+
+    if (response.statusCode == 200) {
+      print("Unliked successfully");
+    } else if (response.statusCode == 404) {
+      print("Like tidak ditemukan");
+    } else {
+      print("Gagal unlike: ${response.statusCode} ${response.body}");
+      throw Exception("Failed to unlike content");
+    }
+  }
+
+  static Future<void> sendReply({
+    required int communityId,
+    required int postId,
+    required String content,
+    int? replyId, // opsional
+  }) async {
+    final prefs = await SharedPreferences.getInstance();
+    final sessionId = prefs.getString('session_cookie');
+    final tt = prefs.getString('tt_cookie');
+
+    if (sessionId == null || tt == null) {
+      throw Exception("Session ID or tt not found");
+    }
+
+    final url = Uri.parse(
+      "https://berework-production-ad0a.up.railway.app/api/communities/$communityId/posts/$postId/replies",
+    );
+
+    final response = await http.post(
+      url,
+      headers: {
+        'Cookie': 'session_id=$sessionId; tt=$tt',
+        'Content-Type': 'application/json',
+      },
+      body: jsonEncode({
+        'content': content,
+        if (replyId != null) 'replyId': replyId,
+      }),
+    );
+
+    if (response.statusCode != 201 && response.statusCode != 200) {
+      throw Exception("Gagal mengirim komentar: ${response.body}");
+    }
+  }
 }

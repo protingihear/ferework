@@ -13,6 +13,13 @@ class AddCommunityPage extends StatefulWidget {
 }
 
 class _AddCommunityPageState extends State<AddCommunityPage> {
+  // Warna hijau lembut dominan
+  final Color kGreenVerySoft = const Color(0xFFF1F8E9);
+  final Color kGreenSoft = const Color(0xFFC8E6C9);
+  final Color kGreenLight = const Color(0xFF81C784);
+  final Color kGreenAccent = const Color(0xFF66BB6A);
+  final Color kGreenDark = const Color(0xFF388E3C);
+
   final _formKey = GlobalKey<FormState>();
   final TextEditingController _nameController = TextEditingController();
   final TextEditingController _descController = TextEditingController();
@@ -29,7 +36,6 @@ class _AddCommunityPageState extends State<AddCommunityPage> {
       final targetPath =
           '${dir.path}/img_${DateTime.now().millisecondsSinceEpoch}.jpg';
 
-      // Kompres file
       final compressed = await FlutterImageCompress.compressAndGetFile(
         picked.path,
         targetPath,
@@ -40,7 +46,7 @@ class _AddCommunityPageState extends State<AddCommunityPage> {
 
       if (compressed != null) {
         setState(() {
-          _selectedImage = File(compressed.path); // Fix: konversi ke File
+          _selectedImage = File(compressed.path);
         });
       }
     }
@@ -80,51 +86,56 @@ class _AddCommunityPageState extends State<AddCommunityPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text("Tambah Komunitas")),
+      backgroundColor: kGreenVerySoft,
+      appBar: AppBar(
+        backgroundColor: kGreenLight,
+        title: const Text("Tambah Komunitas"),
+        foregroundColor: Colors.white,
+        elevation: 0,
+      ),
       body: Padding(
         padding: const EdgeInsets.all(16),
         child: Form(
           key: _formKey,
           child: ListView(
             children: [
-              // Nama komunitas
               TextFormField(
                 controller: _nameController,
-                decoration: const InputDecoration(
+                decoration: InputDecoration(
                   labelText: 'Nama Komunitas',
-                  border: OutlineInputBorder(),
+                  filled: true,
+                  fillColor: kGreenSoft,
+                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
                 ),
                 validator: (val) =>
                     val == null || val.isEmpty ? 'Wajib diisi' : null,
               ),
               const SizedBox(height: 16),
-
-              // Deskripsi
               TextFormField(
                 controller: _descController,
-                decoration: const InputDecoration(
-                  labelText: 'Deskripsi',
-                  border: OutlineInputBorder(),
-                ),
                 maxLines: 3,
+                decoration: InputDecoration(
+                  labelText: 'Deskripsi',
+                  filled: true,
+                  fillColor: kGreenSoft,
+                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                ),
                 validator: (val) =>
                     val == null || val.isEmpty ? 'Wajib diisi' : null,
               ),
               const SizedBox(height: 16),
-
-              // Gambar
               GestureDetector(
                 onTap: _pickImage,
                 child: Container(
                   height: 180,
                   decoration: BoxDecoration(
-                    border: Border.all(color: Colors.grey),
-                    borderRadius: BorderRadius.circular(8),
-                    color: Colors.grey[100],
+                    color: kGreenSoft,
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: kGreenLight, width: 1.5),
                   ),
                   child: _selectedImage != null
                       ? ClipRRect(
-                          borderRadius: BorderRadius.circular(8),
+                          borderRadius: BorderRadius.circular(12),
                           child: Image.file(
                             _selectedImage!,
                             width: double.infinity,
@@ -132,19 +143,26 @@ class _AddCommunityPageState extends State<AddCommunityPage> {
                             fit: BoxFit.cover,
                           ),
                         )
-                      : const Center(child: Text('Klik untuk pilih gambar')),
+                      : Center(
+                          child: Text(
+                            'Klik untuk pilih gambar',
+                            style: TextStyle(color: kGreenDark),
+                          ),
+                        ),
                 ),
               ),
               const SizedBox(height: 24),
-
-              // Tombol submit
               ElevatedButton.icon(
                 onPressed: _isLoading ? null : _submit,
                 icon: const Icon(Icons.send),
                 label: Text(_isLoading ? "Mengirim..." : "Buat Komunitas"),
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.green[600],
+                  backgroundColor: kGreenLight,
+                  foregroundColor: Colors.white,
                   padding: const EdgeInsets.symmetric(vertical: 14),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
                 ),
               ),
             ],

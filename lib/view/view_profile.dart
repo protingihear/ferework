@@ -6,6 +6,7 @@ import 'package:reworkmobile/services/comumnity_service.dart';
 import 'package:reworkmobile/view/chat_view.dart';
 import 'package:reworkmobile/view/edit_profile.dart';
 import 'package:reworkmobile/view/view_setting.dart';
+import 'package:reworkmobile/widgets/post_card.dart';
 import 'sign_in.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:http/http.dart' as http;
@@ -23,17 +24,31 @@ class _ProfilePageState extends State<ProfilePage> {
   String currentView = 'add';
   bool isLoadingUsers = false;
 
-  List<dynamic> likedPosts = [];
-  bool isLoadingLikedPosts = false;
-  bool hasFetchedLikedPosts = false;
+  List<dynamic> myPosts = [];
+  int myPostsCount = 0;
+  bool isLoadingMyPosts = false;
+  bool hasFetchedMyPosts = false;
 
   int itemsToShow = 10;
   String searchQuery = '';
+
+  late List<bool> isLikedList;
+
+  int? currentUserId;
 
   @override
   void initState() {
     super.initState();
     _profileFuture = ApiService.fetchUserProfile();
+    loadMyPosts();
+    loadUserId();
+  }
+
+  void loadUserId() async {
+    final prefs = await SharedPreferences.getInstance();
+    setState(() {
+      currentUserId = prefs.getInt('user_id');
+    });
   }
 
   void _updateProfile(UserProfile updatedProfile) {
@@ -72,21 +87,23 @@ class _ProfilePageState extends State<ProfilePage> {
     }
   }
 
-  Future<void> loadLikedPosts() async {
+  Future<void> loadMyPosts() async {
     setState(() {
-      isLoadingLikedPosts = true;
+      isLoadingMyPosts = true;
     });
 
     try {
-      likedPosts = await ComumnityService.getLikedPosts();
+      myPosts = await ComumnityService.fetchMyPosts();
+      myPostsCount = myPosts.length;
     } catch (e) {
-      print("Failed to load liked posts: $e");
-      likedPosts = [];
+      print("Failed to load my posts: $e");
+      myPosts = [];
+      myPostsCount = 0;
     }
 
     setState(() {
-      isLoadingLikedPosts = false;
-      hasFetchedLikedPosts = true;
+      isLoadingMyPosts = false;
+      hasFetchedMyPosts = true;
     });
   }
 
@@ -146,7 +163,7 @@ class _ProfilePageState extends State<ProfilePage> {
                           child: Row(
                             mainAxisAlignment: MainAxisAlignment.spaceAround,
                             children: [
-                              _buildStatColumn('Post', '0'),
+                              _buildStatColumn('Post', myPostsCount.toString()),
                               _buildStatColumn('Teman', '0'),
                               _buildStatColumn('Fans', '0'),
                             ],
@@ -173,7 +190,7 @@ class _ProfilePageState extends State<ProfilePage> {
                           ),
                           const SizedBox(height: 4),
                           Text(
-                            '"${profile.bio}"',
+                            '${profile.bio}',
                             style: const TextStyle(
                                 fontSize: 13, color: Colors.black87),
                           ),
@@ -222,8 +239,8 @@ class _ProfilePageState extends State<ProfilePage> {
                           setState(() {
                             currentView = 'add';
                           });
-                          if (!hasFetchedLikedPosts) {
-                            await loadLikedPosts();
+                          if (!hasFetchedMyPosts) {
+                            await loadMyPosts();
                           }
                         },
                         icon: const Icon(Icons.add_reaction_outlined),
@@ -252,9 +269,9 @@ class _ProfilePageState extends State<ProfilePage> {
                   const Divider(thickness: 1),
                   if (currentView == 'add') ...[
                     const SizedBox(height: 16),
-                    if (isLoadingLikedPosts)
+                    if (isLoadingMyPosts)
                       const Center(child: CircularProgressIndicator())
-                    else if (likedPosts.isEmpty) ...[
+                    else if (myPosts.isEmpty) ...[
                       Center(
                         child: Column(
                           children: const [
@@ -281,7 +298,7 @@ class _ProfilePageState extends State<ProfilePage> {
                         child: Align(
                           alignment: Alignment.centerLeft,
                           child: Text(
-                            '❤️ Postingan yang Kamu Sukai',
+                            '📸 Aktivitas Postingan Community',
                             style: const TextStyle(
                               fontSize: 16,
                               fontWeight: FontWeight.bold,
@@ -292,35 +309,27 @@ class _ProfilePageState extends State<ProfilePage> {
                       ),
                       const SizedBox(height: 8),
                       ListView.builder(
-                        shrinkWrap: true,
-                        physics: const NeverScrollableScrollPhysics(),
-                        itemCount: likedPosts.length,
-                        itemBuilder: (context, index) {
-                          final post = likedPosts[index];
-                          return Card(
-                            margin: const EdgeInsets.symmetric(
-                                horizontal: 16, vertical: 8),
-                            shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(12)),
-                            child: ListTile(
-                              leading: post['imageUrl'] != null
-                                  ? ClipRRect(
-                                      borderRadius: BorderRadius.circular(8),
-                                      child: Image.network(
-                                        post['imageUrl'],
-                                        width: 48,
-                                        height: 48,
-                                        fit: BoxFit.cover,
-                                      ),
-                                    )
-                                  : const Icon(Icons.image_not_supported),
-                              title: Text(post['title'] ?? 'Tanpa Judul'),
-                              subtitle:
-                                  Text(post['description'] ?? 'Tanpa deskripsi'),
-                            ),
-                          );
-                        },
-                      )
+                          shrinkWrap: true,
+                          physics: const NeverScrollableScrollPhysics(),
+                          itemCount: myPosts.length,
+                          itemBuilder: (context, index) {
+                            final post = myPosts[index];
+                            final community = post['community'];
+                            print(community);
+
+                            return Padding(
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 16.0),
+                              child: PostCard(
+                                post: post,
+                                currentUserId: currentUserId ?? 0,
+                                onLikeChanged: () {
+                                  setState(() {});
+                                },
+                                community: community,
+                              ),
+                            );
+                          })
                     ]
                   ] else if (currentView == 'chat') ...[
                     const SizedBox(height: 16),

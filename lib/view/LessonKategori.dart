@@ -2,6 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:reworkmobile/services/method_service.dart';
 import 'package:reworkmobile/view/LessonSubKategori.dart';
 
+const softGreen = Color(0xFFD0F0C0);
+const mainGreen = Color(0xFF98DFAF);
+const Color kGreenSoft = Color(0xFFE8F5E9);
+const Color kGreenLightAccent = Color(0xFFB3E5FC);
+
 class Lessonkategori extends StatefulWidget {
   @override
   _LessonkategoriState createState() => _LessonkategoriState();
@@ -27,6 +32,7 @@ class _LessonkategoriState extends State<Lessonkategori> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: kGreenSoft,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
@@ -39,14 +45,15 @@ class _LessonkategoriState extends State<Lessonkategori> {
           style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold),
         ),
         centerTitle: true,
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.add, color: Colors.green),
-            onPressed: () => MethodService.showChoiceDialog(context),
-          ),
-        ],
+      ),
+      floatingActionButton: FloatingActionButton(
+        backgroundColor: kGreenLightAccent,
+        foregroundColor: Colors.white,
+        onPressed: () => MethodService.showChoiceDialog(context),
+        child: const Icon(Icons.add),
       ),
       body: SingleChildScrollView(
+        
         child: Column(
           children: [
             Center(
@@ -110,8 +117,8 @@ class _LessonkategoriState extends State<Lessonkategori> {
                 } else {
                   List<Map<String, dynamic>> sortedLessons =
                       List.from(snapshot.data!);
-                  sortedLessons.sort((a, b) =>
-                      (a['name'] ?? '').compareTo(b['name'] ?? ''));
+                  sortedLessons.sort(
+                      (a, b) => (a['name'] ?? '').compareTo(b['name'] ?? ''));
 
                   return Container(
                     margin:
@@ -131,7 +138,6 @@ class _LessonkategoriState extends State<Lessonkategori> {
                           future: MethodService.fetchProgress(
                               lesson['id'].toString(), userId!),
                           builder: (context, progressSnapshot) {
-
                             var progress =
                                 progressSnapshot.data?['progress'] ?? 0.0;
 
