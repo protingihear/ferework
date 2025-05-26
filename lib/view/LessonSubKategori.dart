@@ -47,7 +47,7 @@ class _SubCategoryPageState extends State<SubCategoryPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: Color(0xFFE8F5E9),
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,

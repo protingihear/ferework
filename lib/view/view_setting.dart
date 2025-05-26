@@ -146,7 +146,7 @@ class SettingsPage extends StatelessWidget {
                     context,
                     MaterialPageRoute(
                         builder: (context) =>
-                            SplashScreen()), // <-- Diubah ke HomeScreen
+                            SplashScreen()),
                   );
                 },
                 shape: RoundedRectangleBorder(

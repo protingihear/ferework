@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:reworkmobile/view/view_reset_password.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:reworkmobile/main_screen.dart';
 import 'package:reworkmobile/services/auth_service.dart';
@@ -83,8 +84,7 @@ class _Sign_In_PageState extends State<Sign_In_Page> {
                         'assets/logo.png',
                         height: 100,
                         width: 100,
-                        fit: BoxFit
-                            .cover,
+                        fit: BoxFit.cover,
                       ),
                       const SizedBox(height: 12),
                       const Text(
@@ -182,7 +182,13 @@ class _Sign_In_PageState extends State<Sign_In_Page> {
                 Align(
                   alignment: Alignment.centerRight,
                   child: GestureDetector(
-                    onTap: () => print('Forgot Password tapped'),
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                            builder: (context) => const ForgotPasswordPage()),
+                      );
+                    },
                     child: const Text(
                       'Forgot your password?',
                       style: TextStyle(

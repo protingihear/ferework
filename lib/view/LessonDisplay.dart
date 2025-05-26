@@ -25,7 +25,6 @@ class _VideoPlayerPageState extends State<VideoPlayerPage> {
   void initState() {
     super.initState();
 
-    // Cek apakah URL valid
     if (!_isValidUrl(widget.videoUrl)) {
       setState(() {
         _isError = true;
@@ -33,7 +32,7 @@ class _VideoPlayerPageState extends State<VideoPlayerPage> {
       return;
     }
 
-    _controller = VideoPlayerController.networkUrl(Uri.parse(widget.videoUrl))
+    _controller = VideoPlayerController.network(widget.videoUrl)
       ..initialize().then((_) {
         if (mounted) {
           setState(() {});
@@ -63,61 +62,110 @@ class _VideoPlayerPageState extends State<VideoPlayerPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text("Pemutar Video"),
-        backgroundColor: Colors.black,
-        foregroundColor: Colors.white,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
-          onPressed: () => Navigator.pop(context),
-        ),
+        title: const Text("🎥 Pemutar Video"),
+        backgroundColor: const Color(0xFFB2F2BB),
+        foregroundColor: Colors.green[900],
       ),
-      backgroundColor: Colors.black,
+      backgroundColor: const Color(0xFFDFFFE0),
       body: _isError
           ? _buildErrorMessage()
           : Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Video Player
-                AspectRatio(
-                  aspectRatio: _controller.value.isInitialized
-                      ? _controller.value.aspectRatio
-                      : 16 / 9,
-                  child: _controller.value.isInitialized
-                      ? VideoPlayer(_controller)
-                      : const Center(child: CircularProgressIndicator()),
+                Container(
+                  color: Colors.black,
+                  child: AspectRatio(
+                    aspectRatio: _controller.value.isInitialized
+                        ? _controller.value.aspectRatio
+                        : 16 / 9,
+                    child: _controller.value.isInitialized
+                        ? Stack(
+                            alignment: Alignment.center,
+                            children: [
+                              VideoPlayer(_controller),
+                              GestureDetector(
+                                onTap: () {
+                                  setState(() {
+                                    _controller.value.isPlaying
+                                        ? _controller.pause()
+                                        : _controller.play();
+                                  });
+                                },
+                                child: AnimatedOpacity(
+                                  opacity: _controller.value.isPlaying ? 0.0 : 1.0,
+                                  duration: const Duration(milliseconds: 300),
+                                  child: Container(
+                                    color: Colors.black45,
+                                    child: const Icon(
+                                      Icons.play_arrow,
+                                      size: 64,
+                                      color: Colors.white,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          )
+                        : const Center(child: CircularProgressIndicator()),
+                  ),
                 ),
-                const SizedBox(height: 10),
+                const SizedBox(height: 12),
 
-                // Judul Video
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 16),
                   child: Text(
                     widget.title,
                     style: const TextStyle(
-                      fontSize: 18,
+                      fontSize: 20,
                       fontWeight: FontWeight.bold,
-                      color: Colors.white,
+                      color: Color(0xFF2F5D50),
+                      fontFamily: 'ComicSans',
                     ),
                   ),
                 ),
-                const SizedBox(height: 5),
+                const SizedBox(height: 6),
 
-                // Jumlah Views & Upload Date
-                const Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 16),
-                  child: Text(
-                    "100K views • 10 Maret 2025",
-                    style: TextStyle(fontSize: 14, color: Colors.grey),
-                  ),
-                ),
-                const SizedBox(height: 10),
-
-                // Deskripsi Video
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 16),
                   child: Text(
                     widget.description,
-                    style: const TextStyle(fontSize: 14, color: Colors.white70),
+                    style: const TextStyle(
+                      fontSize: 16,
+                      color: Colors.black87,
+                      fontFamily: 'ComicSans',
+                    ),
+                  ),
+                ),
+
+                const SizedBox(height: 20),
+
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  child: SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFFB2F2BB),
+                        foregroundColor: Colors.green[900],
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                      onPressed: () {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(content: Text("Tombol ditekan!")),
+                        );
+                      },
+                      child: const Text(
+                        'Ayo Cobain Sekarang!',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                          fontFamily: 'ComicSans',
+                        ),
+                      ),
+                    ),
                   ),
                 ),
               ],
@@ -132,12 +180,12 @@ class _VideoPlayerPageState extends State<VideoPlayerPage> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.error, size: 80, color: Colors.red),
+            Icon(Icons.error_outline, size: 80, color: Colors.red),
             SizedBox(height: 20),
             Text(
               "Video tidak dapat dimuat.\nPastikan URL valid dan bisa diakses.",
               textAlign: TextAlign.center,
-              style: TextStyle(fontSize: 16, color: Colors.white),
+              style: TextStyle(fontSize: 16, color: Colors.black54),
             ),
           ],
         ),

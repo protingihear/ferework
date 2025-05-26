@@ -74,6 +74,10 @@ class AuthService {
             await prefs.setInt('user_id', userId);
             print('✅ User ID berhasil disimpan: $userId');
 
+            final userJson = jsonEncode(user);
+            await prefs.setString('user_data', userJson);
+            print('✅ Data user berhasil disimpan' + " " + userJson);
+
             // // ✅ Ambil FCM token
             // final fcmToken = await FirebaseMessaging.instance.getToken();
             // print('📱 FCM Token: $fcmToken');
@@ -106,14 +110,15 @@ class AuthService {
   /// Fungsi Logout
   static Future<void> logout() async {
     final prefs = await SharedPreferences.getInstance();
-    final sessionId = prefs.getString('session_cookie');
+    final sessionCookie = prefs.getString('session_cookie');
+    final ttCookie = prefs.getString('tt_cookie');
 
-    if (sessionId != null) {
+    if (sessionCookie != null && ttCookie != null) {
       try {
         final response = await http.post(
-          Uri.parse('$_baseUrl/logout'),
+          Uri.parse('$_baseUrl/api/logout'),
           headers: {
-            'Cookie': 'session_id=$sessionId',
+            'Cookie': 'session_id=$sessionCookie; tt=$ttCookie',
           },
         );
 
@@ -121,6 +126,8 @@ class AuthService {
           // Clear cookies dari local storage
           await prefs.remove('session_cookie');
           await prefs.remove('tt_cookie');
+          await prefs.remove('user_data');
+          await prefs.remove('user_id');
           print('Logout berhasil.');
         } else {
           print('Logout gagal. Status code: ${response.statusCode}');
@@ -131,6 +138,32 @@ class AuthService {
     } else {
       print('Session ID tidak ditemukan.');
     }
+  }
+
+  static Future<void> saveTempUserData({
+    required String username,
+    required String email,
+    required String password,
+    required String fullName,
+    required String gender,
+  }) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('temp_username', username);
+    await prefs.setString('temp_email', email);
+    await prefs.setString('temp_password', password);
+    await prefs.setString('temp_fullName', fullName);
+    await prefs.setString('temp_gender', gender);
+  }
+
+  static Future<Map<String, String>> getTempUserData() async {
+    final prefs = await SharedPreferences.getInstance();
+    return {
+      'username': prefs.getString('temp_username') ?? '',
+      'email': prefs.getString('temp_email') ?? '',
+      'password': prefs.getString('temp_password') ?? '',
+      'fullName': prefs.getString('temp_fullName') ?? '',
+      'gender': prefs.getString('temp_gender') ?? '',
+    };
   }
 
   static Future<void> registerUser({
@@ -204,6 +237,26 @@ class AuthService {
           backgroundColor: Colors.red,
         ),
       );
+    }
+  }
+
+  static Future<String> forgotPassword(String email) async {
+    final url = Uri.parse('$_baseUrl/auth/forgot-password');
+
+    final response = await http.post(
+      url,
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({'email': email}),
+    );
+
+    if (response.statusCode == 200) {
+      final data = jsonDecode(response.body);
+      return data['message'] ?? "Berhasil mengirim link reset password";
+    } else if (response.statusCode == 404) {
+      final data = jsonDecode(response.body);
+      return data['message'] ?? "Email tidak ditemukan";
+    } else {
+      return "Gagal mengirim link reset password";
     }
   }
 }

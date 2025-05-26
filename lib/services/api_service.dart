@@ -90,6 +90,55 @@ class ApiService {
     }
   }
 
+  static Future<void> updateUserRole(String newRole) async {
+    final prefs = await SharedPreferences.getInstance();
+    final sessionCookie = prefs.getString('session_cookie');
+    final ttCookie = prefs.getString('tt_cookie');
+
+    if (sessionCookie == null || ttCookie == null) {
+      throw Exception(
+          "❌ Gagal mengubah role: Session tidak ditemukan. Harap login terlebih dahulu.");
+    }
+
+    final url = Uri.parse('$_baseUrl/api/profile');
+    final headers = {
+      'Content-Type': 'application/json',
+      'Cookie': 'session_id=$sessionCookie; tt=$ttCookie',
+    };
+
+    final body = jsonEncode({
+      'role': newRole,
+    });
+
+    try {
+      final response = await http.put(url, headers: headers, body: body);
+
+      if (response.statusCode == 200) {
+        print("✅ Role updated successfully!");
+      } else if (response.statusCode == 400) {
+        // Coba parsing pesan dari response body
+        final responseBody = jsonDecode(response.body);
+        final message = responseBody['message'] ?? 'Request tidak valid';
+
+        if (message.toLowerCase().contains("sudah") ||
+            message.toLowerCase().contains("pernah")) {
+          throw Exception("⚠️ Kode sudah pernah digunakan.");
+        }
+
+        throw Exception("Gagal update role: Redeem Code sudah pernah digunakan");
+      } else {
+        print("❌ Gagal update role. Status code: ${response.statusCode}");
+        print("Response body: ${response.body}");
+
+        throw Exception(
+            "Gagal update role. Server mengembalikan status ${response.statusCode}: ${response.body}");
+      }
+    } catch (e) {
+      print("❌ Error updating role: $e");
+      throw Exception("Terjadi kesalahan saat mengubah role: $e");
+    }
+  }
+
   static Future<List<dynamic>> fetchBerita() async {
     try {
       final response = await http.get(Uri.parse("$_baseUrl/api/berita"));

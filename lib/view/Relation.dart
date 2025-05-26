@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:reworkmobile/widgets/post_card.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../services/comumnity_service.dart';
 import '../models/community.dart';
 import '../widgets/community_card.dart';
@@ -20,12 +22,23 @@ class _RelationsPageState extends State<RelationsPage> {
 
   Future<List<dynamic>>? posts;
   int? selectedCommunityId;
+  String? selectedCommunityName;
+
+  int? currentUserId;
 
   @override
   void initState() {
     super.initState();
     communitiesFuture = fetchAndSetCommunities();
     searchController.addListener(_filterCommunities);
+    loadUserId();
+  }
+
+  void loadUserId() async {
+    final prefs = await SharedPreferences.getInstance();
+    setState(() {
+      currentUserId = prefs.getInt('user_id');
+    });
   }
 
   Future<List<Community>> fetchAndSetCommunities() async {
@@ -46,9 +59,10 @@ class _RelationsPageState extends State<RelationsPage> {
     });
   }
 
-  void loadPosts(int communityId) {
+  void loadPosts(int communityId, String communityName) {
     setState(() {
       selectedCommunityId = communityId;
+      selectedCommunityName = communityName;
       posts = ComumnityService.fetchCommunityPosts(communityId);
     });
   }
@@ -90,7 +104,6 @@ class _RelationsPageState extends State<RelationsPage> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Search Bar
               TextField(
                 controller: searchController,
                 style: const TextStyle(color: Colors.black),
@@ -108,8 +121,6 @@ class _RelationsPageState extends State<RelationsPage> {
                 ),
               ),
               const SizedBox(height: 20),
-
-              // Title "Community"
               const Text(
                 "Community",
                 style: TextStyle(
@@ -119,8 +130,6 @@ class _RelationsPageState extends State<RelationsPage> {
                 ),
               ),
               const SizedBox(height: 8),
-
-              // List komunitas
               SizedBox(
                 height: 160,
                 child: filteredCommunities.isEmpty
@@ -136,15 +145,13 @@ class _RelationsPageState extends State<RelationsPage> {
                         itemBuilder: (context, index) {
                           final community = filteredCommunities[index];
                           return GestureDetector(
-                            onTap: () => loadPosts(community.id),
+                            onTap: () => loadPosts(community.id, community.name),
                             child: CommunityCard(community: community),
                           );
                         },
                       ),
               ),
               const SizedBox(height: 20),
-
-              // Tombol buat postingan
               if (selectedCommunityId != null)
                 ElevatedButton.icon(
                   style: ElevatedButton.styleFrom(
@@ -158,7 +165,7 @@ class _RelationsPageState extends State<RelationsPage> {
                       context,
                       MaterialPageRoute(
                         builder: (context) =>
-                            CreatePostPage(communityId: selectedCommunityId!),
+                            CreatePostPage(communityId: selectedCommunityId!, communityName: selectedCommunityName!,),
                       ),
                     );
                     if (result == true) {
@@ -169,8 +176,6 @@ class _RelationsPageState extends State<RelationsPage> {
                   label: const Text("Buat Post"),
                 ),
               const SizedBox(height: 16),
-
-              // Postingan komunitas
               selectedCommunityId == null
                   ? const Center(
                       child: Text(
@@ -196,72 +201,13 @@ class _RelationsPageState extends State<RelationsPage> {
                         } else {
                           return Column(
                             children: snapshot.data!.map((post) {
-                              return Container(
-                                width: double.infinity,
-                                margin: const EdgeInsets.only(bottom: 12),
-                                padding: const EdgeInsets.all(16),
-                                decoration: BoxDecoration(
-                                  color: const Color(0xFFD3F0D0),
-                                  borderRadius: BorderRadius.circular(12),
-                                ),
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Row(
-                                      children: [
-                                        CircleAvatar(
-                                          backgroundImage: NetworkImage(
-                                            post['author']['avatarUrl'] ??
-                                                'https://via.placeholder.com/150',
-                                          ),
-                                          radius: 20,
-                                        ),
-                                        const SizedBox(width: 12),
-                                        Text(
-                                          post['author']['username'],
-                                          style: const TextStyle(
-                                            fontWeight: FontWeight.bold,
-                                            fontSize: 16,
-                                            color: Colors.black,
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                    const SizedBox(height: 12),
-                                    Text(
-                                      post['content'],
-                                      style: const TextStyle(
-                                        fontSize: 14,
-                                        color: Colors.black87,
-                                      ),
-                                    ),
-                                    const SizedBox(height: 16),
-                                    Row(
-                                      children: [
-                                        Icon(Icons.favorite_border,
-                                            size: 20, color: Colors.black54),
-                                        const SizedBox(width: 4),
-                                        Text(
-                                          '${post['likes'] ?? 0}',
-                                          style: const TextStyle(
-                                              color: Colors.black54),
-                                        ),
-                                        const SizedBox(width: 16),
-                                        Icon(Icons.mode_comment_outlined,
-                                            size: 20, color: Colors.black54),
-                                        const SizedBox(width: 4),
-                                        Text(
-                                          '${post['comments'] ?? 0}',
-                                          style: const TextStyle(
-                                              color: Colors.black54),
-                                        ),
-                                        const SizedBox(width: 16),
-                                        Icon(Icons.share_outlined,
-                                            size: 20, color: Colors.black54),
-                                      ],
-                                    ),
-                                  ],
-                                ),
+                              return PostCard(
+                                post: post,
+                                currentUserId: currentUserId ?? 0,
+                                onLikeChanged: () {
+                                  setState(
+                                      () {});
+                                },
                               );
                             }).toList(),
                           );
@@ -272,8 +218,6 @@ class _RelationsPageState extends State<RelationsPage> {
           ),
         ),
       ),
-
-      // Tombol tambah komunitas
       floatingActionButton: FloatingActionButton(
         onPressed: () {
           Navigator.push(

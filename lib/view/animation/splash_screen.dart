@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:reworkmobile/main_screen.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:reworkmobile/view/sign_in.dart';
 
 class SplashScreen extends StatefulWidget {
@@ -12,12 +14,26 @@ class _SplashScreenState extends State<SplashScreen> {
   @override
   void initState() {
     super.initState();
-    
-    Future.delayed(Duration(milliseconds: 800), () {
+    _checkLoginStatus();
+  }
+
+  Future<void> _checkLoginStatus() async {
+    await Future.delayed(const Duration(milliseconds: 800));
+
+    final prefs = await SharedPreferences.getInstance();
+    final userId = prefs.getInt('user_id');
+
+    if (userId != null) {
+      // Sudah login
       Navigator.of(context).pushReplacement(
-        MaterialPageRoute(builder: (_) => Sign_In_Page()),
+        MaterialPageRoute(builder: (_) => const MainScreen()),
       );
-    });
+    } else {
+      // Belum login
+      Navigator.of(context).pushReplacement(
+        MaterialPageRoute(builder: (_) => const Sign_In_Page()),
+      );
+    }
   }
 
   @override
@@ -33,7 +49,6 @@ class _SplashScreenState extends State<SplashScreen> {
             fit: BoxFit.contain,
           ),
         ),
-
       ),
     );
   }

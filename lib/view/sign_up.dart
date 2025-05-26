@@ -1,5 +1,7 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:reworkmobile/services/auth_service.dart';
+import 'package:reworkmobile/view/view_wait_verify.dart';
 import '../services/data_user.dart';
 
 class Sign_Up_Page extends StatefulWidget {
@@ -59,10 +61,9 @@ class _SignUpPageState extends State<Sign_Up_Page> {
       ),
     );
   }
-  
+
   @override
   Widget build(BuildContext context) {
-
     const Color primaryColor = Color(0xFFB7E4C7);
     const Color accentColor = Color(0xFF2D6A4F);
 
@@ -74,22 +75,21 @@ class _SignUpPageState extends State<Sign_Up_Page> {
           child: Column(
             children: [
               Image.asset(
-                        'assets/logo.png',
-                        height: 100,
-                        width: 100,
-                        fit: BoxFit
-                            .cover,
-                      ),
-                      const SizedBox(height: 12),
-                      const Text(
-                        'IHear',
-                        style: TextStyle(
-                          fontSize: 32,
-                          color: accentColor,
-                          fontWeight: FontWeight.w700,
-                          letterSpacing: 1.2,
-                        ),
-                      ),
+                'assets/logo.png',
+                height: 100,
+                width: 100,
+                fit: BoxFit.cover,
+              ),
+              const SizedBox(height: 12),
+              const Text(
+                'IHear',
+                style: TextStyle(
+                  fontSize: 32,
+                  color: accentColor,
+                  fontWeight: FontWeight.w700,
+                  letterSpacing: 1.2,
+                ),
+              ),
               const SizedBox(height: 8),
               const Text(
                 'Sign Up for IHear',
@@ -249,24 +249,45 @@ class _SignUpPageState extends State<Sign_Up_Page> {
                           ),
                         ),
                         onPressed: (isAgreed && gender != null)
-                            ? () {
+                            ? () async {
                                 if (_formKey.currentState!.validate()) {
-                                  if (gender != null) {
-                                    AuthService.registerUser(
-                                      context: context,
-                                      username: usernameController.text,
-                                      email: registEmailController.text,
+                                  try {
+                                    final userCredential = await FirebaseAuth
+                                        .instance
+                                        .createUserWithEmailAndPassword(
+                                      email: registEmailController.text.trim(),
                                       password: registPasswordController.text,
-                                      confirmPassword:
-                                          confirmPasswordController.text,
-                                      fullName: nameController.text,
-                                      gender: gender!,
                                     );
-                                  } else {
+
+                                    await userCredential.user
+                                        ?.sendEmailVerification();
+
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (_) => EmailVerificationPage(
+                                          onVerified: () {
+                                            AuthService.registerUser(
+                                              context: context,
+                                              username: usernameController.text,
+                                              email: registEmailController.text
+                                                  .trim(),
+                                              password:
+                                                  registPasswordController.text,
+                                              confirmPassword:
+                                                  confirmPasswordController
+                                                      .text,
+                                              fullName: nameController.text,
+                                              gender: gender!,
+                                            );
+                                          },
+                                        ),
+                                      ),
+                                    );
+                                  } catch (e) {
                                     ScaffoldMessenger.of(context).showSnackBar(
                                       SnackBar(
-                                        content: Text(
-                                            'Silakan pilih jenis kelamin terlebih dahulu.'),
+                                        content: Text('Terjadi kesalahan: $e'),
                                         backgroundColor: Colors.red,
                                       ),
                                     );

@@ -87,7 +87,7 @@ class MethodService {
       final response = await http.get(Uri.parse(apiUrl));
       if (response.statusCode == 200) {
         List<dynamic> data = jsonDecode(response.body);
-        
+
         return List<Map<String, dynamic>>.from(data);
       } else {
         return [];
@@ -102,24 +102,52 @@ class MethodService {
       context: context,
       builder: (dialogContext) {
         return AlertDialog(
-          title: Text('Pilih Jenis Tambah'),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
+          ),
+          backgroundColor: const Color(0xFFE9FBE7), // soft green
+          title: const Text(
+            'Pilih Jenis Tambah',
+            style: TextStyle(
+              color: Color(0xFF4CAF50), // main green
+              fontWeight: FontWeight.bold,
+            ),
+          ),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              ElevatedButton(
+              ElevatedButton.icon(
                 onPressed: () {
                   Navigator.of(dialogContext).pop();
                   showCategoryForm(context);
                 },
-                child: Text('Tambah Kategori'),
+                icon: const Icon(Icons.category),
+                label: const Text('Tambah Kategori'),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Color(0xFF98DFAF), // main green
+                  foregroundColor: Colors.white,
+                  minimumSize: const Size(double.infinity, 45),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(14),
+                  ),
+                ),
               ),
-              SizedBox(height: 10),
-              ElevatedButton(
+              const SizedBox(height: 12),
+              ElevatedButton.icon(
                 onPressed: () {
                   Navigator.of(dialogContext).pop();
                   showSubCategoryForm(context);
                 },
-                child: Text('Tambah SubKategori'),
+                icon: const Icon(Icons.subtitles),
+                label: const Text('Tambah SubKategori'),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Color(0xFF98DFAF),
+                  foregroundColor: Colors.white,
+                  minimumSize: const Size(double.infinity, 45),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(14),
+                  ),
+                ),
               ),
             ],
           ),
@@ -135,19 +163,51 @@ class MethodService {
       context: context,
       builder: (dialogContext) {
         return AlertDialog(
-          title: Text('Buat Kategori Baru'),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
+          ),
+          backgroundColor: const Color(0xFFE9FBE7), // soft green
+          title: const Text(
+            'Buat Kategori Baru',
+            style: TextStyle(
+              color: Color(0xFF4CAF50), // main green
+              fontWeight: FontWeight.bold,
+            ),
+          ),
           content: TextField(
             controller: nameController,
-            decoration: InputDecoration(hintText: 'Nama Kategori'),
+            decoration: InputDecoration(
+              hintText: 'Nama Kategori',
+              filled: true,
+              fillColor: Colors.white,
+              contentPadding:
+                  const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(14),
+                borderSide: BorderSide.none,
+              ),
+            ),
           ),
+          actionsPadding:
+              const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
           actions: [
             TextButton(
               onPressed: () => Navigator.of(dialogContext).pop(),
-              child: Text('Batal'),
+              child: const Text(
+                'Batal',
+                style: TextStyle(color: Colors.grey),
+              ),
             ),
             ElevatedButton(
               onPressed: () => createCategory(dialogContext, nameController),
-              child: Text('Simpan'),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFF98DFAF),
+                foregroundColor: Colors.white,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
+              child: const Text('Simpan'),
             ),
           ],
         );
@@ -169,26 +229,58 @@ class MethodService {
           builder: (context, snapshot) {
             if (snapshot.connectionState == ConnectionState.waiting) {
               return AlertDialog(
-                title: Text('Tambah SubKategori'),
-                content: Center(child: CircularProgressIndicator()),
+                backgroundColor: const Color(0xFFE9FBE7),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                title: const Text(
+                  'Tambah SubKategori',
+                  style: TextStyle(color: Color(0xFF4CAF50)),
+                ),
+                content: const Center(child: CircularProgressIndicator()),
               );
             } else if (snapshot.hasError) {
               return AlertDialog(
-                title: Text('Error'),
-                content: Text('Gagal mengambil kategori'),
+                backgroundColor: const Color(0xFFE9FBE7),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                title: const Text('Error'),
+                content: const Text('Gagal mengambil kategori'),
               );
             } else {
               List categories = snapshot.data ?? [];
 
               return AlertDialog(
-                title: Text('Tambah SubKategori'),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                backgroundColor: const Color(0xFFE9FBE7),
+                title: const Text(
+                  'Tambah SubKategori',
+                  style: TextStyle(
+                    color: Color(0xFF4CAF50),
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
                 content: SingleChildScrollView(
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       DropdownButtonFormField<String>(
-                        decoration:
-                            InputDecoration(labelText: 'Pilih Kategori'),
+                        decoration: InputDecoration(
+                          labelText: 'Pilih Kategori',
+                          filled: true,
+                          fillColor: Colors.white,
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: BorderSide.none,
+                          ),
+                          contentPadding: const EdgeInsets.symmetric(
+                            horizontal: 16,
+                            vertical: 12,
+                          ),
+                        ),
                         items: categories
                             .map<DropdownMenuItem<String>>((category) {
                           return DropdownMenuItem<String>(
@@ -200,26 +292,69 @@ class MethodService {
                           selectedCategory = value;
                         },
                       ),
+                      const SizedBox(height: 10),
                       TextField(
                         controller: nameController,
-                        decoration:
-                            InputDecoration(labelText: 'Nama SubKategori'),
+                        decoration: InputDecoration(
+                          labelText: 'Nama SubKategori',
+                          filled: true,
+                          fillColor: Colors.white,
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: BorderSide.none,
+                          ),
+                          contentPadding: const EdgeInsets.symmetric(
+                            horizontal: 16,
+                            vertical: 12,
+                          ),
+                        ),
                       ),
+                      const SizedBox(height: 10),
                       TextField(
                         controller: videoController,
-                        decoration: InputDecoration(labelText: 'Video (URL)'),
+                        decoration: InputDecoration(
+                          labelText: 'Video (URL)',
+                          filled: true,
+                          fillColor: Colors.white,
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: BorderSide.none,
+                          ),
+                          contentPadding: const EdgeInsets.symmetric(
+                            horizontal: 16,
+                            vertical: 12,
+                          ),
+                        ),
                       ),
+                      const SizedBox(height: 10),
                       TextField(
                         controller: descriptionController,
-                        decoration: InputDecoration(labelText: 'Deskripsi'),
+                        decoration: InputDecoration(
+                          labelText: 'Deskripsi',
+                          filled: true,
+                          fillColor: Colors.white,
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: BorderSide.none,
+                          ),
+                          contentPadding: const EdgeInsets.symmetric(
+                            horizontal: 16,
+                            vertical: 12,
+                          ),
+                        ),
                       ),
                     ],
                   ),
                 ),
+                actionsPadding:
+                    const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                 actions: [
                   TextButton(
                     onPressed: () => Navigator.of(dialogContext).pop(),
-                    child: Text('Batal'),
+                    child: const Text(
+                      'Batal',
+                      style: TextStyle(color: Colors.grey),
+                    ),
                   ),
                   ElevatedButton(
                     onPressed: () {
@@ -228,14 +363,22 @@ class MethodService {
                           videoController.text.isNotEmpty &&
                           descriptionController.text.isNotEmpty) {
                         createSubCategory(
-                            dialogContext,
-                            selectedCategory,
-                            nameController.text,
-                            videoController.text,
-                            descriptionController.text);
+                          dialogContext,
+                          selectedCategory,
+                          nameController.text,
+                          videoController.text,
+                          descriptionController.text,
+                        );
                       }
                     },
-                    child: Text('Simpan'),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFF98DFAF),
+                      foregroundColor: Colors.white,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                    child: const Text('Simpan'),
                   ),
                 ],
               );
@@ -321,14 +464,15 @@ class MethodService {
     return url;
   }
 
-  static List<dynamic> searchSubCategory(String query, List<dynamic> subCategories) {
+  static List<dynamic> searchSubCategory(
+      String query, List<dynamic> subCategories) {
     if (query.isEmpty) {
       return subCategories;
     }
-    
+
     return subCategories
-        .where((item) => item['name'].toString().toLowerCase().contains(query.toLowerCase()))
+        .where((item) =>
+            item['name'].toString().toLowerCase().contains(query.toLowerCase()))
         .toList();
   }
-
 }
