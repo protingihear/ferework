@@ -60,6 +60,18 @@ class _AllBeritaPageState extends State<AllBeritaPage> {
     }
   }
 
+  void refreshBerita() {
+    setState(() {
+      _beritaList = ApiService.fetchBerita();
+      _beritaList.then((data) {
+        setState(() {
+          _allBerita = data;
+          _filteredBerita = data;
+        });
+      });
+    });
+  }
+
   @override
   void dispose() {
     _searchController.dispose();
@@ -101,7 +113,9 @@ class _AllBeritaPageState extends State<AllBeritaPage> {
                       MaterialPageRoute(
                         builder: (context) => const ViewAddBeritaPage(),
                       ),
-                    );
+                    ).then((_) {
+                      refreshBerita();
+                    });
                   },
                   child: const Icon(Icons.add),
                 )
@@ -148,7 +162,8 @@ class _AllBeritaPageState extends State<AllBeritaPage> {
                               Navigator.push(
                                 context,
                                 MaterialPageRoute(
-                                  builder: (context) => BeritaDetail(berita: berita),
+                                  builder: (context) =>
+                                      BeritaDetail(berita: berita),
                                 ),
                               );
                             },
@@ -169,7 +184,8 @@ class _AllBeritaPageState extends State<AllBeritaPage> {
                               child: Row(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  if (fotoBase64 != null && fotoBase64.isNotEmpty)
+                                  if (fotoBase64 != null &&
+                                      fotoBase64.isNotEmpty)
                                     ClipRRect(
                                       borderRadius: const BorderRadius.only(
                                         topLeft: Radius.circular(18),
@@ -193,23 +209,28 @@ class _AllBeritaPageState extends State<AllBeritaPage> {
                                           bottomLeft: Radius.circular(18),
                                         ),
                                       ),
-                                      child:
-                                          const Icon(Icons.image, color: Colors.white),
+                                      child: const Icon(Icons.image,
+                                          color: Colors.white),
                                     ),
                                   Expanded(
                                     child: Padding(
                                       padding: const EdgeInsets.all(12),
                                       child: Column(
-                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
                                         children: [
                                           Row(
                                             children: [
                                               Container(
-                                                padding: const EdgeInsets.symmetric(
-                                                    horizontal: 8, vertical: 4),
+                                                padding:
+                                                    const EdgeInsets.symmetric(
+                                                        horizontal: 8,
+                                                        vertical: 4),
                                                 decoration: BoxDecoration(
-                                                  color: mainGreen.withOpacity(0.2),
-                                                  borderRadius: BorderRadius.circular(12),
+                                                  color: mainGreen
+                                                      .withOpacity(0.2),
+                                                  borderRadius:
+                                                      BorderRadius.circular(12),
                                                 ),
                                                 child: Text(
                                                   kategori,

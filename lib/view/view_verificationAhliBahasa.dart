@@ -1,6 +1,9 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:reworkmobile/services/api_service.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class SignLanguageExpertFormPage extends StatefulWidget {
   @override
@@ -26,22 +29,45 @@ class _SignLanguageExpertFormPageState
     if (code == "IHear Ahli Bahasa") {
       try {
         await ApiService.updateUserRole("ahli_bahasa");
+        await updateUserRole('ahli_bahasa');
+        redeemCodeController.clear();
 
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(
           content: Text("Kode berhasil diredeem! 🎉"),
           backgroundColor: Colors.green,
         ));
       } catch (e) {
+        redeemCodeController.clear();
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(
           content: Text("Redeem Code sudah pernah digunakan"),
           backgroundColor: Colors.redAccent,
         ));
       }
     } else {
+      redeemCodeController.clear();
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(
         content: Text("Kode tidak valid."),
         backgroundColor: Colors.orange,
       ));
+    }
+  }
+
+  Future<void> updateUserRole(String newRole) async {
+    final prefs = await SharedPreferences.getInstance();
+    final userJson = prefs.getString('user_data');
+
+    if (userJson != null) {
+      // Decode ke Map
+      final Map<String, dynamic> userMap = jsonDecode(userJson);
+
+      // Ubah nilai role
+      userMap['role'] = newRole;
+
+      // Encode kembali ke JSON
+      final updatedUserJson = jsonEncode(userMap);
+
+      // Simpan ulang ke SharedPreferences
+      await prefs.setString('user_data', updatedUserJson);
     }
   }
 

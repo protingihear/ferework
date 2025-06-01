@@ -57,36 +57,33 @@ class ApiService {
       throw Exception(
           "❌ Gagal membuat post: Session tidak ditemukan. Harap login terlebih dahulu.");
     }
+
     final url = Uri.parse('$_baseUrl/api/profile');
 
-    final request = http.MultipartRequest('PUT', url);
+    // Ubah gambar ke Base64 (jika ada)
+    final base64Image = imageBytes != null ? base64Encode(imageBytes) : "";
 
-    request.headers['Cookie'] = "session_id=$sessionCookie; tt=$ttCookie";
+    final body = {
+      "firstname": firstname,
+      "lastname": lastname,
+      "bio": bio ?? '',
+      "gender": gender,
+      "Image": base64Image, // string base64 atau kosong
+    };
 
-    request.fields['firstname'] = firstname;
-    request.fields['lastname'] = lastname;
-    request.fields['gender'] = gender;
-
-    if (bio != null) request.fields['bio'] = bio;
-
-    if (imageBytes != null) {
-      request.files.add(http.MultipartFile.fromBytes(
-        'Image',
-        imageBytes,
-        filename: 'profile.jpg',
-        contentType: MediaType('image', 'jpeg'),
-      ));
-    } else {
-      request.fields['Image'] = '';
-    }
-
-    final response = await request.send();
-    final resBody = await response.stream.bytesToString();
+    final response = await http.put(
+      url,
+      headers: {
+        'Content-Type': 'application/json',
+        'Cookie': "session_id=$sessionCookie; tt=$ttCookie",
+      },
+      body: jsonEncode(body),
+    );
 
     if (response.statusCode == 200) {
-      return jsonDecode(resBody);
+      return jsonDecode(response.body);
     } else {
-      throw Exception('Failed to update profile: $resBody');
+      throw Exception('❌ Gagal update profil: ${response.body}');
     }
   }
 
@@ -125,7 +122,8 @@ class ApiService {
           throw Exception("⚠️ Kode sudah pernah digunakan.");
         }
 
-        throw Exception("Gagal update role: Redeem Code sudah pernah digunakan");
+        throw Exception(
+            "Gagal update role: Redeem Code sudah pernah digunakan");
       } else {
         print("❌ Gagal update role. Status code: ${response.statusCode}");
         print("Response body: ${response.body}");

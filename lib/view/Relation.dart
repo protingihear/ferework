@@ -144,9 +144,20 @@ class _RelationsPageState extends State<RelationsPage> {
                         itemCount: filteredCommunities.length,
                         itemBuilder: (context, index) {
                           final community = filteredCommunities[index];
+                          final isSelected =
+                              community.id == selectedCommunityId;
+
                           return GestureDetector(
-                            onTap: () => loadPosts(community.id, community.name),
-                            child: CommunityCard(community: community),
+                            onTap: () {
+                              setState(() {
+                                selectedCommunityId = community.id;
+                              });
+                              loadPosts(community.id, community.name);
+                            },
+                            child: CommunityCard(
+                              community: community,
+                              isSelected: isSelected,
+                            ),
                           );
                         },
                       ),
@@ -164,8 +175,10 @@ class _RelationsPageState extends State<RelationsPage> {
                     final result = await Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (context) =>
-                            CreatePostPage(communityId: selectedCommunityId!, communityName: selectedCommunityName!,),
+                        builder: (context) => CreatePostPage(
+                          communityId: selectedCommunityId!,
+                          communityName: selectedCommunityName!,
+                        ),
                       ),
                     );
                     if (result == true) {
@@ -205,8 +218,7 @@ class _RelationsPageState extends State<RelationsPage> {
                                 post: post,
                                 currentUserId: currentUserId ?? 0,
                                 onLikeChanged: () {
-                                  setState(
-                                      () {});
+                                  setState(() {});
                                 },
                               );
                             }).toList(),
