@@ -68,7 +68,7 @@ class _ProfilePageState extends State<ProfilePage> {
       }
 
       final response = await http.get(
-        Uri.parse('https://berework-production-ad0a.up.railway.app/api/users'),
+        Uri.parse('http://74.226.193.115:5001/api/users'),
         headers: {
           "Content-Type": "application/json",
           "Cookie": "session_id=$sessionId; tt=$tt",

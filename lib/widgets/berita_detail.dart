@@ -45,25 +45,29 @@ class BeritaDetail extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     // Gambar
-                    berita['foto'] != null
-                        ? ClipRRect(
-                            borderRadius: BorderRadius.circular(16),
-                            child: Image.memory(
-                              base64Decode(berita['foto']),
-                              width: double.infinity,
-                              fit: BoxFit.cover,
-                            ),
-                          )
-                        : Container(
-                            height: 150,
-                            decoration: BoxDecoration(
-                              color: Colors.green[100],
+                    Center(
+                      child: berita['foto'] != null
+                          ? ClipRRect(
                               borderRadius: BorderRadius.circular(16),
+                              child: Image.memory(
+                                base64Decode(berita['foto']),
+                                width: 150,
+                                height: 200,
+                                fit: BoxFit.cover,
+                              ),
+                            )
+                          : Container(
+                              height: 150,
+                              decoration: BoxDecoration(
+                                color: Colors.green[100],
+                                borderRadius: BorderRadius.circular(16),
+                              ),
+                              child: const Center(
+                                child: Icon(Icons.image,
+                                    size: 50, color: Colors.white),
+                              ),
                             ),
-                            child: const Center(
-                              child: Icon(Icons.image, size: 50, color: Colors.white),
-                            ),
-                          ),
+                    ),
                     const SizedBox(height: 20),
 
                     // Judul

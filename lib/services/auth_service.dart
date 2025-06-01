@@ -13,7 +13,7 @@ Future<void> initPrefs() async {
 
 class AuthService {
   static const String _baseUrl =
-      'https://berework-production-ad0a.up.railway.app';
+      'http://74.226.193.115:5001';
 
   // Pakai http.Client untuk persist cookie
   final http.Client _client = http.Client();
@@ -205,7 +205,7 @@ class AuthService {
     try {
       var response = await http.post(
         Uri.parse(
-            'https://berework-production-ad0a.up.railway.app/auth/register'),
+            '$_baseUrl/auth/register'),
         headers: {
           'Content-Type': 'application/json',
         },

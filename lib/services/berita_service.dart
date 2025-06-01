@@ -6,7 +6,7 @@ import 'package:path/path.dart';
 
 class BeritaService {
   static const String _baseUrl =
-      'https://berework-production-ad0a.up.railway.app';
+      'http://74.226.193.115:5001';
 
   static Future<bool> uploadBerita({
     required String judul,
