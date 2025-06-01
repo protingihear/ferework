@@ -7,11 +7,11 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 class ComumnityService {
   static const String baseUrl =
-      'https://berework-production-ad0a.up.railway.app/api';
+      'http://74.226.193.115:5001/api';
 
   static Future<List<Community>> fetchCommunities() async {
     final response = await http.get(Uri.parse(
-        'https://berework-production-ad0a.up.railway.app/api/communities'));
+        '$baseUrl/communities'));
 
     if (response.statusCode == 200) {
       List<dynamic> data = jsonDecode(response.body);
@@ -24,7 +24,7 @@ class ComumnityService {
 
   static Future<List<Post>> fetchPosts(int communityId) async {
     final response = await http.get(Uri.parse(
-        "https://berework-production-ad0a.up.railway.app/api/communities/$communityId/posts"));
+        "$baseUrl/communities/$communityId/posts"));
 
     if (response.statusCode == 200) {
       final List<dynamic> data = json.decode(response.body);
@@ -50,7 +50,7 @@ class ComumnityService {
 
   static Future<void> createPost(int communityId, String content) async {
     final url = Uri.parse(
-        'https://berework-production-ad0a.up.railway.app/api/communities/$communityId/posts');
+        '$baseUrl/communities/$communityId/posts');
 
     try {
       final prefs = await SharedPreferences.getInstance();
@@ -183,7 +183,7 @@ class ComumnityService {
       }
 
       final response = await http.get(
-        Uri.parse('$baseUrl/api/communities/posts/liked'),
+        Uri.parse('$baseUrl/communities/posts/liked'),
         headers: {
           'Content-Type': 'application/json',
           'Cookie': cookie,
@@ -249,7 +249,7 @@ class ComumnityService {
     }
 
     final uri = Uri.parse(
-      'https://berework-production-ad0a.up.railway.app/api/communities/$communityId/posts/$postId/likes${replyId != null ? '?replyId=$replyId' : ''}',
+      '$baseUrl/communities/$communityId/posts/$postId/likes${replyId != null ? '?replyId=$replyId' : ''}',
     );
 
     final response = await http.post(
@@ -282,7 +282,7 @@ class ComumnityService {
     }
 
     final uri = Uri.parse(
-      'https://berework-production-ad0a.up.railway.app/api/communities/$communityId/posts/$postId/likes${replyId != null ? '?replyId=$replyId' : ''}',
+      '$baseUrl/communities/$communityId/posts/$postId/likes${replyId != null ? '?replyId=$replyId' : ''}',
     );
 
     final response = await http.delete(
@@ -318,7 +318,7 @@ class ComumnityService {
     }
 
     final url = Uri.parse(
-      "https://berework-production-ad0a.up.railway.app/api/communities/$communityId/posts/$postId/replies",
+      "$baseUrl/communities/$communityId/posts/$postId/replies",
     );
 
     final response = await http.post(

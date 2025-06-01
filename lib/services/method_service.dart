@@ -5,10 +5,12 @@ import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class MethodService {
+  static const String baseUrl =
+      'http://74.226.193.115:5001/api';
   static Future<void> createCategory(
       BuildContext context, TextEditingController nameController) async {
     final String apiUrl =
-        'https://berework-production-ad0a.up.railway.app/api/categories';
+        '$baseUrl/categories';
 
     try {
       final response = await http.post(
@@ -48,7 +50,7 @@ class MethodService {
     }
 
     final String apiUrl =
-        'https://berework-production-ad0a.up.railway.app/api/categories/$categoryId/subcategories';
+        '$baseUrl/categories/$categoryId/subcategories';
     try {
       final response = await http.post(
         Uri.parse(apiUrl),
@@ -82,7 +84,7 @@ class MethodService {
 
   static Future<List<Map<String, dynamic>>> fetchCategories() async {
     final String apiUrl =
-        'https://berework-production-ad0a.up.railway.app/api/categories';
+        '$baseUrl/categories';
     try {
       final response = await http.get(Uri.parse(apiUrl));
       if (response.statusCode == 200) {
@@ -393,7 +395,7 @@ class MethodService {
       String categoryId, String userId) async {
     try {
       String url =
-          "https://berework-production-ad0a.up.railway.app/api/categories/$categoryId/progress?userId=$userId";
+          "$baseUrl/categories/$categoryId/progress?userId=$userId";
       final response = await http.get(Uri.parse(url));
 
       if (response.statusCode == 200) {
@@ -414,7 +416,7 @@ class MethodService {
       String subCategoryId, bool done, String userId) async {
     try {
       String url =
-          "https://berework-production-ad0a.up.railway.app/api/subcategories/$subCategoryId/status";
+          "$baseUrl/subcategories/$subCategoryId/status";
       final response = await http.put(
         Uri.parse(url),
         headers: {
