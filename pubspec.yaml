@@ -34,6 +34,13 @@ dependencies:
   firebase_messaging: ^15.2.5
   http_parser: ^4.0.2
   path_provider: ^2.1.5
+  youtube_player_flutter: ^9.1.1
+  flutter_launcher_icons: ^0.13.1
+
+flutter_icons:
+  android: true
+  ios: true
+  image_path: "assets/ihear_logo.png"
 
 dev_dependencies:
   flutter_test:

@@ -97,7 +97,7 @@ class MethodService {
     }
   }
 
-  static void showChoiceDialog(BuildContext context) {
+  static Future<void> showChoiceDialog(BuildContext context) async {
     showDialog(
       context: context,
       builder: (dialogContext) {
@@ -474,5 +474,14 @@ class MethodService {
         .where((item) =>
             item['name'].toString().toLowerCase().contains(query.toLowerCase()))
         .toList();
+  }
+
+  static Future<String?> getUserRole() async {
+    final prefs = await SharedPreferences.getInstance();
+    final userJson = prefs.getString('user_data');
+    if (userJson == null) return null;
+
+    final Map<String, dynamic> userMap = jsonDecode(userJson);
+    return userMap['role'] as String?;
   }
 }

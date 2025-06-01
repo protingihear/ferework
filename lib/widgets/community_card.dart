@@ -4,34 +4,43 @@ import '../models/community.dart';
 
 class CommunityCard extends StatelessWidget {
   final Community community;
+  final bool isSelected;
 
-  CommunityCard({required this.community});
+  CommunityCard({
+    required this.community,
+    this.isSelected = false,
+  });
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      width: 200, // Lebih besar supaya muat teks
+      width: 200,
       margin: EdgeInsets.only(right: 12),
       padding: EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: Colors.grey[200],
+        color:
+            isSelected ? Colors.green[100] : Colors.grey[200], // ← ini kuncinya
         borderRadius: BorderRadius.circular(10),
+        border: isSelected ? Border.all(color: Colors.green, width: 2) : null,
       ),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
         children: [
-          // Decode base64 ke gambar
           community.imageBase64.isNotEmpty
               ? Image.memory(
                   base64Decode(community.imageBase64),
-                  height: 80, width: 80, fit: BoxFit.cover,
+                  height: 80,
+                  width: 80,
+                  fit: BoxFit.cover,
                 )
               : Icon(Icons.image_not_supported, size: 80, color: Colors.grey),
-
           SizedBox(height: 8),
           Text(
             community.name,
-            style: TextStyle(fontWeight: FontWeight.bold, color: Colors.black),
+            style: TextStyle(
+              fontWeight: FontWeight.bold,
+              color: Colors.black,
+            ),
             textAlign: TextAlign.center,
           ),
           Text(
@@ -44,4 +53,3 @@ class CommunityCard extends StatelessWidget {
     );
   }
 }
-

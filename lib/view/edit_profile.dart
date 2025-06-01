@@ -52,9 +52,16 @@ class _EditProfilePageState extends State<EditProfilePage> {
     }
 
     try {
+      final fullName = nameController.text.trim();
+      final nameParts = fullName.split(' ');
+
+      final firstName = nameParts.isNotEmpty ? nameParts.first : '';
+      final lastName =
+          nameParts.length > 1 ? nameParts.sublist(1).join(' ') : '';
+
       final updated = await ApiService.updateUserProfile(
-        firstname: nameController.text,
-        lastname: '', // bisa dikosongkan atau di-split dari name jika kamu mau
+        firstname: firstName,
+        lastname: lastName,
         bio: bioController.text,
         gender: selectedGender ?? 'Laki-Laki',
         imageBytes: imageBytes,
@@ -117,7 +124,8 @@ class _EditProfilePageState extends State<EditProfilePage> {
   }
 
   void showSnackbar(String message) {
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
+    ScaffoldMessenger.of(context)
+        .showSnackBar(SnackBar(content: Text(message)));
   }
 
   @override
@@ -149,9 +157,11 @@ class _EditProfilePageState extends State<EditProfilePage> {
                                       profileImageUrl.split(',')[1]))
                                   : null,
                       backgroundColor: Colors.white,
-                      child: (profileImageFile == null && profileImageUrl.isEmpty)
-                          ? const Icon(Icons.person, size: 60, color: Colors.grey)
-                          : null,
+                      child:
+                          (profileImageFile == null && profileImageUrl.isEmpty)
+                              ? const Icon(Icons.person,
+                                  size: 60, color: Colors.grey)
+                              : null,
                     ),
                     Positioned(
                       right: 0,
@@ -164,7 +174,8 @@ class _EditProfilePageState extends State<EditProfilePage> {
                           onTap: showImagePicker,
                           child: const Padding(
                             padding: EdgeInsets.all(8),
-                            child: Icon(Icons.edit, color: Colors.white, size: 20),
+                            child:
+                                Icon(Icons.edit, color: Colors.white, size: 20),
                           ),
                         ),
                       ),
@@ -172,7 +183,8 @@ class _EditProfilePageState extends State<EditProfilePage> {
                   ],
                 ),
                 const SizedBox(height: 20),
-                buildRoundedTextField(controller: nameController, label: 'Nama'),
+                buildRoundedTextField(
+                    controller: nameController, label: 'Nama'),
                 const SizedBox(height: 16),
                 buildRoundedTextField(controller: bioController, label: 'Bio'),
                 const SizedBox(height: 16),
@@ -185,7 +197,8 @@ class _EditProfilePageState extends State<EditProfilePage> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Text("Gender:", style: TextStyle(fontWeight: FontWeight.bold)),
+                      const Text("Gender:",
+                          style: TextStyle(fontWeight: FontWeight.bold)),
                       Row(
                         children: [
                           Expanded(
@@ -228,7 +241,8 @@ class _EditProfilePageState extends State<EditProfilePage> {
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.teal,
                     foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 14),
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 32, vertical: 14),
                     shape: RoundedRectangleBorder(borderRadius: borderRadius),
                   ),
                   label: const Text('Simpan', style: TextStyle(fontSize: 16)),

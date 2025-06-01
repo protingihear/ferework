@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:video_player/video_player.dart';
+import 'package:youtube_player_flutter/youtube_player_flutter.dart';
 
 class VideoPlayerPage extends StatefulWidget {
   final String videoUrl;
@@ -18,51 +18,42 @@ class VideoPlayerPage extends StatefulWidget {
 }
 
 class _VideoPlayerPageState extends State<VideoPlayerPage> {
-  late VideoPlayerController _controller;
+  late YoutubePlayerController _controller;
   bool _isError = false;
 
   @override
   void initState() {
     super.initState();
 
-    if (!_isValidUrl(widget.videoUrl)) {
+    String? videoId = YoutubePlayer.convertUrlToId(widget.videoUrl);
+
+    if (videoId == null) {
       setState(() {
         _isError = true;
       });
-      return;
+    } else {
+      _controller = YoutubePlayerController(
+        initialVideoId: videoId,
+        flags: const YoutubePlayerFlags(
+          autoPlay: true,
+          mute: false,
+          loop: true,
+        ),
+      );
     }
-
-    _controller = VideoPlayerController.network(widget.videoUrl)
-      ..initialize().then((_) {
-        if (mounted) {
-          setState(() {});
-          _controller.play();
-        }
-      }).catchError((error) {
-        setState(() {
-          _isError = true;
-        });
-      });
-
-    _controller.setLooping(true);
   }
 
   @override
   void dispose() {
-    _controller.dispose();
+    if (!_isError) _controller.dispose();
     super.dispose();
-  }
-
-  bool _isValidUrl(String url) {
-    Uri? uri = Uri.tryParse(url);
-    return uri != null && (uri.scheme == "http" || uri.scheme == "https");
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text("🎥 Pemutar Video"),
+        title: const Text("🎥 Pemutar YouTube"),
         backgroundColor: const Color(0xFFB2F2BB),
         foregroundColor: Colors.green[900],
       ),
@@ -72,45 +63,12 @@ class _VideoPlayerPageState extends State<VideoPlayerPage> {
           : Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Container(
-                  color: Colors.black,
-                  child: AspectRatio(
-                    aspectRatio: _controller.value.isInitialized
-                        ? _controller.value.aspectRatio
-                        : 16 / 9,
-                    child: _controller.value.isInitialized
-                        ? Stack(
-                            alignment: Alignment.center,
-                            children: [
-                              VideoPlayer(_controller),
-                              GestureDetector(
-                                onTap: () {
-                                  setState(() {
-                                    _controller.value.isPlaying
-                                        ? _controller.pause()
-                                        : _controller.play();
-                                  });
-                                },
-                                child: AnimatedOpacity(
-                                  opacity: _controller.value.isPlaying ? 0.0 : 1.0,
-                                  duration: const Duration(milliseconds: 300),
-                                  child: Container(
-                                    color: Colors.black45,
-                                    child: const Icon(
-                                      Icons.play_arrow,
-                                      size: 64,
-                                      color: Colors.white,
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            ],
-                          )
-                        : const Center(child: CircularProgressIndicator()),
-                  ),
+                YoutubePlayer(
+                  controller: _controller,
+                  showVideoProgressIndicator: true,
+                  progressIndicatorColor: Colors.green,
                 ),
                 const SizedBox(height: 12),
-
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 16),
                   child: Text(
@@ -124,7 +82,6 @@ class _VideoPlayerPageState extends State<VideoPlayerPage> {
                   ),
                 ),
                 const SizedBox(height: 6),
-
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 16),
                   child: Text(
@@ -136,9 +93,7 @@ class _VideoPlayerPageState extends State<VideoPlayerPage> {
                     ),
                   ),
                 ),
-
                 const SizedBox(height: 20),
-
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 16),
                   child: SizedBox(
@@ -183,7 +138,7 @@ class _VideoPlayerPageState extends State<VideoPlayerPage> {
             Icon(Icons.error_outline, size: 80, color: Colors.red),
             SizedBox(height: 20),
             Text(
-              "Video tidak dapat dimuat.\nPastikan URL valid dan bisa diakses.",
+              "Video tidak dapat dimuat.\nPastikan URL YouTube valid.",
               textAlign: TextAlign.center,
               style: TextStyle(fontSize: 16, color: Colors.black54),
             ),
