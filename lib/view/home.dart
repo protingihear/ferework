@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:reworkmobile/view/LessonKategori.dart';
+import 'package:reworkmobile/view/scan_to_text.dart';
 import 'package:reworkmobile/view/view_all_berita.dart';
 import 'dart:convert';
 import '../services/api_service.dart';
@@ -181,7 +182,10 @@ class _HomeScreenState extends State<HomeScreen> {
           FeatureButton(
             imagePath: 'assets/scan_icon.png',
             label: 'Scan to Text',
-            onTap: () {},
+            onTap: () => Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => SignDetectionPage()),
+            ),
             width: screenWidth * 0.26,
             color: kGreenLightAccent,
           ),
