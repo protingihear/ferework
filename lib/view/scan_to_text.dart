@@ -82,7 +82,7 @@ class _SignDetectionPageState extends State<SignDetectionPage> {
   WebSocketChannel? _webSocketChannel;
   String _predictionText = "Tap 'Start Detection'";
   final String _webSocketURI =
-      "ws://192.168.100.37:8000/ws_predict_sequence"; // Your local IP
+      "ws://4.216.184.229:8000/ws_predict_sequence"; // Your local IP
   final int _framesPerSecondToSendToBackend = 5;
   late final int _frameSendIntervalMs;
   DateTime? _lastFrameProcessingAttemptTime; // Renamed for clarity
