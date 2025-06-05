@@ -7,7 +7,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 class ComumnityService {
   static const String baseUrl =
-      'http://74.226.193.115:5001/api';
+      'http://20.214.51.17:5001/api';
 
   static Future<List<Community>> fetchCommunities() async {
     final response = await http.get(Uri.parse(

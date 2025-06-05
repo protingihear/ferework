@@ -153,6 +153,7 @@ class _AddCommunityPageState extends State<AddCommunityPage> {
               ),
               const SizedBox(height: 24),
               ElevatedButton.icon(
+                key: const Key('submitCommunity'),
                 onPressed: _isLoading ? null : _submit,
                 icon: const Icon(Icons.send),
                 label: Text(_isLoading ? "Mengirim..." : "Buat Komunitas"),

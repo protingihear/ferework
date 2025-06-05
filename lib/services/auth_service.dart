@@ -12,11 +12,12 @@ Future<void> initPrefs() async {
 }
 
 class AuthService {
-  static const String _baseUrl =
-      'http://74.226.193.115:5001';
+  static const String baseUrl = 'http://20.214.51.17:5001';
 
   // Pakai http.Client untuk persist cookie
-  final http.Client _client = http.Client();
+  final http.Client _client;
+
+  AuthService({http.Client? client}) : _client = client ?? http.Client();
 
   /// Mengecek apakah session cookie ada di penyimpanan lokal
   Future<bool> hasSessionCookie() async {
@@ -30,7 +31,7 @@ class AuthService {
 
   /// Fungsi Login
   Future<String?> login(String email, String password) async {
-    final url = Uri.parse('$_baseUrl/auth/login');
+    final url = Uri.parse('$baseUrl/auth/login');
 
     try {
       final response = await _client.post(
@@ -116,7 +117,7 @@ class AuthService {
     if (sessionCookie != null && ttCookie != null) {
       try {
         final response = await http.post(
-          Uri.parse('$_baseUrl/api/logout'),
+          Uri.parse('$baseUrl/api/logout'),
           headers: {
             'Cookie': 'session_id=$sessionCookie; tt=$ttCookie',
           },
@@ -204,8 +205,7 @@ class AuthService {
 
     try {
       var response = await http.post(
-        Uri.parse(
-            '$_baseUrl/auth/register'),
+        Uri.parse('$baseUrl/auth/register'),
         headers: {
           'Content-Type': 'application/json',
         },
@@ -241,7 +241,7 @@ class AuthService {
   }
 
   static Future<String> forgotPassword(String email) async {
-    final url = Uri.parse('$_baseUrl/auth/forgot-password');
+    final url = Uri.parse('$baseUrl/auth/forgot-password');
 
     final response = await http.post(
       url,

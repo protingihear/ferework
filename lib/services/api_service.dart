@@ -10,7 +10,7 @@ import 'package:http_parser/http_parser.dart' as http_parser;
 
 class ApiService {
   static const String _baseUrl =
-      'http://74.226.193.115:5001';
+      'http://20.214.51.17:5001';
 
   static Future<UserProfile> fetchUserProfile() async {
     try {

@@ -92,6 +92,7 @@ class _MainScreenState extends State<MainScreen> {
         ),
       ),
       bottomNavigationBar: Container(
+        key: const Key('mainBottomNavBar'),
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: const BorderRadius.only(
