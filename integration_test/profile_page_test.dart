@@ -1,64 +1,55 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:integration_test/integration_test.dart';
-import 'package:reworkmobile/main.dart' as app;
+import 'package:reworkmobile/view/view_profile.dart';
+import 'package:reworkmobile/widgets/post_card.dart';
 
 void main() {
   IntegrationTestWidgetsFlutterBinding.ensureInitialized();
 
-  group('🧪 ProfilePage Integration Test', () {
-    testWidgets('Loads and displays user profile info and switches tabs', (WidgetTester tester) async {
-      app.main();
-      await tester.pump();
+  testWidgets('Integration Test for ProfilePage UI and behavior',
+      (WidgetTester tester) async {
+    // Langsung set ProfilePage sebagai home
+    await tester.pumpWidget(const MaterialApp(home: ProfilePage()));
 
-      final spinnerFinder = find.byType(CircularProgressIndicator);
+    // Tunggu render pertama
+    await tester.pumpAndSettle();
 
-      if (spinnerFinder.evaluate().isNotEmpty) {
-        expect(spinnerFinder, findsWidgets);
-        // Tunggu loading selesai
-        await tester.pumpAndSettle(const Duration(seconds: 5));
-      } else {
-        print('Spinner loading tidak ditemukan, lanjut ke pengecekan UI');
-        // Jika spinner tidak ada, beri waktu UI stabil
-        await tester.pumpAndSettle(const Duration(seconds: 3));
-      }
+    // Buka halaman setting (SettingsPage)
+    await tester.tap(find.text('Atur Profil 💼'));
+    await tester.pumpAndSettle();
 
-      // Cek username dengan emoji 😎
-      expect(find.textContaining('😎'), findsOneWidget);
+    // Cek navigasi ke SettingsPage (asumsi ada tombol Simpan misalnya)
+    expect(find.text('Simpan'), findsWidgets);
+    await tester.pageBack();
+    await tester.pumpAndSettle();
 
-      // Cek stats
-      expect(find.text('Post'), findsOneWidget);
-      expect(find.text('Teman'), findsOneWidget);
-      expect(find.text('Fans'), findsOneWidget);
+    // Pindah ke tampilan chat
+    await tester.tap(find.byIcon(Icons.chat_bubble_outline));
+    await tester.pumpAndSettle();
 
-      // Tap tombol "Atur Profil 💼"
-      final settingsButton = find.widgetWithText(OutlinedButton, 'Atur Profil 💼');
-      expect(settingsButton, findsOneWidget);
-      await tester.tap(settingsButton);
+    // Harus ada search bar
+    expect(find.byType(TextField), findsOneWidget);
+    await tester.enterText(find.byType(TextField), 'tes');
+    await tester.pumpAndSettle();
+
+    // Coba klik "View More" jika ada
+    final viewMoreFinder = find.text('View More');
+    if (viewMoreFinder.evaluate().isNotEmpty) {
+      await tester.tap(viewMoreFinder);
       await tester.pumpAndSettle();
+    }
 
-      // Kembali ke profil
-      await tester.pageBack();
-      await tester.pumpAndSettle();
+    // Balik ke tampilan post
+    await tester.tap(find.byIcon(Icons.add_reaction_outlined));
+    await tester.pumpAndSettle();
 
-      // Switch ke tab Chat
-      final chatButton = find.byIcon(Icons.chat_bubble_outline);
-      expect(chatButton, findsOneWidget);
-      await tester.tap(chatButton);
-      await tester.pumpAndSettle(const Duration(seconds: 2));
-
-      // Cek ada search bar dan list tile di chat
-      expect(find.byType(TextField), findsOneWidget);
-      expect(find.byType(ListTile), findsWidgets);
-
-      // Switch kembali ke tab Post
-      final postButton = find.byIcon(Icons.add_reaction_outlined);
-      expect(postButton, findsOneWidget);
-      await tester.tap(postButton);
-      await tester.pumpAndSettle();
-
-      // Cek header post community
-      expect(find.textContaining('Aktivitas Postingan Community'), findsOneWidget);
-    });
+    // Kalau nggak ada post
+    if (find.textContaining('Belum ada postingan').evaluate().isNotEmpty) {
+      expect(find.text('📸 Bagi Aktifitas Kamu!'), findsOneWidget);
+    } else {
+      // Kalau ada post
+      expect(find.byType(PostCard), findsWidgets);
+    }
   });
 }

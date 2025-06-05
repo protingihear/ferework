@@ -7,8 +7,8 @@ void main() {
   group('🔗 API Integration Tests (tanpa emulator)', () {
     setUp(() async {
       SharedPreferences.setMockInitialValues({
-        'session_cookie': 'isi_session_asli_di_sini',
-        'tt_cookie': 'isi_tt_asli_di_sini',
+        'session_cookie': 'NO4Rg6x3oQ9V6-sbUGPyO67kDxWgc3vx',
+        'tt_cookie': 's:NO4Rg6x3oQ9V6-sbUGPyO67kDxWgc3vx.CzuFylhpsm94lPIC2ApqzJTlTTbYSeUYn6Jm6cZUMGU	',
       });
     });
 
