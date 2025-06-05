@@ -6,7 +6,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 class MethodService {
   static const String baseUrl =
-      'http://74.226.193.115:5001/api';
+      'http://20.214.51.17:5001/api';
   static Future<void> createCategory(
       BuildContext context, TextEditingController nameController) async {
     final String apiUrl =

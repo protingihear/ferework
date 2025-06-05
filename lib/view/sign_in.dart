@@ -40,13 +40,17 @@ class _Sign_In_PageState extends State<Sign_In_Page> {
     String password = _passwordController.text;
 
     if (email.isEmpty || password.isEmpty) {
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('username dan password tidak boleh kosong!')),
+        const SnackBar(
+            content: Text('username dan password tidak boleh kosong!')),
       );
       return;
     }
 
     String? errorMessage = await _authService.login(email, password);
+
+    if (!mounted) return;
 
     if (errorMessage == null) {
       Navigator.pushReplacement(
@@ -117,6 +121,7 @@ class _Sign_In_PageState extends State<Sign_In_Page> {
 
                 // Username Field
                 Container(
+                  key: const Key('usernameField'),
                   decoration: BoxDecoration(
                     color: Colors.white,
                     borderRadius: BorderRadius.circular(16),
@@ -143,6 +148,7 @@ class _Sign_In_PageState extends State<Sign_In_Page> {
 
                 // Password Field
                 Container(
+                  key: const Key('passwordField'),
                   decoration: BoxDecoration(
                     color: Colors.white,
                     borderRadius: BorderRadius.circular(16),
@@ -202,6 +208,7 @@ class _Sign_In_PageState extends State<Sign_In_Page> {
 
                 // Sign In Button
                 ElevatedButton(
+                  key: const Key('signInButton'),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: accentColor,
                     foregroundColor: Colors.white,

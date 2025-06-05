@@ -36,6 +36,7 @@ dependencies:
   path_provider: ^2.1.5
   youtube_player_flutter: ^9.1.1
   flutter_launcher_icons: ^0.13.1
+  mockito: ^5.3.0
 
 flutter_icons:
   android: true
@@ -43,6 +44,8 @@ flutter_icons:
   image_path: "assets/ihear_logo.png"
 
 dev_dependencies:
+  integration_test:
+    sdk: flutter
   flutter_test:
     sdk: flutter
   flutter_lints: ^5.0.0
