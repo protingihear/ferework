@@ -20,6 +20,7 @@ class EditProfilePage extends StatefulWidget {
 }
 
 class _EditProfilePageState extends State<EditProfilePage> {
+  final _formKey = GlobalKey<FormState>();
   late TextEditingController nameController;
   late TextEditingController bioController;
   String? selectedGender;
@@ -43,6 +44,10 @@ class _EditProfilePageState extends State<EditProfilePage> {
   }
 
   Future<void> saveProfile() async {
+    if (!_formKey.currentState!.validate()) {
+      return;
+    }
+
     Uint8List? imageBytes;
 
     if (profileImageFile != null) {
@@ -139,115 +144,135 @@ class _EditProfilePageState extends State<EditProfilePage> {
         children: [
           SingleChildScrollView(
             padding: const EdgeInsets.all(20),
-            child: Column(
-              children: [
-                const SizedBox(height: 70),
-                Stack(
-                  alignment: Alignment.bottomRight,
-                  children: [
-                    CircleAvatar(
-                      radius: 75,
-                      backgroundImage: profileImageFile != null
-                          ? FileImage(profileImageFile!)
-                          : (profileImageUrl.isNotEmpty &&
-                                  profileImageUrl.startsWith('http'))
-                              ? NetworkImage(profileImageUrl)
-                              : (profileImageUrl.startsWith('data:image'))
-                                  ? MemoryImage(base64Decode(
-                                      profileImageUrl.split(',')[1]))
-                                  : null,
-                      backgroundColor: Colors.white,
-                      child:
-                          (profileImageFile == null && profileImageUrl.isEmpty)
-                              ? const Icon(Icons.person,
-                                  size: 60, color: Colors.grey)
-                              : null,
-                    ),
-                    Positioned(
-                      right: 0,
-                      bottom: 0,
-                      child: Material(
-                        color: Colors.teal,
-                        shape: const CircleBorder(),
-                        child: InkWell(
-                          customBorder: const CircleBorder(),
-                          onTap: showImagePicker,
-                          child: const Padding(
-                            padding: EdgeInsets.all(8),
-                            child:
-                                Icon(Icons.edit, color: Colors.white, size: 20),
+            child: Form(
+              key: _formKey,
+              child: Column(
+                children: [
+                  const SizedBox(height: 70),
+                  Stack(
+                    alignment: Alignment.bottomRight,
+                    children: [
+                      CircleAvatar(
+                        radius: 75,
+                        backgroundImage: profileImageFile != null
+                            ? FileImage(profileImageFile!)
+                            : (profileImageUrl.isNotEmpty &&
+                                    profileImageUrl.startsWith('http'))
+                                ? NetworkImage(profileImageUrl)
+                                : (profileImageUrl.startsWith('data:image'))
+                                    ? MemoryImage(base64Decode(
+                                        profileImageUrl.split(',')[1]))
+                                    : null,
+                        backgroundColor: Colors.white,
+                        child: (profileImageFile == null &&
+                                profileImageUrl.isEmpty)
+                            ? const Icon(Icons.person,
+                                size: 60, color: Colors.grey)
+                            : null,
+                      ),
+                      Positioned(
+                        right: 0,
+                        bottom: 0,
+                        child: Material(
+                          color: Colors.teal,
+                          shape: const CircleBorder(),
+                          child: InkWell(
+                            customBorder: const CircleBorder(),
+                            onTap: showImagePicker,
+                            child: const Padding(
+                              padding: EdgeInsets.all(8),
+                              child: Icon(Icons.edit,
+                                  color: Colors.white, size: 20),
+                            ),
                           ),
                         ),
                       ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 20),
-                buildRoundedTextField(
-                    controller: nameController, label: 'Nama'),
-                const SizedBox(height: 16),
-                buildRoundedTextField(controller: bioController, label: 'Bio'),
-                const SizedBox(height: 16),
-                Container(
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: borderRadius,
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Text("Gender:",
-                          style: TextStyle(fontWeight: FontWeight.bold)),
-                      Row(
-                        children: [
-                          Expanded(
-                            child: RadioListTile<String>(
-                              title: const Text('Laki-Laki'),
-                              value: 'Laki-Laki',
-                              groupValue: selectedGender,
-                              onChanged: (value) {
-                                if (value != null) {
-                                  setState(() {
-                                    selectedGender = value;
-                                  });
-                                }
-                              },
-                            ),
-                          ),
-                          Expanded(
-                            child: RadioListTile<String>(
-                              title: const Text('Perempuan'),
-                              value: 'Perempuan',
-                              groupValue: selectedGender,
-                              onChanged: (value) {
-                                if (value != null) {
-                                  setState(() {
-                                    selectedGender = value;
-                                  });
-                                }
-                              },
-                            ),
-                          ),
-                        ],
-                      ),
                     ],
                   ),
-                ),
-                const SizedBox(height: 30),
-                ElevatedButton.icon(
-                  icon: const Icon(Icons.save),
-                  onPressed: saveProfile,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.teal,
-                    foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 32, vertical: 14),
-                    shape: RoundedRectangleBorder(borderRadius: borderRadius),
+                  const SizedBox(height: 20),
+                  buildRoundedTextField(
+                    controller: nameController,
+                    label: 'Nama',
+                    validator: (value) {
+                      if (value == null || value.trim().isEmpty) {
+                        return 'Nama tidak boleh kosong';
+                      }
+                      return null;
+                    },
                   ),
-                  label: const Text('Simpan', style: TextStyle(fontSize: 16)),
-                ),
-              ],
+                  const SizedBox(height: 16),
+                  buildRoundedTextField(
+                    controller: bioController,
+                    label: 'Bio',
+                    validator: (value) {
+                      if (value == null || value.trim().isEmpty) {
+                        return 'Bio tidak boleh kosong';
+                      }
+                      return null;
+                    },
+                  ),
+                  const SizedBox(height: 16),
+                  Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: borderRadius,
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text("Gender:",
+                            style: TextStyle(fontWeight: FontWeight.bold)),
+                        Row(
+                          children: [
+                            Expanded(
+                              child: RadioListTile<String>(
+                                title: const Text('Laki-Laki'),
+                                value: 'Laki-Laki',
+                                groupValue: selectedGender,
+                                onChanged: (value) {
+                                  if (value != null) {
+                                    setState(() {
+                                      selectedGender = value;
+                                    });
+                                  }
+                                },
+                              ),
+                            ),
+                            Expanded(
+                              child: RadioListTile<String>(
+                                title: const Text('Perempuan'),
+                                value: 'Perempuan',
+                                groupValue: selectedGender,
+                                onChanged: (value) {
+                                  if (value != null) {
+                                    setState(() {
+                                      selectedGender = value;
+                                    });
+                                  }
+                                },
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 30),
+                  ElevatedButton.icon(
+                    icon: const Icon(Icons.save),
+                    onPressed: saveProfile,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.teal,
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 32, vertical: 14),
+                      shape: RoundedRectangleBorder(borderRadius: borderRadius),
+                    ),
+                    label: const Text('Simpan', style: TextStyle(fontSize: 16)),
+                  ),
+                ],
+              ),
             ),
           ),
           Positioned(
@@ -270,10 +295,12 @@ class _EditProfilePageState extends State<EditProfilePage> {
     required TextEditingController controller,
     required String label,
     bool obscureText = false,
+    String? Function(String?)? validator,
   }) {
-    return TextField(
+    return TextFormField(
       controller: controller,
       obscureText: obscureText,
+      validator: validator,
       decoration: InputDecoration(
         filled: true,
         fillColor: Colors.white,
@@ -283,6 +310,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
           borderSide: const BorderSide(color: Colors.teal),
           borderRadius: BorderRadius.circular(20),
         ),
+        errorStyle: const TextStyle(color: Colors.red),
       ),
     );
   }
