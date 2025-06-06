@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:reworkmobile/view/view_community.dart';
 import 'package:reworkmobile/widgets/post_card.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../services/comumnity_service.dart';
@@ -26,19 +27,26 @@ class _RelationsPageState extends State<RelationsPage> {
 
   int? currentUserId;
 
+  ScrollController _scrollController = ScrollController();
+
   @override
   void initState() {
     super.initState();
     communitiesFuture = fetchAndSetCommunities();
     searchController.addListener(_filterCommunities);
+    _scrollController = ScrollController();
     loadUserId();
   }
 
   void loadUserId() async {
     final prefs = await SharedPreferences.getInstance();
-    setState(() {
-      currentUserId = prefs.getInt('user_id');
-    });
+    final userId = prefs.getInt('user_id');
+
+    if (userId != null) {
+      setState(() {
+        currentUserId = userId;
+      });
+    }
   }
 
   Future<List<Community>> fetchAndSetCommunities() async {
@@ -80,6 +88,7 @@ class _RelationsPageState extends State<RelationsPage> {
   @override
   void dispose() {
     searchController.dispose();
+    _scrollController.dispose();
     super.dispose();
   }
 
@@ -92,13 +101,17 @@ class _RelationsPageState extends State<RelationsPage> {
         elevation: 0,
         title: const Text(
           "Relations",
-          style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold),
+          style: TextStyle(
+            color: Colors.black,
+            fontWeight: FontWeight.bold,
+          ),
         ),
         centerTitle: true,
       ),
       body: RefreshIndicator(
         onRefresh: refreshPage,
         child: SingleChildScrollView(
+          controller: _scrollController,
           physics: const AlwaysScrollableScrollPhysics(),
           padding: const EdgeInsets.all(16),
           child: Column(
@@ -115,7 +128,7 @@ class _RelationsPageState extends State<RelationsPage> {
                   fillColor: Colors.white,
                   contentPadding: const EdgeInsets.symmetric(vertical: 10),
                   border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: BorderRadius.circular(16),
                     borderSide: BorderSide.none,
                   ),
                 ),
@@ -130,46 +143,79 @@ class _RelationsPageState extends State<RelationsPage> {
                 ),
               ),
               const SizedBox(height: 8),
-              SizedBox(
-                height: 160,
-                child: filteredCommunities.isEmpty
-                    ? const Center(
+              filteredCommunities.isEmpty
+                  ? const Center(
+                      child: Padding(
+                        padding: EdgeInsets.all(16),
                         child: Text(
                           "Tidak ada komunitas ditemukan",
                           style: TextStyle(color: Colors.black54),
                         ),
-                      )
-                    : ListView.builder(
-                        scrollDirection: Axis.horizontal,
-                        itemCount: filteredCommunities.length,
-                        itemBuilder: (context, index) {
-                          final community = filteredCommunities[index];
-                          final isSelected =
-                              community.id == selectedCommunityId;
+                      ),
+                    )
+                  : Wrap(
+                      spacing: 8.0,
+                      runSpacing: 8.0,
+                      children: filteredCommunities.map((community) {
+                        final isSelected = community.id == selectedCommunityId;
+                        return GestureDetector(
+                          onTap: () async {
+                            await Navigator.push(
+                              context,
+                              PageRouteBuilder(
+                                pageBuilder:
+                                    (context, animation, secondaryAnimation) =>
+                                        ViewCommunity(
+                                  community: community,
+                                  currentUserId: currentUserId!,
+                                ),
+                                transitionsBuilder: (context, animation,
+                                    secondaryAnimation, child) {
+                                  const begin = Offset(0.0, 1.0);
+                                  const end = Offset.zero;
+                                  const curve = Curves.ease;
 
-                          return GestureDetector(
-                            onTap: () {
-                              setState(() {
-                                selectedCommunityId = community.id;
-                              });
-                              loadPosts(community.id, community.name);
-                            },
+                                  final tween = Tween(begin: begin, end: end)
+                                      .chain(CurveTween(curve: curve));
+                                  final offsetAnimation =
+                                      animation.drive(tween);
+
+                                  return SlideTransition(
+                                    position: offsetAnimation,
+                                    child: child,
+                                  );
+                                },
+                              ),
+                            );
+
+                            _scrollController.animateTo(
+                              0,
+                              duration: const Duration(milliseconds: 500),
+                              curve: Curves.easeInOut,
+                            );
+                          },
+                          child: SizedBox(
+                            width: MediaQuery.of(context).size.width / 2 - 16,
                             child: CommunityCard(
                               community: community,
                               isSelected: isSelected,
+                              currentUserId: currentUserId!,
                             ),
-                          );
-                        },
-                      ),
-              ),
+                          ),
+                        );
+                      }).toList(),
+                    ),
               const SizedBox(height: 20),
               if (selectedCommunityId != null)
                 ElevatedButton.icon(
                   style: ElevatedButton.styleFrom(
                     backgroundColor: const Color(0xFF77C29B),
+                    foregroundColor: Colors.white,
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
+                      borderRadius: BorderRadius.circular(16),
                     ),
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 20, vertical: 12),
                   ),
                   onPressed: () async {
                     final result = await Navigator.push(
@@ -190,12 +236,7 @@ class _RelationsPageState extends State<RelationsPage> {
                 ),
               const SizedBox(height: 16),
               selectedCommunityId == null
-                  ? const Center(
-                      child: Text(
-                        "Pilih komunitas untuk melihat postingan",
-                        style: TextStyle(color: Colors.black87),
-                      ),
-                    )
+                  ? const SizedBox.shrink()
                   : FutureBuilder<List<dynamic>>(
                       future: posts,
                       builder: (context, snapshot) {
@@ -207,9 +248,12 @@ class _RelationsPageState extends State<RelationsPage> {
                           return Text("Error: ${snapshot.error}");
                         } else if (!snapshot.hasData ||
                             snapshot.data!.isEmpty) {
-                          return const Text(
-                            "Belum ada postingan",
-                            style: TextStyle(color: Colors.black54),
+                          return const Padding(
+                            padding: EdgeInsets.symmetric(vertical: 16),
+                            child: Text(
+                              "Belum ada postingan",
+                              style: TextStyle(color: Colors.black54),
+                            ),
                           );
                         } else {
                           return Column(

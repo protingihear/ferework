@@ -6,12 +6,10 @@ import '../models/post.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class ComumnityService {
-  static const String baseUrl =
-      'http://20.214.51.17:5001/api';
+  static const String baseUrl = 'http://20.214.51.17:5001/api';
 
   static Future<List<Community>> fetchCommunities() async {
-    final response = await http.get(Uri.parse(
-        '$baseUrl/communities'));
+    final response = await http.get(Uri.parse('$baseUrl/communities'));
 
     if (response.statusCode == 200) {
       List<dynamic> data = jsonDecode(response.body);
@@ -23,8 +21,8 @@ class ComumnityService {
   }
 
   static Future<List<Post>> fetchPosts(int communityId) async {
-    final response = await http.get(Uri.parse(
-        "$baseUrl/communities/$communityId/posts"));
+    final response =
+        await http.get(Uri.parse("$baseUrl/communities/$communityId/posts"));
 
     if (response.statusCode == 200) {
       final List<dynamic> data = json.decode(response.body);
@@ -49,8 +47,7 @@ class ComumnityService {
   }
 
   static Future<void> createPost(int communityId, String content) async {
-    final url = Uri.parse(
-        '$baseUrl/communities/$communityId/posts');
+    final url = Uri.parse('$baseUrl/communities/$communityId/posts');
 
     try {
       final prefs = await SharedPreferences.getInstance();
@@ -127,6 +124,57 @@ class ComumnityService {
     }
   }
 
+  // Fungsi untuk keluar dari komunitas
+  static Future<String> leaveCommunity(int communityId) async {
+    final url = Uri.parse('$baseUrl/communities/$communityId/leave');
+    final prefs = await SharedPreferences.getInstance();
+    final sessionCookie = prefs.getString('session_cookie');
+    final ttCookie = prefs.getString('tt_cookie');
+
+    final response = await http.post(
+      url,
+      headers: {
+        'Content-Type': 'application/json',
+        'Cookie': "session_id=$sessionCookie; tt=$ttCookie",
+      },
+    );
+
+    if (response.statusCode == 200) {
+      return jsonDecode(response.body)['message'];
+    } else {
+      final body = jsonDecode(response.body);
+      throw Exception(body['message'] ?? 'Gagal keluar dari komunitas');
+    }
+  }
+
+  // Fungsi mengambil komunitas yang telah diikuti
+  static Future<List<dynamic>> getJoinedCommunities() async {
+    final url = Uri.parse('$baseUrl/communities/joined');
+    final prefs = await SharedPreferences.getInstance();
+    final sessionCookie = prefs.getString('session_cookie');
+    final ttCookie = prefs.getString('tt_cookie');
+
+    final response = await http.get(
+      url,
+      headers: {
+        'Content-Type': 'application/json',
+        'Cookie': "session_id=$sessionCookie; tt=$ttCookie",
+      },
+    );
+
+    print("Status code: ${response.statusCode}");
+    print("Response body: ${response.body}");
+
+    if (response.statusCode == 200) {
+      final data = jsonDecode(response.body);
+      print("Joined Communities Response: $data");
+      return data['joinedCommunities'];
+    } else {
+      final body = jsonDecode(response.body);
+      throw Exception(body['message'] ?? 'Gagal mengambil data komunitas');
+    }
+  }
+
   static Future<http.Response> createCommunity({
     required String name,
     required String description,
@@ -145,8 +193,7 @@ class ComumnityService {
     final request = http.MultipartRequest('POST', uri)
       ..fields['name'] = name
       ..fields['description'] = description
-      ..headers['Cookie'] =
-          "session_id=$sessionId; tt=$tt"; // atau sesuaikan nama cookie session kamu
+      ..headers['Cookie'] = "session_id=$sessionId; tt=$tt";
 
     // Tambah foto jika ada
     if (imageFile != null) {
@@ -171,6 +218,61 @@ class ComumnityService {
     }
 
     return response;
+  }
+
+  static Future<bool> editCommunity({
+    required int communityId,
+    required String name,
+    required String description,
+  }) async {
+    final url = Uri.parse('$baseUrl/communities/$communityId');
+    final prefs = await SharedPreferences.getInstance();
+    final sessionCookie = prefs.getString('session_cookie');
+    final ttCookie = prefs.getString('tt_cookie');
+
+    final response = await http.put(
+      url,
+      headers: {
+        'Content-Type': 'application/json',
+        'Cookie': 'session_id=$sessionCookie; tt=$ttCookie',
+      },
+      body: jsonEncode({
+        'name': name,
+        'description': description,
+      }),
+    );
+
+    if (response.statusCode == 200) {
+      return true;
+    } else {
+      print("Gagal update komunitas: ${response.body}");
+      return false;
+    }
+  }
+
+  static Future<List<dynamic>> getCommunityMembers({
+    required int communityId,
+    required String token,
+  }) async {
+    final url = Uri.parse('$baseUrl/communities/$communityId/members');
+    final prefs = await SharedPreferences.getInstance();
+    final sessionCookie = prefs.getString('session_cookie');
+    final ttCookie = prefs.getString('tt_cookie');
+
+    final response = await http.get(
+      url,
+      headers: {
+        'Cookie': 'session_id=$sessionCookie; tt=$ttCookie',
+      },
+    );
+
+    if (response.statusCode == 200) {
+      final data = jsonDecode(response.body);
+      return data['members'];
+    } else {
+      print('Gagal mengambil anggota komunitas: ${response.body}');
+      return [];
+    }
   }
 
   static Future<List<dynamic>> getLikedPosts() async {

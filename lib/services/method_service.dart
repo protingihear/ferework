@@ -5,12 +5,10 @@ import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class MethodService {
-  static const String baseUrl =
-      'http://20.214.51.17:5001/api';
+  static const String baseUrl = 'http://20.214.51.17:5001/api';
   static Future<void> createCategory(
       BuildContext context, TextEditingController nameController) async {
-    final String apiUrl =
-        '$baseUrl/categories';
+    final String apiUrl = '$baseUrl/categories';
 
     try {
       final response = await http.post(
@@ -38,8 +36,14 @@ class MethodService {
     }
   }
 
-  static Future<void> createSubCategory(BuildContext context,
-      String? categoryId, String name, String video, String description) async {
+  static Future<void> createSubCategory(
+    BuildContext context,
+    String? categoryId,
+    String name,
+    String video,
+    String description, {
+    http.Client? client, // <- tambahkan parameter opsional
+  }) async {
     if (categoryId == null || name.isEmpty || video.isEmpty) {
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -49,10 +53,12 @@ class MethodService {
       return;
     }
 
-    final String apiUrl =
-        '$baseUrl/categories/$categoryId/subcategories';
+    final String apiUrl = '$baseUrl/categories/$categoryId/subcategories';
+
+    client ??= http.Client(); // <- fallback default
+
     try {
-      final response = await http.post(
+      final response = await client.post(
         Uri.parse(apiUrl),
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({
@@ -83,8 +89,7 @@ class MethodService {
   }
 
   static Future<List<Map<String, dynamic>>> fetchCategories() async {
-    final String apiUrl =
-        '$baseUrl/categories';
+    final String apiUrl = '$baseUrl/categories';
     try {
       final response = await http.get(Uri.parse(apiUrl));
       if (response.statusCode == 200) {
@@ -394,8 +399,7 @@ class MethodService {
   static Future<Map<String, dynamic>?> fetchProgress(
       String categoryId, String userId) async {
     try {
-      String url =
-          "$baseUrl/categories/$categoryId/progress?userId=$userId";
+      String url = "$baseUrl/categories/$categoryId/progress?userId=$userId";
       final response = await http.get(Uri.parse(url));
 
       if (response.statusCode == 200) {
@@ -415,8 +419,7 @@ class MethodService {
   static Future<bool> updateStatus(
       String subCategoryId, bool done, String userId) async {
     try {
-      String url =
-          "$baseUrl/subcategories/$subCategoryId/status";
+      String url = "$baseUrl/subcategories/$subCategoryId/status";
       final response = await http.put(
         Uri.parse(url),
         headers: {
