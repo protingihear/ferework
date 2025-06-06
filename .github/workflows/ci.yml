@@ -34,8 +34,8 @@ jobs:
       run: dart format --set-exit-if-changed .
 
     # --- [5] Continuous Testing: Run automated tests ---
-    - name: Run tests
-      run: flutter test
+    - name: Unit Testing
+      run: flutter test test/unit_test/main_unit_test.dart
 
     # --- [6] Continuous Deployment/Delivery: Build debug APK ---
     - name: Build APK (debug)

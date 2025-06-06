@@ -60,7 +60,6 @@ class ApiService {
 
     final url = Uri.parse('$_baseUrl/api/profile');
 
-    // Ubah gambar ke Base64 (jika ada)
     final base64Image = imageBytes != null ? base64Encode(imageBytes) : "";
 
     final body = {
@@ -68,7 +67,7 @@ class ApiService {
       "lastname": lastname,
       "bio": bio ?? '',
       "gender": gender,
-      "Image": base64Image, // string base64 atau kosong
+      "Image": base64Image,
     };
 
     final response = await http.put(
@@ -125,14 +124,10 @@ class ApiService {
         throw Exception(
             "Gagal update role: Redeem Code sudah pernah digunakan");
       } else {
-        print("❌ Gagal update role. Status code: ${response.statusCode}");
-        print("Response body: ${response.body}");
-
         throw Exception(
             "Gagal update role. Server mengembalikan status ${response.statusCode}: ${response.body}");
       }
     } catch (e) {
-      print("❌ Error updating role: $e");
       throw Exception("Terjadi kesalahan saat mengubah role: $e");
     }
   }

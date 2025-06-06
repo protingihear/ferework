@@ -42,7 +42,7 @@ class MethodService {
     String name,
     String video,
     String description, {
-    http.Client? client, // <- tambahkan parameter opsional
+    http.Client? client,
   }) async {
     if (categoryId == null || name.isEmpty || video.isEmpty) {
       if (context.mounted) {
@@ -404,14 +404,14 @@ class MethodService {
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
-        print("Data berhasil diambil: $data");
+        // print("Data berhasil diambil: $data");
         return data; // Langsung return data JSON
       } else {
-        print("Gagal mengambil data: ${response.statusCode}");
+        // print("Gagal mengambil data: ${response.statusCode}");
         return null;
       }
     } catch (e) {
-      print("Error: $e");
+      // print("Error: $e");
       return null;
     }
   }
@@ -432,15 +432,15 @@ class MethodService {
       );
 
       if (response.statusCode == 200) {
-        print("Status berhasil diupdate ✅");
+        // print("Status berhasil diupdate ✅");
         return true; // Berhasil
       } else {
-        print("Gagal update status ❌: ${response.statusCode}");
-        print(response.body);
+        // print("Gagal update status ❌: ${response.statusCode}");
+        // print(response.body);
         return false; // Gagal
       }
     } catch (e) {
-      print("Error: $e");
+      // print("Error: $e");
       return false; // Error
     }
   }

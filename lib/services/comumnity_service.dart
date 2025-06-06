@@ -13,20 +13,21 @@ class ComumnityService {
 
     if (response.statusCode == 200) {
       List<dynamic> data = jsonDecode(response.body);
-      print(data);
+      // print(data);
       return data.map((json) => Community.fromJson(json)).toList();
     } else {
       throw Exception('Failed to load communities');
     }
   }
 
-  static Future<List<Post>> fetchPosts(int communityId) async {
+  static Future<List<dynamic>> fetchPosts(int communityId) async {
     final response =
         await http.get(Uri.parse("$baseUrl/communities/$communityId/posts"));
 
     if (response.statusCode == 200) {
-      final List<dynamic> data = json.decode(response.body);
-      return data.map((json) => Post.fromJson(json)).toList();
+      List<dynamic> data =
+          jsonDecode(response.body)['posts']; 
+          return data;
     } else {
       throw Exception("Failed to load posts");
     }
@@ -38,8 +39,8 @@ class ComumnityService {
 
     if (response.statusCode == 200) {
       List<dynamic> data =
-          jsonDecode(response.body)['posts']; // Ambil array `posts`
-      print(data);
+          jsonDecode(response.body)['posts']; 
+      // print(data);
       return data;
     } else {
       throw Exception('Failed to load community posts');
@@ -71,20 +72,20 @@ class ComumnityService {
         }),
       );
 
-      print("📤 Payload: ${jsonEncode({
-            "communityId": communityId,
-            "content": content
-          })}");
-      print("📥 Response Code: ${response.statusCode}");
-      print("📥 Response Body: ${response.body}");
+      // print("📤 Payload: ${jsonEncode({
+      //       "communityId": communityId,
+      //       "content": content
+      //     })}");
+      // print("📥 Response Code: ${response.statusCode}");
+      // print("📥 Response Body: ${response.body}");
 
       if (response.statusCode == 201 || response.statusCode == 200) {
-        print("✅ Post berhasil dibuat!");
+        // print("✅ Post berhasil dibuat!");
       } else {
         throw Exception("Gagal membuat post: ${response.body}");
       }
     } catch (e) {
-      print("⚠️ Terjadi kesalahan: $e");
+      // print("⚠️ Terjadi kesalahan: $e");
       throw Exception("Terjadi kesalahan saat membuat post: $e");
     }
   }
@@ -110,16 +111,16 @@ class ComumnityService {
         },
       );
 
-      print("🔍 Status Code: ${response.statusCode}");
-      print("📜 Response Body: ${response.body}");
+      // print("🔍 Status Code: ${response.statusCode}");
+      // print("📜 Response Body: ${response.body}");
 
       if (response.statusCode == 200) {
-        print("✅ Berhasil join komunitas!");
+        // print("✅ Berhasil join komunitas!");
       } else {
         throw Exception("❌ Gagal join komunitas: ${response.body}");
       }
     } catch (e) {
-      print("⚠️ Error saat join komunitas: $e");
+      // print("⚠️ Error saat join komunitas: $e");
       throw Exception("Terjadi kesalahan: $e");
     }
   }
@@ -162,12 +163,12 @@ class ComumnityService {
       },
     );
 
-    print("Status code: ${response.statusCode}");
-    print("Response body: ${response.body}");
+    // print("Status code: ${response.statusCode}");
+    // print("Response body: ${response.body}");
 
     if (response.statusCode == 200) {
       final data = jsonDecode(response.body);
-      print("Joined Communities Response: $data");
+      // print("Joined Communities Response: $data");
       return data['joinedCommunities'];
     } else {
       final body = jsonDecode(response.body);
@@ -211,10 +212,10 @@ class ComumnityService {
     final response = await http.Response.fromStream(streamedResponse);
 
     if (response.statusCode == 201) {
-      print('✅ Komunitas berhasil dibuat');
+      // print('✅ Komunitas berhasil dibuat');
     } else {
-      print('❌ Gagal membuat komunitas: ${response.statusCode}');
-      print(response.body);
+      // print('❌ Gagal membuat komunitas: ${response.statusCode}');
+      // print(response.body);
     }
 
     return response;
@@ -245,7 +246,7 @@ class ComumnityService {
     if (response.statusCode == 200) {
       return true;
     } else {
-      print("Gagal update komunitas: ${response.body}");
+      // print("Gagal update komunitas: ${response.body}");
       return false;
     }
   }
@@ -270,7 +271,7 @@ class ComumnityService {
       final data = jsonDecode(response.body);
       return data['members'];
     } else {
-      print('Gagal mengambil anggota komunitas: ${response.body}');
+      // print('Gagal mengambil anggota komunitas: ${response.body}');
       return [];
     }
   }
@@ -302,7 +303,7 @@ class ComumnityService {
         throw Exception('Gagal mengambil data: ${response.body}');
       }
     } catch (e) {
-      print('Error getting liked posts: $e');
+      // print('Error getting liked posts: $e');
       rethrow;
     }
   }
@@ -363,9 +364,9 @@ class ComumnityService {
     );
 
     if (response.statusCode == 200) {
-      print("Liked successfully");
+      // print("Liked successfully");
     } else {
-      print("Failed to like: ${response.statusCode} ${response.body}");
+      // print("Failed to like: ${response.statusCode} ${response.body}");
       throw Exception("Failed to like content");
     }
   }
@@ -396,11 +397,11 @@ class ComumnityService {
     );
 
     if (response.statusCode == 200) {
-      print("Unliked successfully");
+      // print("Unliked successfully");
     } else if (response.statusCode == 404) {
-      print("Like tidak ditemukan");
+      // print("Like tidak ditemukan");
     } else {
-      print("Gagal unlike: ${response.statusCode} ${response.body}");
+      // print("Gagal unlike: ${response.statusCode} ${response.body}");
       throw Exception("Failed to unlike content");
     }
   }
