@@ -3,7 +3,7 @@ import 'package:http/http.dart' as http;
 import 'package:reworkmobile/services/berita_service.dart';
 
 void main() async {
-  print('🧪 TCU_007 - Upload berita dengan gambar dari internet');
+  print('🧪 TCU_005 - Upload berita dengan gambar dari internet');
 
   try {
     // Step 1: Download gambar dan simpan di direktori lokal sementara
@@ -29,11 +29,11 @@ void main() async {
     );
 
     if (success) {
-      print('✅ TCU_007 - Berita berhasil diupload dengan gambar');
+      print('✅ TCU_005 - Berita berhasil diupload dengan gambar');
     } else {
-      print('❌ TCU_007 - Gagal upload berita dengan gambar');
+      print('❌ TCU_005 - Gagal upload berita dengan gambar');
     }
   } catch (e) {
-    print('❌ TCU_007 - Error saat test: $e');
+    print('❌ TCU_005 - Error saat test: $e');
   }
 }

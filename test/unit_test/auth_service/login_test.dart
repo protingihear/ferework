@@ -1,26 +1,21 @@
-import 'package:reworkmobile/services/auth_service.dart';
+import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:reworkmobile/services/auth_service.dart';
 
-void main() async {
-  // Inisialisasi SharedPreferences
-  SharedPreferences.setMockInitialValues({});
-  await initPrefs();
+void main() {
+  test('🧪 TCU_001 - Login dengan kredensial valid', () async {
+    SharedPreferences.setMockInitialValues({}); // reset prefs
+    await initPrefs();
 
-  final authService = AuthService();
+    final authService = AuthService();
 
-  // 🔹 Test Case
-  const testCaseCode = 'TCU_001';
-  const testDescription = 'Login dengan kredensial valid';
+    final result = await authService.login("testing", "Admin123@");
 
-  print("🧪 Test Case: $testCaseCode");
-  print("📋 Deskripsi : $testDescription");
-  print("🔐 Mulai login...");
-
-  final result = await authService.login("Admin", "Admin123@");
-
-  if (result == null) {
-    print("✅ [$testCaseCode] Hasil: Login berhasil!");
-  } else {
-    print("❌ [$testCaseCode] Hasil: Login gagal - $result");
-  }
+    if (result == null) {
+      print("✅ TCU_001 - Login berhasil!");
+    } else {
+      print("❌ TCU_001 - Login gagal - $result");
+      fail("Login gagal: $result");
+    }
+  });
 }

@@ -40,13 +40,13 @@ class AuthService {
         body: jsonEncode({"username": email, "password": password}),
       );
 
-      print("🔍 Status Code: ${response.statusCode}");
-      print("📜 Headers: ${response.headers}");
-      print("📜 Response Body: ${response.body}");
+      // print("🔍 Status Code: ${response.statusCode}");
+      // print("📜 Headers: ${response.headers}");
+      // print("📜 Response Body: ${response.body}");
 
       if (response.statusCode == 200) {
         final cookies = response.headers['set-cookie'];
-        print("📢 Full Set-Cookie Header: $cookies");
+        // print("📢 Full Set-Cookie Header: $cookies");
 
         final json = jsonDecode(response.body);
         final user = json['user'];
@@ -73,11 +73,11 @@ class AuthService {
           if (user != null) {
             final userId = user['id'];
             await prefs.setInt('user_id', userId);
-            print('✅ User ID berhasil disimpan: $userId');
+            // print('✅ User ID berhasil disimpan: $userId');
 
             final userJson = jsonEncode(user);
             await prefs.setString('user_data', userJson);
-            print('✅ Data user berhasil disimpan' + " " + userJson);
+            // print('✅ Data user berhasil disimpan' + " " + userJson);
 
             // // ✅ Ambil FCM token
             // final fcmToken = await FirebaseMessaging.instance.getToken();
@@ -201,7 +201,7 @@ class AuthService {
       'gender': gender
     };
 
-    print("Request Data: ${jsonEncode(requestData)}");
+    // print("Request Data: ${jsonEncode(requestData)}");
 
     try {
       var response = await http.post(

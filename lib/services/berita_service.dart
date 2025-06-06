@@ -38,15 +38,14 @@ class BeritaService {
       final response = await request.send();
 
       if (response.statusCode == 201) {
-        print("✅ Berita berhasil ditambahkan");
+        // print("✅ Berita berhasil ditambahkan");
         return true;
       } else {
         final respStr = await response.stream.bytesToString();
-        print("❌ Gagal tambah berita: $respStr");
+        // print("❌ Gagal tambah berita: $respStr");
         return false;
       }
     } catch (e) {
-      print("❌ Error: $e");
       return false;
     }
   }

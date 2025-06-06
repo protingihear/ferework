@@ -1,15 +1,20 @@
+import 'package:flutter_test/flutter_test.dart';
 import 'package:reworkmobile/services/auth_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-void main() async {
-  SharedPreferences.setMockInitialValues({
-    'session_cookie': 'NO4Rg6x3oQ9V6-sbUGPyO67kDxWgc3vx	',
-    'tt_cookie': 's:NO4Rg6x3oQ9V6-sbUGPyO67kDxWgc3vx.CzuFylhpsm94lPIC2ApqzJTlTTbYSeUYn6Jm6cZUMGU	',
+void main() {
+  test('🧪 TCU_0018 - Logout dengan session valid', () async {
+    SharedPreferences.setMockInitialValues({
+      'session_cookie': 'hBZfO3usjq7J9zcl5Gfqnq3HHACzPwjC',
+      'tt_cookie': 's%3AhBZfO3usjq7J9zcl5Gfqnq3HHACzPwjC.KkeAzyEMzyV1TAXtITk96GQ6NYjIMor1O2CLoqMKAW0',
+    });
+
+    try {
+      await AuthService.logout();
+      print('✅ TCU_0018 - Logout function dipanggil dengan session valid.');
+    } catch (e) {
+      print('❌ TCU_0018 - Logout gagal: $e');
+      fail('Logout gagal: $e');
+    }
   });
-
-  print('🧪 TCU_002 - Logout dengan session valid');
-
-  await AuthService.logout();
-
-  print('✅ TCU_002 - Logout function dipanggil, cek console untuk hasil.');
 }
