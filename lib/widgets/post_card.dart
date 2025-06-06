@@ -145,24 +145,6 @@ class _PostCardState extends State<PostCard> {
           Row(
             children: [
               GestureDetector(
-                onTap: toggleLike,
-                child: Row(
-                  children: [
-                    Icon(
-                      isLiked ? Icons.favorite : Icons.favorite_border,
-                      size: 20,
-                      color: isLiked ? Colors.red : Colors.black54,
-                    ),
-                    const SizedBox(width: 4),
-                    Text(
-                      '$likeCount',
-                      style: const TextStyle(color: Colors.black54),
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(width: 16),
-              GestureDetector(
                 onTap: () {
                   setState(() {
                     showComments = !showComments;
