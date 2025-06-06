@@ -143,68 +143,79 @@ class _RelationsPageState extends State<RelationsPage> {
                 ),
               ),
               const SizedBox(height: 8),
-              filteredCommunities.isEmpty
-                  ? const Center(
-                      child: Padding(
-                        padding: EdgeInsets.all(16),
-                        child: Text(
-                          "Tidak ada komunitas ditemukan",
-                          style: TextStyle(color: Colors.black54),
-                        ),
-                      ),
-                    )
-                  : Wrap(
-                      spacing: 8.0,
-                      runSpacing: 8.0,
-                      children: filteredCommunities.map((community) {
-                        final isSelected = community.id == selectedCommunityId;
-                        return GestureDetector(
-                          onTap: () async {
-                            await Navigator.push(
-                              context,
-                              PageRouteBuilder(
-                                pageBuilder:
-                                    (context, animation, secondaryAnimation) =>
-                                        ViewCommunity(
-                                  community: community,
-                                  currentUserId: currentUserId!,
-                                ),
-                                transitionsBuilder: (context, animation,
-                                    secondaryAnimation, child) {
-                                  const begin = Offset(0.0, 1.0);
-                                  const end = Offset.zero;
-                                  const curve = Curves.ease;
 
-                                  final tween = Tween(begin: begin, end: end)
-                                      .chain(CurveTween(curve: curve));
-                                  final offsetAnimation =
-                                      animation.drive(tween);
+              // PERBAIKAN ADA DI SINI
+              LayoutBuilder(
+                builder: (context, constraints) {
+                  final itemWidth = (constraints.maxWidth - 8) / 2;
 
-                                  return SlideTransition(
-                                    position: offsetAnimation,
-                                    child: child,
-                                  );
-                                },
-                              ),
-                            );
-
-                            _scrollController.animateTo(
-                              0,
-                              duration: const Duration(milliseconds: 500),
-                              curve: Curves.easeInOut,
-                            );
-                          },
-                          child: SizedBox(
-                            width: MediaQuery.of(context).size.width / 2 - 16,
-                            child: CommunityCard(
-                              community: community,
-                              isSelected: isSelected,
-                              currentUserId: currentUserId!,
+                  return filteredCommunities.isEmpty
+                      ? const Center(
+                          child: Padding(
+                            padding: EdgeInsets.all(16),
+                            child: Text(
+                              "Tidak ada komunitas ditemukan",
+                              style: TextStyle(color: Colors.black54),
                             ),
                           ),
+                        )
+                      : Wrap(
+                          spacing: 8.0,
+                          runSpacing: 8.0,
+                          children: filteredCommunities.map((community) {
+                            final isSelected =
+                                community.id == selectedCommunityId;
+                            return GestureDetector(
+                              onTap: () async {
+                                await Navigator.push(
+                                  context,
+                                  PageRouteBuilder(
+                                    pageBuilder: (context, animation,
+                                            secondaryAnimation) =>
+                                        ViewCommunity(
+                                      community: community,
+                                      currentUserId: currentUserId!,
+                                    ),
+                                    transitionsBuilder: (context, animation,
+                                        secondaryAnimation, child) {
+                                      const begin = Offset(0.0, 1.0);
+                                      const end = Offset.zero;
+                                      const curve = Curves.ease;
+
+                                      final tween = Tween(
+                                              begin: begin, end: end)
+                                          .chain(CurveTween(curve: curve));
+                                      final offsetAnimation =
+                                          animation.drive(tween);
+
+                                      return SlideTransition(
+                                        position: offsetAnimation,
+                                        child: child,
+                                      );
+                                    },
+                                  ),
+                                );
+
+                                _scrollController.animateTo(
+                                  0,
+                                  duration: const Duration(milliseconds: 500),
+                                  curve: Curves.easeInOut,
+                                );
+                              },
+                              child: SizedBox(
+                                width: itemWidth,
+                                child: CommunityCard(
+                                  community: community,
+                                  isSelected: isSelected,
+                                  currentUserId: currentUserId!,
+                                ),
+                              ),
+                            );
+                          }).toList(),
                         );
-                      }).toList(),
-                    ),
+                },
+              ),
+
               const SizedBox(height: 20),
               if (selectedCommunityId != null)
                 ElevatedButton.icon(
