@@ -3,11 +3,9 @@ import 'package:flutter/material.dart';
 import 'package:reworkmobile/models/user_profile.dart';
 import 'package:reworkmobile/services/api_service.dart';
 import 'package:reworkmobile/services/comumnity_service.dart';
-import 'package:reworkmobile/view/chat_view.dart';
-import 'package:reworkmobile/view/edit_profile.dart';
-import 'package:reworkmobile/view/view_setting.dart';
+import 'package:reworkmobile/view/profile/chat/chat_view.dart';
+import 'package:reworkmobile/view/profile/profile_setting/view_setting.dart';
 import 'package:reworkmobile/widgets/post_card.dart';
-import 'sign_in.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:http/http.dart' as http;
 

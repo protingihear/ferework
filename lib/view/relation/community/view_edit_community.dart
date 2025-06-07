@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../services/comumnity_service.dart';
+import '../../../services/comumnity_service.dart';
 
 class EditCommunityPage extends StatefulWidget {
   final int communityId;

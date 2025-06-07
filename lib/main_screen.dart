@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
-import 'package:reworkmobile/view/Relation.dart';
-import 'package:reworkmobile/view/home.dart';
-import 'package:reworkmobile/view/view_profile.dart';
+import 'package:reworkmobile/view/relation/Relation.dart';
+import 'package:reworkmobile/view/home/home.dart';
+import 'package:reworkmobile/view/profile/view_profile.dart';
 
 class MainScreen extends StatefulWidget {
   const MainScreen({Key? key}) : super(key: key);

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:integration_test/integration_test.dart';
-import 'package:reworkmobile/view/CreatePostPage.dart';
+import 'package:reworkmobile/view/relation/post/CreatePostPage.dart';
 
 void main() {
   IntegrationTestWidgetsFlutterBinding.ensureInitialized();

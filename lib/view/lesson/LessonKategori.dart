@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:reworkmobile/services/method_service.dart';
-import 'package:reworkmobile/view/LessonSubKategori.dart';
+import 'package:reworkmobile/view/lesson/LessonSubKategori.dart';
 
 const softGreen = Color(0xFFD0F0C0);
 const mainGreen = Color(0xFF98DFAF);

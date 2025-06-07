@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:reworkmobile/models/user_profile.dart';
 import 'package:reworkmobile/services/auth_service.dart';
 import 'package:reworkmobile/view/animation/splash_screen.dart';
-import 'package:reworkmobile/view/edit_profile.dart';
-import 'package:reworkmobile/view/view_verificationAhliBahasa.dart';
+import 'package:reworkmobile/view/profile/profile_setting/edit_profile/edit_profile.dart';
+import 'package:reworkmobile/view/profile/profile_setting/upgrade_role/view_verificationAhliBahasa.dart';
 
 class SettingsPage extends StatelessWidget {
   final UserProfile profile;

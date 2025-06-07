@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import '../services/comumnity_service.dart';
+import '../../../services/comumnity_service.dart';
 
 const Color kGreenVerySoft = Color(0xFFF1F8E9);
 const Color kGreenSoft = Color(0xFFC8E6C9);

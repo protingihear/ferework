@@ -3,9 +3,9 @@ import 'dart:convert';
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:reworkmobile/view/LessonKategori.dart';
-import 'package:reworkmobile/view/home.dart';
-import 'package:reworkmobile/view/voice_to_text.dart';
+import 'package:reworkmobile/view/lesson/LessonKategori.dart';
+import 'package:reworkmobile/view/home/home.dart';
+import 'package:reworkmobile/view/voice%20to%20text/voice_to_text.dart';
 
 class TestHttpOverrides extends HttpOverrides {
   final Map<Uri, String> mockResponses;

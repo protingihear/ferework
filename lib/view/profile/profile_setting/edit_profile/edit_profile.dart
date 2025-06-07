@@ -3,9 +3,9 @@ import 'dart:io';
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
-import '../models/user_profile.dart';
-import '../services/api_service.dart';
-import '../services/image_service.dart';
+import '../../../../models/user_profile.dart';
+import '../../../../services/api_service.dart';
+import '../../../../services/image_service.dart';
 
 class EditProfilePage extends StatefulWidget {
   final UserProfile profile;
@@ -49,11 +49,25 @@ class _EditProfilePageState extends State<EditProfilePage> {
     }
 
     Uint8List? imageBytes;
+    String? finalBase64Image;
 
     if (profileImageFile != null) {
       imageBytes = await profileImageFile!.readAsBytes();
+      final base64 = base64Encode(imageBytes);
+
+      // Ambil base64 dari image lama (kalau ada)
+      String? oldBase64;
+      if (profileImageUrl.startsWith('data:image')) {
+        oldBase64 = profileImageUrl.split(',')[1];
+      }
+
+      // Kirim gambar hanya jika berubah
+      if (base64 != oldBase64) {
+        finalBase64Image = base64;
+      }
     } else if (profileImageUrl.isEmpty) {
-      imageBytes = null;
+      // User menghapus gambar
+      finalBase64Image = "";
     }
 
     try {
@@ -65,12 +79,13 @@ class _EditProfilePageState extends State<EditProfilePage> {
           nameParts.length > 1 ? nameParts.sublist(1).join(' ') : '';
 
       final updated = await ApiService.updateUserProfile(
-        firstname: firstName,
-        lastname: lastName,
-        bio: bioController.text,
-        gender: selectedGender ?? 'Laki-Laki',
-        imageBytes: imageBytes,
-      );
+  firstname: firstName,
+  lastname: lastName,
+  bio: bioController.text,
+  gender: selectedGender ?? 'Laki-Laki',
+  base64Image: finalBase64Image,  // langsung kirim base64 string atau "" atau null
+);
+
 
       showSnackbar("Berhasil disimpan!");
       Navigator.pop(context, updated);
@@ -118,14 +133,21 @@ class _EditProfilePageState extends State<EditProfilePage> {
   }
 
   Future<void> pickImage(ImageSource source) async {
-    final imageFile = await ImageService.pickImage(source);
-    if (imageFile != null) {
-      setState(() {
-        profileImageFile = imageFile;
-        profileImageUrl = imageFile.path;
-      });
+    try {
+      final imageFile = await ImageService.pickImage(source);
+      if (imageFile != null) {
+        setState(() {
+          profileImageFile = imageFile;
+          profileImageUrl = imageFile.path;
+        });
+      } else {
+        showSnackbar("Tidak ada gambar yang dipilih.");
+      }
+    } catch (e) {
+      showSnackbar("Gagal memilih gambar: $e");
+    } finally {
+      Navigator.pop(context);
     }
-    Navigator.pop(context);
   }
 
   void showSnackbar(String message) {

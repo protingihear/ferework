@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:integration_test/integration_test.dart';
-import 'package:reworkmobile/view/AddCommunityPage.dart';
+import 'package:reworkmobile/view/relation/community/AddCommunityPage.dart';
 
 void main() {
   IntegrationTestWidgetsFlutterBinding.ensureInitialized();

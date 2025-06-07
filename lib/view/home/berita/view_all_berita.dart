@@ -1,7 +1,7 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:reworkmobile/services/api_service.dart';
-import 'package:reworkmobile/view/view_add_berita.dart';
+import 'package:reworkmobile/view/home/berita/view_add_berita.dart';
 import 'package:reworkmobile/widgets/berita_detail.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -160,12 +160,13 @@ class _AllBeritaPageState extends State<AllBeritaPage> {
                           return InkWell(
                             onTap: () {
                               Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (context) =>
-                                      BeritaDetail(berita: berita),
-                                ),
-                              );
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) =>
+                                        BeritaDetail(berita: berita),
+                                  )).then((_) {
+                                refreshBerita();
+                              });
                             },
                             borderRadius: BorderRadius.circular(18),
                             child: Container(

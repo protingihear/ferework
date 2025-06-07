@@ -5,8 +5,7 @@ import 'package:mime/mime.dart';
 import 'package:path/path.dart';
 
 class BeritaService {
-  static const String _baseUrl =
-      'http://20.214.51.17:5001';
+  static const String _baseUrl = 'http://20.214.51.17:5001';
 
   static Future<bool> uploadBerita({
     required String judul,
@@ -47,6 +46,45 @@ class BeritaService {
       }
     } catch (e) {
       return false;
+    }
+  }
+
+  static Future<void> updateBerita({
+    required int id,
+    required String judul,
+    required String isi,
+    required String tanggal,
+    File? fotoFile,
+  }) async {
+    final uri = Uri.parse('$_baseUrl/api/berita/$id');
+    var request = http.MultipartRequest('PUT', uri);
+
+    request.fields['judul'] = judul;
+    request.fields['isi'] = isi;
+    request.fields['tanggal'] = tanggal;
+
+    if (fotoFile != null) {
+      request.files
+          .add(await http.MultipartFile.fromPath('foto', fotoFile.path));
+    }
+
+    final response = await request.send();
+
+    if (response.statusCode == 200) {
+      print('Berita berhasil diupdate');
+    } else {
+      print('Gagal update berita: ${response.statusCode}');
+    }
+  }
+
+  static Future<void> deleteBerita(int id) async {
+    final uri = Uri.parse('$_baseUrl/api/berita/$id');
+    final response = await http.delete(uri);
+
+    if (response.statusCode == 200) {
+      print('Berita berhasil dihapus');
+    } else {
+      print('Gagal menghapus berita: ${response.statusCode}');
     }
   }
 }
