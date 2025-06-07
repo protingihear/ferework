@@ -1,8 +1,8 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:reworkmobile/services/auth_service.dart';
-import 'package:reworkmobile/view/view_wait_verify.dart';
-import '../services/data_user.dart';
+import 'package:reworkmobile/view/authtentication/verification%20and%20reset/view_wait_verify.dart';
+import '../../services/data_user.dart';
 
 class Sign_Up_Page extends StatefulWidget {
   const Sign_Up_Page({super.key});

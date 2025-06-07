@@ -1,14 +1,14 @@
 import 'package:flutter/material.dart';
-import 'package:reworkmobile/view/LessonKategori.dart';
-import 'package:reworkmobile/view/scan_to_text.dart';
-import 'package:reworkmobile/view/view_all_berita.dart';
+import 'package:reworkmobile/view/lesson/LessonKategori.dart';
+import 'package:reworkmobile/view/scan%20to%20text/scan_to_text.dart';
+import 'package:reworkmobile/view/home/berita/view_all_berita.dart';
 import 'dart:convert';
-import '../services/api_service.dart';
-import '../models/user_profile.dart';
-import '../widgets/berita_card.dart';
-import '../widgets/feature_button.dart';
-import '../widgets/berita_detail.dart';
-import 'package:reworkmobile/view/voice_to_text.dart';
+import '../../services/api_service.dart';
+import '../../models/user_profile.dart';
+import '../../widgets/berita_card.dart';
+import '../../widgets/feature_button.dart';
+import '../../widgets/berita_detail.dart';
+import 'package:reworkmobile/view/voice%20to%20text/voice_to_text.dart';
 
 const Color kGreenSoft = Color(0xFFE8F5E9);
 const Color kGreenMid = Color(0xFF81C784);

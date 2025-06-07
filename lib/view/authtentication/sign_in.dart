@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:reworkmobile/view/view_reset_password.dart';
+import 'package:reworkmobile/view/authtentication/verification%20and%20reset/view_reset_password.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:reworkmobile/main_screen.dart';
 import 'package:reworkmobile/services/auth_service.dart';

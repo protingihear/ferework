@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
-import 'package:reworkmobile/view/view_community.dart';
+import 'package:reworkmobile/view/relation/community/view_community.dart';
 import 'package:reworkmobile/widgets/post_card.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import '../services/comumnity_service.dart';
-import '../models/community.dart';
-import '../widgets/community_card.dart';
-import './CreatePostPage.dart';
-import './AddCommunityPage.dart';
+import '../../services/comumnity_service.dart';
+import '../../models/community.dart';
+import '../../widgets/community_card.dart';
+import 'post/CreatePostPage.dart';
+import 'community/AddCommunityPage.dart';
 
 class RelationsPage extends StatefulWidget {
   const RelationsPage({Key? key}) : super(key: key);

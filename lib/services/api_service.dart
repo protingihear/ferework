@@ -9,8 +9,7 @@ import 'package:flutter/foundation.dart';
 import 'package:http_parser/http_parser.dart' as http_parser;
 
 class ApiService {
-  static const String _baseUrl =
-      'http://20.214.51.17:5001';
+  static const String _baseUrl = 'http://20.214.51.17:5001';
 
   static Future<UserProfile> fetchUserProfile() async {
     try {
@@ -31,6 +30,7 @@ class ApiService {
       );
 
       if (response.statusCode == 200) {
+        print('✅ Raw body: ${response.body}');
         return UserProfile.fromJson(jsonDecode(response.body));
       } else {
         throw Exception(
@@ -46,29 +46,28 @@ class ApiService {
     required String lastname,
     String? bio,
     required String gender,
-    Uint8List? imageBytes,
-    String? sessionId,
+    String? base64Image,
   }) async {
     final prefs = await SharedPreferences.getInstance();
     final sessionCookie = prefs.getString('session_cookie');
     final ttCookie = prefs.getString('tt_cookie');
 
     if (sessionCookie == null || ttCookie == null) {
-      throw Exception(
-          "❌ Gagal membuat post: Session tidak ditemukan. Harap login terlebih dahulu.");
+      throw Exception("❌ Gagal update: Session tidak ditemukan. Harap login.");
     }
 
     final url = Uri.parse('$_baseUrl/api/profile');
 
-    final base64Image = imageBytes != null ? base64Encode(imageBytes) : "";
-
     final body = {
       "firstname": firstname,
       "lastname": lastname,
-      "bio": bio ?? '',
       "gender": gender,
-      "Image": base64Image,
+      "bio": bio ?? '',
+      "Image":
+          base64Image ?? "",
     };
+
+    print('📤 Body: ${jsonEncode(body)}');
 
     final response = await http.put(
       url,
@@ -80,6 +79,7 @@ class ApiService {
     );
 
     if (response.statusCode == 200) {
+      print('✅ Profil berhasil diupdate: ${response.body}');
       return jsonDecode(response.body);
     } else {
       throw Exception('❌ Gagal update profil: ${response.body}');

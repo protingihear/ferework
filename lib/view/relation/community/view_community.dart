@@ -1,11 +1,10 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
-import 'package:reworkmobile/view/CreatePostPage.dart';
-import 'package:reworkmobile/view/view_edit_community.dart';
-// import 'package:reworkmobile/view/EditCommunityPage.dart';
+import 'package:reworkmobile/view/relation/post/CreatePostPage.dart';
+import 'package:reworkmobile/view/relation/community/view_edit_community.dart';
 import 'package:reworkmobile/widgets/post_card.dart';
-import '../models/community.dart';
-import '../services/comumnity_service.dart';
+import '../../../models/community.dart';
+import '../../../services/comumnity_service.dart';
 
 const Color kGreenSoft = Color(0xFFE8F5E9);
 const Color kGreenMid = Color(0xFF81C784);

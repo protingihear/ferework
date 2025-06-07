@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:reworkmobile/main_screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:reworkmobile/view/sign_in.dart';
+import 'package:reworkmobile/view/authtentication/sign_in.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});

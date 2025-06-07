@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import 'package:reworkmobile/services/method_service.dart';
-import 'package:reworkmobile/view/LessonDisplay.dart';
+import 'package:reworkmobile/view/lesson/LessonDisplay.dart';
 
 class SubCategoryPage extends StatefulWidget {
   final String name;
