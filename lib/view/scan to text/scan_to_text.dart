@@ -79,7 +79,9 @@ class SignDetectionPage extends StatefulWidget {
 
 class _SignDetectionPageState extends State<SignDetectionPage> {
   CameraController? _cameraController;
-  CameraDescription? _frontCamera;
+  List<CameraDescription> _cameras = [];
+  int _selectedCameraIndex = 0;
+
   bool _isCameraInitialized = false;
   bool _isDetecting = false;
   WebSocketChannel? _webSocketChannel;
@@ -91,14 +93,13 @@ class _SignDetectionPageState extends State<SignDetectionPage> {
   DateTime? _lastFrameProcessingAttemptTime; // Renamed for clarity
   int _conversionTimeMs =
       0; // This will now be the round-trip time for the isolate task
-  Image?
-      _debugFramePreview; // Will remain null as client doesn't generate preview
+  PredictionResponse? _lastMeaningfulPrediction;
   int _processedFrameCounter = 0;
   String _lastError = "";
 
   int _cameraSensorOrientation = 0;
-  final bool _doFlipFrontCameraImageHorizontally = true;
-
+  // final bool _doFlipFrontCameraImageHorizontally = true;
+  Image? _debugFramePreview;
   // Persistent Isolate variables
   Isolate? _frameProcessingIsolate;
   SendPort? _toFrameWorkerSendPort; // To send tasks to the worker
@@ -120,51 +121,60 @@ class _SignDetectionPageState extends State<SignDetectionPage> {
   }
 
   Future<void> _initializeCamera() async {
-    if (mounted) setState(() => _isCameraInitialized = false);
+    // [ROBUSTNESS] Check if a controller exists and a stream is running before stopping it.
+    // This is the primary fix for the CameraException.
+    if (_cameraController != null && _cameraController!.value.isStreamingImages) {
+      await _cameraController!.stopImageStream().catchError((e) {
+        debugPrint("Error stopping previous stream: $e");
+      });
+    }
+    // Now, safely dispose the old controller.
     if (_cameraController != null) {
-      if (_cameraController!.value.isStreamingImages) {
-        try {
-          await _cameraController!.stopImageStream();
-        } catch (e) {
-          debugPrint("Error stopping previous stream: $e");
-        }
-      }
       await _cameraController!.dispose();
       _cameraController = null;
     }
-    try {
-      final cameras = await availableCameras();
-      if (cameras.isEmpty) {
-        if (mounted) setState(() => _predictionText = "No cameras available.");
+
+    // Set camera to not initialized to show loading indicator during setup
+    if (mounted) setState(() => _isCameraInitialized = false);
+
+    // Discover cameras if we haven't already
+    if (_cameras.isEmpty) {
+      try {
+        _cameras = await availableCameras();
+        if (_cameras.isEmpty) {
+          if (mounted) setState(() => _predictionText = "No cameras available.");
+          return;
+        }
+        final frontCameraIndex = _cameras.indexWhere(
+            (c) => c.lensDirection == CameraLensDirection.front);
+        if (frontCameraIndex != -1) {
+          _selectedCameraIndex = frontCameraIndex;
+        }
+      } catch (e) {
+        if (mounted) setState(() => _predictionText = "Error finding cameras: $e");
         return;
       }
-      _frontCamera = cameras.firstWhere(
-          (camera) => camera.lensDirection == CameraLensDirection.front,
-          orElse: () => cameras.first);
-      _cameraSensorOrientation = _frontCamera?.sensorOrientation ?? 0;
-    } catch (e) {
-      if (mounted)
-        setState(() => _predictionText = "Error finding cameras: $e");
-      return;
-    }
-    if (_frontCamera == null) {
-      if (mounted)
-        setState(() => _predictionText = "Could not select front camera.");
-      return;
     }
 
+    if (_selectedCameraIndex >= _cameras.length) {
+       _selectedCameraIndex = 0;
+    }
+
+    final CameraDescription selectedCamera = _cameras[_selectedCameraIndex];
+    _cameraSensorOrientation = selectedCamera.sensorOrientation;
+
     _cameraController = CameraController(
-      _frontCamera!,
-      ResolutionPreset.low, // Using low as per your logs (320x240)
+      selectedCamera,
+      ResolutionPreset.low,
       enableAudio: false,
-      imageFormatGroup: ImageFormatGroup.yuv420, // Explicitly request YUV
+      imageFormatGroup: ImageFormatGroup.yuv420,
     );
+
     try {
       await _cameraController!.initialize();
-      await _cameraController!
-          .lockCaptureOrientation(DeviceOrientation.portraitUp);
+      await _cameraController!.lockCaptureOrientation(DeviceOrientation.portraitUp);
       debugPrint(
-          "INIT: Cam initialized. Req Preset: low. Actual Preview: ${_cameraController?.value.previewSize}, SensorOrientation: $_cameraSensorOrientation");
+          "INIT: Cam initialized. Preview: ${_cameraController?.value.previewSize}, SensorOrientation: $_cameraSensorOrientation");
       if (!mounted) return;
       setState(() {
         _isCameraInitialized = true;
@@ -172,13 +182,42 @@ class _SignDetectionPageState extends State<SignDetectionPage> {
       });
     } catch (e) {
       final errorMsg = e is CameraException ? e.description : e.toString();
-      if (mounted)
+      if (mounted) {
         setState(() {
           _predictionText = "Camera Error: ${errorMsg ?? 'Unknown'}";
           _isCameraInitialized = false;
           _cameraController = null;
         });
+      }
     }
+  }
+
+  // [MODIFIED] This function is more robust and provides better user feedback.
+  Future<void> _switchCamera() async {
+    if (_cameras.length < 2 || !_isCameraInitialized) {
+      debugPrint("Switch Camera: Not enough cameras or camera not ready.");
+      return;
+    }
+
+    // [ROBUSTNESS] Update UI immediately to show the camera is changing.
+    // This solves the "sometimes it won't switch" user experience issue.
+    setState(() {
+      _isCameraInitialized = false;
+      _predictionText = "Switching camera...";
+    });
+
+    // Ensure detection state is off before switching.
+    if (_isDetecting) {
+       _stopProcessingFrames(); // This function already has safety checks.
+       setState(() => _isDetecting = false);
+    }
+    
+    // Cycle to the next camera index.
+    _selectedCameraIndex = (_selectedCameraIndex + 1) % _cameras.length;
+
+    // Re-initialize with the new camera. The unreliable delay is no longer needed.
+    // The new _initializeCamera function will handle disposing the old controller safely.
+    await _initializeCamera();
   }
 
   Future<void> _spawnFrameProcessingIsolate() async {
@@ -256,8 +295,7 @@ class _SignDetectionPageState extends State<SignDetectionPage> {
   }
 
   void _connectWebSocket() {
-    if (_webSocketChannel != null && _webSocketChannel!.closeCode == null)
-      return;
+    if (_webSocketChannel != null && _webSocketChannel!.closeCode == null) return;
     try {
       _webSocketChannel = WebSocketChannel.connect(Uri.parse(_webSocketURI));
       if (mounted) setState(() => _predictionText = "Connecting...");
@@ -265,40 +303,84 @@ class _SignDetectionPageState extends State<SignDetectionPage> {
       _webSocketChannel!.stream.listen(
         (message) {
           if (!mounted) return;
+
+          // --- [MODIFIED] THIS IS THE CORE LOGIC CHANGE ---
           try {
             final decodedMessage = jsonDecode(message as String);
-            final prediction = PredictionResponse.fromJson(decodedMessage);
-            if (mounted)
-              setState(() => _predictionText = prediction.toDisplayText());
+            final newPrediction = PredictionResponse.fromJson(decodedMessage);
+
+            final String meaningfulGesture = newPrediction.isMeaningfulGesture(newPrediction.gesture);
+            final bool isCurrentMeaningful = meaningfulGesture.isNotEmpty;
+
+            if (isCurrentMeaningful) {
+              // Case 1: We received a meaningful gesture ("Hello", "Thanks", etc.).
+              // Accept it, update our state, and show it.
+              _lastMeaningfulPrediction = newPrediction;
+              if (mounted) {
+                setState(() => _predictionText = newPrediction.toDisplayText());
+              }
+            } else {
+              // Case 2: We received a non-meaningful gesture ("Uncertain", "Building", etc.).
+              // This might be a ghost. Let's check.
+              final lastMeaningful = _lastMeaningfulPrediction;
+              if (lastMeaningful == null) {
+                // If we've never seen a real gesture, just show the current status.
+                if (mounted) {
+                  setState(() => _predictionText = newPrediction.toDisplayText());
+                }
+                return;
+              }
+
+              // Calculate time since the last *real* gesture was shown.
+              final timeSinceLast = newPrediction.timestamp.difference(lastMeaningful.timestamp);
+              const ghostTimeThreshold = Duration(milliseconds: 1600);
+
+              if (timeSinceLast < ghostTimeThreshold) {
+                // It's a "ghost" right after a real gesture. IGNORE IT.
+                // By doing nothing, we keep the last real gesture on the screen.
+                debugPrint("Ghost Filter: Ignored transient prediction -> '${newPrediction.gesture}'");
+                return; // The most important part: we exit without calling setState.
+              } else {
+                // It's been long enough (>1.3s) that this is a genuine pause.
+                // Reset the state and show the "Detecting..." or "Uncertain" message.
+                _lastMeaningfulPrediction = null;
+                if (mounted) {
+                  setState(() => _predictionText = newPrediction.toDisplayText());
+                }
+              }
+            }
           } catch (e) {
             if (mounted) setState(() => _predictionText = "Parse Error: $e");
             debugPrint("WebSocket message parse error: $e. Message: $message");
           }
+          // --- [END OF MODIFICATION] ---
         },
         onError: (error) {
           if (!mounted) return;
           debugPrint("WebSocket Error: $error");
-          if (mounted)
+          if (mounted) {
             setState(() {
               _predictionText = "WS Error. Retry.";
-              if (_isDetecting)
-                _stopProcessingFrames(
-                    false); // Stop stream, not full detection logic
-              _isDetecting = false; // To be safe, update detection state
+              if (_isDetecting) _stopProcessingFrames(false);
+              _isDetecting = false;
               _lastError = "WS Error: $error";
+              _lastMeaningfulPrediction = null; // [ADDITION] Reset on error
             });
+          }
           _webSocketChannel = null;
         },
         onDone: () {
           if (!mounted) return;
           debugPrint("WebSocket Closed by server.");
-          if (mounted)
+          if (mounted) {
             setState(() {
               _predictionText = "WS Closed. Retry.";
               if (_isDetecting) _stopProcessingFrames(false);
               _isDetecting = false;
               _lastError = "WS Closed by server";
+              _lastMeaningfulPrediction = null; // [ADDITION] Reset on close
             });
+          }
           _webSocketChannel = null;
         },
         cancelOnError: true,
@@ -352,8 +434,12 @@ class _SignDetectionPageState extends State<SignDetectionPage> {
       int finalRotationForPortraitStage =
           (r0_sensorCorrectionToUprightPortrait + 180) % 360;
 
-      final payload = ImageProcessingPayload.fromCameraImage(cameraImage,
-          finalRotationForPortraitStage, _doFlipFrontCameraImageHorizontally);
+      final bool shouldFlipHorizontally =
+          _cameras[_selectedCameraIndex].lensDirection ==
+              CameraLensDirection.front;
+
+      final payload = ImageProcessingPayload.fromCameraImage(
+          cameraImage, finalRotationForPortraitStage, shouldFlipHorizontally);
 
       // debugPrint("MAIN_ISOLATE: Sending frame #$currentFrameNumber to persistent worker.");
 
@@ -505,6 +591,10 @@ class _SignDetectionPageState extends State<SignDetectionPage> {
       return;
     }
 
+    if (!_isDetecting) { // This condition means detection is about to be toggled OFF.
+        _lastMeaningfulPrediction = null;
+    }
+
     setState(() {
       _isDetecting = !_isDetecting;
       if (_isDetecting) {
@@ -654,7 +744,6 @@ class _SignDetectionPageState extends State<SignDetectionPage> {
                   ),
                 ),
               ),
-              // Ini yang diganti
               Positioned(
                 left: 24,
                 right: 24,
@@ -662,8 +751,7 @@ class _SignDetectionPageState extends State<SignDetectionPage> {
                 bottom: 0,
                 child: CustomPaint(
                   size: Size(
-                    MediaQuery.of(context).size.width -
-                        48, // 24 kiri + 24 kanan
+                    MediaQuery.of(context).size.width - 48,
                     MediaQuery.of(context).size.height,
                   ),
                   painter: CutoutGuideOverlayPainter(
@@ -679,16 +767,19 @@ class _SignDetectionPageState extends State<SignDetectionPage> {
         },
       );
     } else {
-      cameraDisplayAreaWithOverlay =
-          const Center(/* ... your loading UI ... */);
+      cameraDisplayAreaWithOverlay = const Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            CircularProgressIndicator(),
+            SizedBox(height: 16),
+            Text("Initializing camera..."),
+          ],
+        ),
+      );
     }
 
-    final screenHeight = MediaQuery.of(context).size.height;
-    // This targetFontSize is for FittedBox. FittedBox will try to achieve this size
-    // if width permits and then scale down if height is constrained.
-    // Since we are making the text container non-Expanded, its height will be based on this.
     final double targetFontSize = 24;
-    // Made divisor smaller for even larger target font
 
     return Scaffold(
       backgroundColor: Colors.white,
@@ -708,33 +799,26 @@ class _SignDetectionPageState extends State<SignDetectionPage> {
             Navigator.pop(context);
           },
         ),
+        // [MODIFIED] The switch button is no longer here.
+        actions: const [],
       ),
       body: SafeArea(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            // Camera View Area
             Expanded(
-              // This will now take ALL available flexible space
               child: Container(
                 color: Colors.white,
                 child: cameraDisplayAreaWithOverlay,
               ),
             ),
-
-            // Prediction Text Area - NOT Expanded anymore
             Container(
-              // Takes height based on its content
               color: Colors.white,
-              // Reduced vertical padding to bring it closer to the camera view
               padding:
                   const EdgeInsets.symmetric(horizontal: 20.0, vertical: 4.0),
               child: Center(
-                // Center horizontally
                 child: FittedBox(
-                  // Scales text to fit available width primarily
-                  fit: BoxFit
-                      .scaleDown, // Use scaleDown to prevent upscaling if font is too small for width
+                  fit: BoxFit.scaleDown,
                   child: Text(
                     _isDetecting &&
                             _predictionText != "Starting detection..." &&
@@ -748,27 +832,21 @@ class _SignDetectionPageState extends State<SignDetectionPage> {
                             ? "..."
                             : _predictionText),
                     style: TextStyle(
-                      fontSize: targetFontSize < 30
-                          ? 30
-                          : targetFontSize, // Min font size of 60
+                      fontSize: targetFontSize < 30 ? 30 : targetFontSize,
                       fontWeight: FontWeight.w900,
                       color: Colors.blueGrey[900],
-                      letterSpacing: -2.5, // Adjust for very large fonts
+                      letterSpacing: -2.5,
                     ),
                     textAlign: TextAlign.center,
-                    maxLines:
-                        1, // Important for predictable height with FittedBox
+                    maxLines: 1,
                     softWrap: false,
                   ),
                 ),
               ),
             ),
-
-            // Stats and Button Area (Non-Expanded, takes fixed height)
             Container(
               color: Colors.white,
-              padding: const EdgeInsets.fromLTRB(
-                  20.0, 4.0, 20.0, 8.0), // Reduced vertical padding
+              padding: const EdgeInsets.fromLTRB(20.0, 4.0, 20.0, 8.0),
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
@@ -776,8 +854,7 @@ class _SignDetectionPageState extends State<SignDetectionPage> {
                       _conversionTimeMs > 0 ||
                       _lastError.isNotEmpty)
                     Padding(
-                      padding:
-                          const EdgeInsets.only(bottom: 8.0), // Space to button
+                      padding: const EdgeInsets.only(bottom: 8.0),
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
@@ -810,37 +887,64 @@ class _SignDetectionPageState extends State<SignDetectionPage> {
                         ],
                       ),
                     ),
-                  ElevatedButton.icon(
-                    icon: Icon(
-                      _isDetecting
-                          ? Icons.stop_circle_rounded
-                          : Icons.play_circle_fill_rounded,
-                      size: 24, // Slightly smaller icon if space is tight
-                      color: Colors.white,
-                    ),
-                    onPressed: _isCameraInitialized ? _toggleDetection : null,
-                    label: Text(
-                        _isDetecting ? "STOP DETECTION" : "START DETECTION",
-                        style: const TextStyle(
-                            fontSize: 15, // Slightly smaller button text
-                            fontWeight: FontWeight.bold,
-                            color: Colors.white)),
-                    style: ElevatedButton.styleFrom(
-                        backgroundColor: _isDetecting
-                            ? Colors.red.shade700
-                            : Colors.green.shade600,
-                        foregroundColor: Colors.white,
-                        minimumSize: const Size(
-                            double.infinity, 50), // Keep button reasonably tall
-                        padding: const EdgeInsets.symmetric(vertical: 12),
-                        shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(
-                                10))), // Standard rounding
+                  // [NEW] Row to hold both the start/stop and switch camera buttons
+                  Row(
+                    children: [
+                      // [MODIFIED] The main button is now Expanded
+                      Expanded(
+                        child: ElevatedButton.icon(
+                          icon: Icon(
+                            _isDetecting
+                                ? Icons.stop_circle_rounded
+                                : Icons.play_circle_fill_rounded,
+                            size: 24,
+                            color: Colors.white,
+                          ),
+                          onPressed:
+                              _isCameraInitialized ? _toggleDetection : null,
+                          label: Text(
+                              _isDetecting
+                                  ? "STOP DETECTION"
+                                  : "START DETECTION",
+                              style: const TextStyle(
+                                  fontSize: 15,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.white)),
+                          style: ElevatedButton.styleFrom(
+                              backgroundColor: _isDetecting
+                                  ? Colors.red.shade700
+                                  : Colors.green.shade600,
+                              foregroundColor: Colors.white,
+                              // [MODIFIED] Minimum size is no longer full width
+                              minimumSize: const Size(0, 50),
+                              padding: const EdgeInsets.symmetric(vertical: 12),
+                              shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(10))),
+                        ),
+                      ),
+                      const SizedBox(width: 12), // Spacing between buttons
+                      // [NEW] The new, styled camera switch button
+                      IconButton(
+                        icon: const Icon(Icons.flip_camera_ios_outlined),
+                        iconSize: 26,
+                        tooltip: 'Switch Camera',
+                        style: IconButton.styleFrom(
+                            backgroundColor: Colors.grey[200],
+                            foregroundColor: Colors.grey[800],
+                            minimumSize: const Size(50, 50),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                            side: BorderSide(color: Colors.grey[300]!)),
+                        onPressed: (_isCameraInitialized && _cameras.length > 1)
+                            ? _switchCamera
+                            : null,
+                      ),
+                    ],
                   ),
                   SizedBox(
-                      height: MediaQuery.of(context).padding.bottom > 0
-                          ? 0
-                          : 8), // Minimal bottom padding
+                      height:
+                          MediaQuery.of(context).padding.bottom > 0 ? 0 : 8),
                 ],
               ),
             ),

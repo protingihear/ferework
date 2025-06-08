@@ -69,6 +69,7 @@ class PredictionResponse {
   final int? bufferedFrames;
   final int? neededFrames;
   final bool? isStable;
+  final DateTime timestamp;
 
   PredictionResponse({
     this.gesture,
@@ -78,6 +79,7 @@ class PredictionResponse {
     this.bufferedFrames,
     this.neededFrames,
     this.isStable,
+    required this.timestamp,
   });
 
   factory PredictionResponse.fromJson(Map<String, dynamic> json) {
@@ -89,10 +91,11 @@ class PredictionResponse {
       bufferedFrames: json['buffered_frames'] as int?,
       neededFrames: json['needed_frames'] as int?,
       isStable: json['is_stable'] as bool?,
+      timestamp: DateTime.now(),
     );
   }
 
-  String _isMeaningfulGesture(String? gestureStr) {
+  String isMeaningfulGesture(String? gestureStr) {
     if (gestureStr == null || gestureStr.isEmpty) return "";
     if (gestureStr == "Uncertain Seq (Low Confidence)" ||
         gestureStr == "Uncertain Seq (Building Streak)" ||
@@ -108,7 +111,7 @@ class PredictionResponse {
       return "Error: $error";
     }
 
-    String meaningfulGesture = _isMeaningfulGesture(gesture);
+    String meaningfulGesture = isMeaningfulGesture(gesture);
 
     // Priority 1: Stable and meaningful gesture
     if (isStable == true && meaningfulGesture.isNotEmpty) {
