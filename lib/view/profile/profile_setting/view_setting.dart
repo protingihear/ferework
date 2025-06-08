@@ -23,7 +23,7 @@ class SettingsPage extends StatelessWidget {
         leading: IconButton(
           icon: const Icon(Icons.arrow_back, color: Colors.green),
           onPressed: () {
-            Navigator.pop(context);
+            Navigator.pop(context, true);
           },
         ),
         centerTitle: true,

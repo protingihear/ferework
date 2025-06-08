@@ -46,6 +46,7 @@ class _ViewCommunityState extends State<ViewCommunity> {
         posts = fetchedPosts;
         isLoadingPosts = false;
       });
+      print(posts);
     } catch (e) {
       print("Failed to load posts: $e");
       setState(() {
@@ -60,7 +61,6 @@ class _ViewCommunityState extends State<ViewCommunity> {
       final isCurrentlyJoined = joinedCommunities.any(
         (community) => community['id'] == widget.community.id,
       );
-
       setState(() {
         isJoined = isCurrentlyJoined;
       });
@@ -159,34 +159,74 @@ class _ViewCommunityState extends State<ViewCommunity> {
                               ),
                             ),
                             const SizedBox(height: 12),
-                            Row(
+                            Wrap(
+                              spacing: 8,
+                              runSpacing: 8,
                               children: [
                                 if (!isOwner) ...[
-                                  ElevatedButton(
-                                    onPressed:
-                                        loading ? null : toggleMembership,
-                                    style: ElevatedButton.styleFrom(
-                                      backgroundColor: isJoined
-                                          ? Colors.redAccent
-                                          : kGreenMid,
-                                      foregroundColor: Colors.black,
-                                      padding: const EdgeInsets.symmetric(
-                                          horizontal: 24, vertical: 12),
-                                      shape: RoundedRectangleBorder(
-                                        borderRadius: BorderRadius.circular(16),
+                                  SizedBox(
+                                    width: 80,
+                                    height: 34,
+                                    child: ElevatedButton(
+                                      onPressed:
+                                          loading ? null : toggleMembership,
+                                      style: ElevatedButton.styleFrom(
+                                        backgroundColor: isJoined
+                                            ? Colors.redAccent
+                                            : kGreenMid,
+                                        foregroundColor: Colors.black,
+                                        padding: const EdgeInsets.symmetric(
+                                            horizontal: 8, vertical: 6),
+                                        shape: RoundedRectangleBorder(
+                                          borderRadius:
+                                              BorderRadius.circular(10),
+                                        ),
                                       ),
-                                    ),
-                                    child: Text(
-                                      isJoined ? 'Leave' : 'Join',
-                                      style: const TextStyle(
-                                        fontSize: 14,
-                                        fontWeight: FontWeight.bold,
+                                      child: Text(
+                                        isJoined ? 'Leave' : 'Join',
+                                        style: const TextStyle(fontSize: 11),
                                       ),
                                     ),
                                   ),
-                                  const SizedBox(width: 12),
                                   if (isJoined)
-                                    ElevatedButton.icon(
+                                    SizedBox(
+                                      width: 80,
+                                      height: 34,
+                                      child: ElevatedButton.icon(
+                                        onPressed: () async {
+                                          final result = await Navigator.push(
+                                            context,
+                                            MaterialPageRoute(
+                                              builder: (context) =>
+                                                  CreatePostPage(
+                                                communityId: community.id,
+                                                communityName: community.name,
+                                              ),
+                                            ),
+                                          );
+                                          if (result == true) await loadPosts();
+                                        },
+                                        icon: const Icon(Icons.post_add,
+                                            size: 14),
+                                        label: const Text("Post",
+                                            style: TextStyle(fontSize: 11)),
+                                        style: ElevatedButton.styleFrom(
+                                          backgroundColor: kGreenLightAccent,
+                                          foregroundColor: Colors.black,
+                                          padding: const EdgeInsets.symmetric(
+                                              horizontal: 8, vertical: 6),
+                                          shape: RoundedRectangleBorder(
+                                            borderRadius:
+                                                BorderRadius.circular(10),
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                ] else ...[
+                                  SizedBox(
+                                    width: 80,
+                                    height: 34,
+                                    child: ElevatedButton.icon(
                                       onPressed: () async {
                                         final result = await Navigator.push(
                                           context,
@@ -198,70 +238,101 @@ class _ViewCommunityState extends State<ViewCommunity> {
                                             ),
                                           ),
                                         );
-                                        if (result == true) {
-                                          await loadPosts();
-                                        }
+                                        if (result == true) await loadPosts();
                                       },
-                                      icon: const Icon(Icons.post_add,
-                                          size: 18, color: Colors.black),
-                                      label: const Text("Post"),
+                                      icon:
+                                          const Icon(Icons.post_add, size: 14),
+                                      label: const Text("Post",
+                                          style: TextStyle(fontSize: 11),),
                                       style: ElevatedButton.styleFrom(
                                         backgroundColor: kGreenLightAccent,
                                         foregroundColor: Colors.black,
                                         padding: const EdgeInsets.symmetric(
-                                            horizontal: 20, vertical: 12),
+                                            horizontal: 8, vertical: 6),
                                         shape: RoundedRectangleBorder(
                                           borderRadius:
-                                              BorderRadius.circular(16),
+                                              BorderRadius.circular(10),
                                         ),
-                                      ),
-                                    ),
-                                ] else ...[
-                                  ElevatedButton.icon(
-                                    onPressed: () async {
-                                      final result = await Navigator.push(
-                                        context,
-                                        MaterialPageRoute(
-                                          builder: (context) => CreatePostPage(
-                                            communityId: community.id,
-                                            communityName: community.name,
-                                          ),
-                                        ),
-                                      );
-                                      if (result == true) {
-                                        await loadPosts();
-                                      }
-                                    },
-                                    icon: const Icon(Icons.post_add,
-                                        size: 18, color: Colors.black),
-                                    label: const Text("Post"),
-                                    style: ElevatedButton.styleFrom(
-                                      backgroundColor: kGreenLightAccent,
-                                      foregroundColor: Colors.black,
-                                      padding: const EdgeInsets.symmetric(
-                                          horizontal: 20, vertical: 12),
-                                      shape: RoundedRectangleBorder(
-                                        borderRadius: BorderRadius.circular(16),
                                       ),
                                     ),
                                   ),
-                                  const SizedBox(width: 12),
-                                  ElevatedButton.icon(
-                                    onPressed: () {
-                                     
-                                      Navigator.push(context, MaterialPageRoute(
-                                        builder: (_) => EditCommunityPage(communityId: community.id, initialName: community.name, initialDescription: community.description,),
-                                      ));
-                                    },
-                                    icon: const Icon(Icons.edit,
-                                        size: 18, color: Colors.white),
-                                    label: const Text("Edit"),
-                                    style: ElevatedButton.styleFrom(
-                                      backgroundColor: kGreenDark,
-                                      padding: const EdgeInsets.symmetric(
-                                          horizontal: 20, vertical: 12),
-                                      shape: RoundedRectangleBorder(
-                                        borderRadius: BorderRadius.circular(16),
+                                  SizedBox(
+                                    width: 80,
+                                    height: 34,
+                                    child: ElevatedButton.icon(
+                                      onPressed: () {
+                                        Navigator.push(
+                                          context,
+                                          MaterialPageRoute(
+                                            builder: (_) => EditCommunityPage(
+                                              communityId: community.id,
+                                              initialName: community.name,
+                                              initialDescription:
+                                                  community.description,
+                                            ),
+                                          ),
+                                        );
+                                      },
+                                      icon: const Icon(Icons.edit, size: 14, color: Colors.white),
+                                      label: const Text("Edit",
+                                          style: TextStyle(fontSize: 11, color: Colors.white)),
+                                      style: ElevatedButton.styleFrom(
+                                        backgroundColor: kGreenDark,
+                                        padding: const EdgeInsets.symmetric(
+                                            horizontal: 8, vertical: 6),
+                                        shape: RoundedRectangleBorder(
+                                          borderRadius:
+                                              BorderRadius.circular(10),
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                  SizedBox(
+                                    width: 80,
+                                    height: 34,
+                                    child: ElevatedButton.icon(
+                                      onPressed: () async {
+                                        final confirm = await showDialog<bool>(
+                                          context: context,
+                                          builder: (context) => AlertDialog(
+                                            title:
+                                                const Text("Hapus Komunitas"),
+                                            content: const Text(
+                                                "Apakah kamu yakin ingin menghapus komunitas ini?"),
+                                            actions: [
+                                              TextButton(
+                                                  onPressed: () =>
+                                                      Navigator.pop(
+                                                          context, false),
+                                                  child: const Text("Batal")),
+                                              TextButton(
+                                                  onPressed: () =>
+                                                      Navigator.pop(
+                                                          context, true),
+                                                  child: const Text("Hapus",
+                                                      style: TextStyle(
+                                                          color: Colors.red))),
+                                            ],
+                                          ),
+                                        );
+                                        if (confirm == true) {
+                                          await ComumnityService
+                                              .deleteCommunity(
+                                                  widget.community.id);
+                                          if (mounted) Navigator.pop(context);
+                                        }
+                                      },
+                                      icon: const Icon(Icons.delete, size: 14, color: Colors.white),
+                                      label: const Text("Delete",
+                                          style: TextStyle(fontSize: 11, color: Colors.white)),
+                                      style: ElevatedButton.styleFrom(
+                                        backgroundColor: Colors.redAccent,
+                                        padding: const EdgeInsets.symmetric(
+                                            horizontal: 8, vertical: 6),
+                                        shape: RoundedRectangleBorder(
+                                          borderRadius:
+                                              BorderRadius.circular(10),
+                                        ),
                                       ),
                                     ),
                                   ),
@@ -294,20 +365,14 @@ class _ViewCommunityState extends State<ViewCommunity> {
           isLoadingPosts
               ? const SliverFillRemaining(
                   child: Center(
-                    child: CircularProgressIndicator(
-                      color: kGreenMid,
-                    ),
-                  ),
+                      child: CircularProgressIndicator(color: kGreenMid)),
                 )
               : posts.isEmpty
                   ? const SliverFillRemaining(
                       child: Center(
                         child: Text(
                           "Belum ada post di komunitas ini.",
-                          style: TextStyle(
-                            color: Colors.black54,
-                            fontSize: 16,
-                          ),
+                          style: TextStyle(color: Colors.black54, fontSize: 16),
                         ),
                       ),
                     )

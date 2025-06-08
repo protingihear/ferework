@@ -101,27 +101,39 @@ class _AddCommunityPageState extends State<AddCommunityPage> {
             children: [
               TextFormField(
                 controller: _nameController,
+                maxLength: 25,
                 decoration: InputDecoration(
                   labelText: 'Nama Komunitas',
                   filled: true,
                   fillColor: kGreenSoft,
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                  border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12)),
+                  counterText: '',
                 ),
-                validator: (val) =>
-                    val == null || val.isEmpty ? 'Wajib diisi' : null,
+                validator: (val) {
+                  if (val == null || val.isEmpty) return 'Wajib diisi';
+                  if (val.length > 25) return 'Maksimal 25 karakter';
+                  return null;
+                },
               ),
               const SizedBox(height: 16),
               TextFormField(
                 controller: _descController,
                 maxLines: 3,
+                maxLength: 100,
                 decoration: InputDecoration(
                   labelText: 'Deskripsi',
                   filled: true,
                   fillColor: kGreenSoft,
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                  border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12)),
+                  counterText: '',
                 ),
-                validator: (val) =>
-                    val == null || val.isEmpty ? 'Wajib diisi' : null,
+                validator: (val) {
+                  if (val == null || val.isEmpty) return 'Wajib diisi';
+                  if (val.length > 100) return 'Maksimal 100 karakter';
+                  return null;
+                },
               ),
               const SizedBox(height: 16),
               GestureDetector(

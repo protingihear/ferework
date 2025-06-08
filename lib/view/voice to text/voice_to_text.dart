@@ -123,13 +123,14 @@ class _VoiceToTextScreenState extends State<VoiceToTextScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Suara ke Teks'),
+        title: Text('Voice to Text'),
         leading: IconButton(
           icon: Icon(Icons.arrow_back),
           onPressed: () {
             Navigator.of(context).pop();
           },
         ),
+        centerTitle: true,
       ),
       body: Center(
         child: Column(

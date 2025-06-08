@@ -13,58 +13,61 @@ import 'package:flutter/foundation.dart'; // for debugPrint
 import 'package:reworkmobile/models/isolate_image_data.dart';
 
 class CutoutGuideOverlayPainter extends CustomPainter {
-  final Rect guideRect; // This is the 16:9 clear area
-  final Paint backgroundPaint; // For the area outside the guideRect
-  final Paint borderPaint; // Optional border for the clear guideRect
+  final Rect guideRect;
+  final Color overlayBackgroundColor;
+  final Color guideBorderColor;
+  final double guideBorderWidth;
 
   CutoutGuideOverlayPainter({
     required this.guideRect,
-    Color overlayBackgroundColor = Colors.white, // Default to white
-    Color guideBorderColor =
-        Colors.transparent, // Default to no border for the clear area
-    double guideBorderWidth = 0.0, // Default to no border
-  })  : backgroundPaint = Paint()..color = overlayBackgroundColor,
-        borderPaint = Paint()
-          ..color = guideBorderColor
-          ..style = PaintingStyle.stroke
-          ..strokeWidth = guideBorderWidth;
+    this.overlayBackgroundColor = Colors.white,
+    this.guideBorderColor = Colors.white,
+    this.guideBorderWidth = 1.0,
+  });
 
   @override
   void paint(Canvas canvas, Size size) {
-    // If guideRect is invalid or too small, fill the whole screen with the background color
-    if (guideRect.isEmpty || guideRect.width <= 0 || guideRect.height <= 0) {
-      canvas.drawRect(
-          Rect.fromLTWH(0, 0, size.width, size.height), backgroundPaint);
-      return;
-    }
+    final overlayPaint = Paint()
+      ..color = overlayBackgroundColor.withOpacity(0.6); // Gelap area luar
 
-    // Path for the entire screen
-    final fullScreenPath = Path()
-      ..addRect(Rect.fromLTWH(0, 0, size.width, size.height));
+    final borderPaint = Paint()
+      ..color = guideBorderColor
+      ..strokeWidth = guideBorderWidth
+      ..style = PaintingStyle.stroke;
 
-    // Path for the clear guide rectangle (where the camera view will be visible)
-    final clearGuidePath = Path()..addRect(guideRect);
+    // Path seluruh layar DENGAN sudut bulat (radius 45)
+    final fullPath = Path()
+      ..addRRect(RRect.fromRectAndRadius(
+        Rect.fromLTWH(0, 0, size.width, size.height),
+        const Radius.circular(45),
+      ));
 
-    // Create the path for the areas to be covered by the background color
-    // This is done by taking the difference between the full screen and the clear guide area
-    final backgroundAreaPath =
-        Path.combine(PathOperation.difference, fullScreenPath, clearGuidePath);
+    // Path untuk kotak panduan (yang akan di-clear)
+    final cutoutPath = Path()
+      ..addRRect(RRect.fromRectAndRadius(guideRect, Radius.circular(12)));
 
-    // Draw the background (e.g., white) in the areas outside the guideRect
-    canvas.drawPath(backgroundAreaPath, backgroundPaint);
+    // Gabung dua path: luar – dalam = yang digelapin
+    final overlayPath =
+        Path.combine(PathOperation.difference, fullPath, cutoutPath);
 
-    // Optionally, draw a border around the clear guide rectangle
-    if (borderPaint.strokeWidth > 0 && borderPaint.color.alpha > 0) {
-      canvas.drawRect(guideRect, borderPaint);
+    // Step 1: Gelapin seluruh area luar kotak
+    canvas.drawPath(overlayPath, overlayPaint);
+
+    // Step 2: Border putih di kotak (opsional)
+    if (guideBorderWidth > 0 && guideBorderColor.opacity > 0) {
+      canvas.drawRRect(
+        RRect.fromRectAndRadius(guideRect, Radius.circular(12)),
+        borderPaint,
+      );
     }
   }
 
   @override
   bool shouldRepaint(covariant CutoutGuideOverlayPainter oldDelegate) {
-    return oldDelegate.guideRect != guideRect ||
-        oldDelegate.backgroundPaint.color != backgroundPaint.color ||
-        oldDelegate.borderPaint.color != borderPaint.color ||
-        oldDelegate.borderPaint.strokeWidth != borderPaint.strokeWidth;
+    return guideRect != oldDelegate.guideRect ||
+        overlayBackgroundColor != oldDelegate.overlayBackgroundColor ||
+        guideBorderColor != oldDelegate.guideBorderColor ||
+        guideBorderWidth != oldDelegate.guideBorderWidth;
   }
 }
 
@@ -82,7 +85,7 @@ class _SignDetectionPageState extends State<SignDetectionPage> {
   WebSocketChannel? _webSocketChannel;
   String _predictionText = "Tap 'Start Detection'";
   final String _webSocketURI =
-      "ws://4.216.184.229:8000/ws_predict_sequence"; // Your local IP
+      "ws://4.216.184.229:5000/ws_predict_sequence"; // Your local IP
   final int _framesPerSecondToSendToBackend = 5;
   late final int _frameSendIntervalMs;
   DateTime? _lastFrameProcessingAttemptTime; // Renamed for clarity
@@ -532,180 +535,234 @@ class _SignDetectionPageState extends State<SignDetectionPage> {
   // In your _SignDetectionPageState class:
 
   @override
-Widget build(BuildContext context) {
-  Widget cameraDisplayAreaWithOverlay;
+  Widget build(BuildContext context) {
+    Widget cameraDisplayAreaWithOverlay;
 
-  // --- [CAMERA INITIALIZATION AND guideRectForPainter CALCULATION] ---
-  // This entire block of logic that calculates `guideRectForPainter`
-  // MUST BE KEPT EXACTLY AS IT WAS IN YOUR PREVIOUS WORKING VERSION.
-  // I am re-inserting it here for completeness.
-  if (_isCameraInitialized &&
-      _cameraController != null &&
-      _cameraController!.value.isInitialized &&
-      _cameraController!.value.previewSize != null) {
-    cameraDisplayAreaWithOverlay = LayoutBuilder(
-      builder: (context, constraints) {
-        final double previewContainerWidth = constraints.maxWidth;
-        final double previewContainerHeight = constraints.maxHeight;
-        final Size cameraRawPreviewSize =
-            _cameraController!.value.previewSize!;
+    // --- [CAMERA INITIALIZATION AND guideRectForPainter CALCULATION] ---
+    // This entire block of logic that calculates `guideRectForPainter`
+    // MUST BE KEPT EXACTLY AS IT WAS IN YOUR PREVIOUS WORKING VERSION.
+    // I am re-inserting it here for completeness.
+    if (_isCameraInitialized &&
+        _cameraController != null &&
+        _cameraController!.value.isInitialized &&
+        _cameraController!.value.previewSize != null) {
+      cameraDisplayAreaWithOverlay = LayoutBuilder(
+        builder: (context, constraints) {
+          final double previewContainerWidth = constraints.maxWidth;
+          final double previewContainerHeight = constraints.maxHeight;
+          final Size cameraRawPreviewSize =
+              _cameraController!.value.previewSize!;
 
-        // START OF COPIED LOGIC FOR guideRectForPainter
-        int r0_sensorCorrection = 0;
-        if (_cameraSensorOrientation == 90)
-          r0_sensorCorrection = -90;
-        else if (_cameraSensorOrientation == 270)
-          r0_sensorCorrection = 90;
-        else if (_cameraSensorOrientation == 180) r0_sensorCorrection = 180;
-        final int backendRotationDegrees = (r0_sensorCorrection + 180) % 360;
+          // START OF COPIED LOGIC FOR guideRectForPainter
+          int r0_sensorCorrection = 0;
+          if (_cameraSensorOrientation == 90)
+            r0_sensorCorrection = -90;
+          else if (_cameraSensorOrientation == 270)
+            r0_sensorCorrection = 90;
+          else if (_cameraSensorOrientation == 180) r0_sensorCorrection = 180;
+          final int backendRotationDegrees = (r0_sensorCorrection + 180) % 360;
 
-        double W_b_in, H_b_in;
-        if (backendRotationDegrees == 90 || backendRotationDegrees == 270) {
-          W_b_in = cameraRawPreviewSize.height;
-          H_b_in = cameraRawPreviewSize.width;
-        } else {
-          W_b_in = cameraRawPreviewSize.width;
-          H_b_in = cameraRawPreviewSize.height;
-        }
+          double W_b_in, H_b_in;
+          if (backendRotationDegrees == 90 || backendRotationDegrees == 270) {
+            W_b_in = cameraRawPreviewSize.height;
+            H_b_in = cameraRawPreviewSize.width;
+          } else {
+            W_b_in = cameraRawPreviewSize.width;
+            H_b_in = cameraRawPreviewSize.height;
+          }
 
-        if (W_b_in <= 0 || H_b_in <= 0) {
-          return CameraPreview(_cameraController!);
-        }
+          if (W_b_in <= 0 || H_b_in <= 0) {
+            return CameraPreview(_cameraController!);
+          }
 
-        double target_w_16_9_on_backend_image;
-        double target_h_16_9_on_backend_image;
-        double offset_x_16_9_on_backend_image;
-        double offset_y_16_9_on_backend_image;
+          double target_w_16_9_on_backend_image;
+          double target_h_16_9_on_backend_image;
+          double offset_x_16_9_on_backend_image;
+          double offset_y_16_9_on_backend_image;
 
-        if (H_b_in > W_b_in) {
-          target_w_16_9_on_backend_image = W_b_in;
-          target_h_16_9_on_backend_image = (W_b_in * 9.0 / 16.0);
-          if (target_h_16_9_on_backend_image <= 0)
-            target_h_16_9_on_backend_image = 1.0;
-          if (target_h_16_9_on_backend_image > H_b_in)
-            target_h_16_9_on_backend_image = H_b_in;
-          offset_y_16_9_on_backend_image =
-              (H_b_in - target_h_16_9_on_backend_image) / 2.0;
-          offset_x_16_9_on_backend_image = 0.0;
-        } else {
-          target_h_16_9_on_backend_image = H_b_in;
-          target_w_16_9_on_backend_image = (H_b_in * 16.0 / 9.0);
-          if (target_w_16_9_on_backend_image <= 0)
-            target_w_16_9_on_backend_image = 1.0;
-          if (target_w_16_9_on_backend_image > W_b_in)
+          if (H_b_in > W_b_in) {
             target_w_16_9_on_backend_image = W_b_in;
-          offset_x_16_9_on_backend_image =
-              (W_b_in - target_w_16_9_on_backend_image) / 2.0;
-          offset_y_16_9_on_backend_image = 0.0;
-        }
-        if (offset_x_16_9_on_backend_image < 0)
-          offset_x_16_9_on_backend_image = 0.0;
-        if (offset_y_16_9_on_backend_image < 0)
-          offset_y_16_9_on_backend_image = 0.0;
+            target_h_16_9_on_backend_image = (W_b_in * 9.0 / 16.0);
+            if (target_h_16_9_on_backend_image <= 0)
+              target_h_16_9_on_backend_image = 1.0;
+            if (target_h_16_9_on_backend_image > H_b_in)
+              target_h_16_9_on_backend_image = H_b_in;
+            offset_y_16_9_on_backend_image =
+                (H_b_in - target_h_16_9_on_backend_image) / 2.0;
+            offset_x_16_9_on_backend_image = 0.0;
+          } else {
+            target_h_16_9_on_backend_image = H_b_in;
+            target_w_16_9_on_backend_image = (H_b_in * 16.0 / 9.0);
+            if (target_w_16_9_on_backend_image <= 0)
+              target_w_16_9_on_backend_image = 1.0;
+            if (target_w_16_9_on_backend_image > W_b_in)
+              target_w_16_9_on_backend_image = W_b_in;
+            offset_x_16_9_on_backend_image =
+                (W_b_in - target_w_16_9_on_backend_image) / 2.0;
+            offset_y_16_9_on_backend_image = 0.0;
+          }
+          if (offset_x_16_9_on_backend_image < 0)
+            offset_x_16_9_on_backend_image = 0.0;
+          if (offset_y_16_9_on_backend_image < 0)
+            offset_y_16_9_on_backend_image = 0.0;
 
-        final double sourceDisplayWidthForScale = W_b_in;
-        final double sourceDisplayHeightForScale = H_b_in;
-        final double scaleX =
-            previewContainerWidth / sourceDisplayWidthForScale;
-        final double scaleY =
-            previewContainerHeight / sourceDisplayHeightForScale;
-        final double actualDisplayScale = (scaleX < scaleY) ? scaleX : scaleY;
-        final double renderedImageWidthOnScreen =
-            sourceDisplayWidthForScale * actualDisplayScale;
-        final double renderedImageHeightOnScreen =
-            sourceDisplayHeightForScale * actualDisplayScale;
-        final double letterboxOffsetX =
-            (previewContainerWidth - renderedImageWidthOnScreen) / 2.0;
-        final double letterboxOffsetY =
-            (previewContainerHeight - renderedImageHeightOnScreen) / 2.0;
+          final double sourceDisplayWidthForScale = W_b_in;
+          final double sourceDisplayHeightForScale = H_b_in;
+          final double scaleX =
+              previewContainerWidth / sourceDisplayWidthForScale;
+          final double scaleY =
+              previewContainerHeight / sourceDisplayHeightForScale;
+          final double actualDisplayScale = (scaleX < scaleY) ? scaleX : scaleY;
+          final double renderedImageWidthOnScreen =
+              sourceDisplayWidthForScale * actualDisplayScale;
+          final double renderedImageHeightOnScreen =
+              sourceDisplayHeightForScale * actualDisplayScale;
+          final double letterboxOffsetX =
+              (previewContainerWidth - renderedImageWidthOnScreen) / 2.0;
+          final double letterboxOffsetY =
+              (previewContainerHeight - renderedImageHeightOnScreen) / 2.0;
 
-        final Rect guideRectForPainter = Rect.fromLTWH(
-          (offset_x_16_9_on_backend_image * actualDisplayScale) +
-              letterboxOffsetX,
-          (offset_y_16_9_on_backend_image * actualDisplayScale) +
-              letterboxOffsetY,
-          target_w_16_9_on_backend_image * actualDisplayScale,
-          target_h_16_9_on_backend_image * actualDisplayScale,
-        );
-        // END OF COPIED LOGIC
-        // --- [END OF guideRectForPainter CALCULATION] ---
+          final double shrinkHorizontal = 50.0;
+          final double paddingHorizontal = 24.0;
 
-        return Stack(
-          alignment: Alignment.center,
+          final Rect guideRectForPainter = Rect.fromLTWH(
+            (offset_x_16_9_on_backend_image * actualDisplayScale) +
+                letterboxOffsetX -
+                paddingHorizontal +
+                shrinkHorizontal / 2, // geser ke kanan setengah shrink
+            (offset_y_16_9_on_backend_image * actualDisplayScale) +
+                letterboxOffsetY,
+            target_w_16_9_on_backend_image * actualDisplayScale -
+                shrinkHorizontal, // kecilkan lebar
+            target_h_16_9_on_backend_image * actualDisplayScale,
+          );
+
+          // END OF COPIED LOGIC
+          // --- [END OF guideRectForPainter CALCULATION] ---
+
+          return Stack(
+            alignment: Alignment.center,
+            children: [
+              Positioned.fill(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 24.0,
+                  ),
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(45),
+                    child: CameraPreview(_cameraController!),
+                  ),
+                ),
+              ),
+              // Ini yang diganti
+              Positioned(
+                left: 24,
+                right: 24,
+                top: 0,
+                bottom: 0,
+                child: CustomPaint(
+                  size: Size(
+                    MediaQuery.of(context).size.width -
+                        48, // 24 kiri + 24 kanan
+                    MediaQuery.of(context).size.height,
+                  ),
+                  painter: CutoutGuideOverlayPainter(
+                    guideRect: guideRectForPainter,
+                    overlayBackgroundColor: Colors.black.withOpacity(0.1),
+                    guideBorderColor: Colors.black,
+                    guideBorderWidth: 1.0,
+                  ),
+                ),
+              ),
+            ],
+          );
+        },
+      );
+    } else {
+      cameraDisplayAreaWithOverlay =
+          const Center(/* ... your loading UI ... */);
+    }
+
+    final screenHeight = MediaQuery.of(context).size.height;
+    // This targetFontSize is for FittedBox. FittedBox will try to achieve this size
+    // if width permits and then scale down if height is constrained.
+    // Since we are making the text container non-Expanded, its height will be based on this.
+    final double targetFontSize = 24;
+    // Made divisor smaller for even larger target font
+
+    return Scaffold(
+      backgroundColor: Colors.white,
+      appBar: AppBar(
+        backgroundColor: Colors.white,
+        title: const Text(
+          'Scan To Text',
+          style: TextStyle(
+            fontWeight: FontWeight.bold,
+            color: Colors.black,
+          ),
+        ),
+        centerTitle: true,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back, color: Colors.green),
+          onPressed: () {
+            Navigator.pop(context);
+          },
+        ),
+      ),
+      body: SafeArea(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            CameraPreview(_cameraController!),
-            CustomPaint(
-              size: Size(previewContainerWidth, previewContainerHeight),
-              painter: CutoutGuideOverlayPainter( // Ensure CutoutGuideOverlayPainter is defined
-                guideRect: guideRectForPainter,
-                overlayBackgroundColor: Colors.white,
-                guideBorderColor: Colors.grey.shade300,
-                guideBorderWidth: 0.5,
+            // Camera View Area
+            Expanded(
+              // This will now take ALL available flexible space
+              child: Container(
+                color: Colors.white,
+                child: cameraDisplayAreaWithOverlay,
               ),
             ),
-          ],
-        );
-      },
-    );
-  } else {
-    cameraDisplayAreaWithOverlay = const Center( /* ... your loading UI ... */ );
-  }
 
-  final screenHeight = MediaQuery.of(context).size.height;
-  // This targetFontSize is for FittedBox. FittedBox will try to achieve this size
-  // if width permits and then scale down if height is constrained.
-  // Since we are making the text container non-Expanded, its height will be based on this.
-  final double targetFontSize = screenHeight / 9; // Made divisor smaller for even larger target font
-
-  return Scaffold(
-    backgroundColor: Colors.white,
-    appBar: AppBar( /* ... AppBar setup ... */ ),
-    body: SafeArea(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          // Camera View Area
-          Expanded( // This will now take ALL available flexible space
-            child: Container(
-              color: Colors.black,
-              child: cameraDisplayAreaWithOverlay,
-            ),
-          ),
-
-          // Prediction Text Area - NOT Expanded anymore
-          Container( // Takes height based on its content
-            color: Colors.white,
-            // Reduced vertical padding to bring it closer to the camera view
-            padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 4.0),
-            child: Center( // Center horizontally
-              child: FittedBox( // Scales text to fit available width primarily
-                fit: BoxFit.scaleDown, // Use scaleDown to prevent upscaling if font is too small for width
-                child: Text(
-                  _isDetecting &&
-                          _predictionText != "Starting detection..." &&
-                          _predictionText != "Ready." &&
-                          _predictionText != "Connecting..." &&
-                          !_predictionText.toLowerCase().contains("error") &&
-                          !_predictionText.toLowerCase().contains("closed")
-                      ? _predictionText
-                      : (_predictionText == "Tap 'Start Detection'" ||
-                              _predictionText == "Detection stopped."
-                          ? "..."
-                          : _predictionText),
-                  style: TextStyle(
-                    fontSize: targetFontSize < 60 ? 60 : targetFontSize, // Min font size of 60
-                    fontWeight: FontWeight.w900,
-                    color: Colors.blueGrey[900],
-                    letterSpacing: -2.5, // Adjust for very large fonts
+            // Prediction Text Area - NOT Expanded anymore
+            Container(
+              // Takes height based on its content
+              color: Colors.white,
+              // Reduced vertical padding to bring it closer to the camera view
+              padding:
+                  const EdgeInsets.symmetric(horizontal: 20.0, vertical: 4.0),
+              child: Center(
+                // Center horizontally
+                child: FittedBox(
+                  // Scales text to fit available width primarily
+                  fit: BoxFit
+                      .scaleDown, // Use scaleDown to prevent upscaling if font is too small for width
+                  child: Text(
+                    _isDetecting &&
+                            _predictionText != "Starting detection..." &&
+                            _predictionText != "Ready." &&
+                            _predictionText != "Connecting..." &&
+                            !_predictionText.toLowerCase().contains("error") &&
+                            !_predictionText.toLowerCase().contains("closed")
+                        ? _predictionText
+                        : (_predictionText == "Tap 'Start Detection'" ||
+                                _predictionText == "Detection stopped."
+                            ? "..."
+                            : _predictionText),
+                    style: TextStyle(
+                      fontSize: targetFontSize < 30
+                          ? 30
+                          : targetFontSize, // Min font size of 60
+                      fontWeight: FontWeight.w900,
+                      color: Colors.blueGrey[900],
+                      letterSpacing: -2.5, // Adjust for very large fonts
+                    ),
+                    textAlign: TextAlign.center,
+                    maxLines:
+                        1, // Important for predictable height with FittedBox
+                    softWrap: false,
                   ),
-                  textAlign: TextAlign.center,
-                  maxLines: 1, // Important for predictable height with FittedBox
-                  softWrap: false,
                 ),
               ),
             ),
-          ),
-
 
             // Stats and Button Area (Non-Expanded, takes fixed height)
             Container(
