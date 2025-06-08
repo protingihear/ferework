@@ -109,14 +109,16 @@ class AuthService {
   }
 
   /// Fungsi Logout
-  static Future<void> logout() async {
+  static Future<void> logout({http.Client? client}) async {
+    final usedClient = client ?? http.Client();
+
     final prefs = await SharedPreferences.getInstance();
     final sessionCookie = prefs.getString('session_cookie');
     final ttCookie = prefs.getString('tt_cookie');
 
     if (sessionCookie != null && ttCookie != null) {
       try {
-        final response = await http.post(
+        final response = await usedClient.post(
           Uri.parse('$baseUrl/api/logout'),
           headers: {
             'Cookie': 'session_id=$sessionCookie; tt=$ttCookie',

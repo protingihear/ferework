@@ -1,39 +1,28 @@
-import 'dart:io';
+import 'package:flutter_test/flutter_test.dart';
 import 'package:http/http.dart' as http;
+import 'package:http/testing.dart';
+
 import 'package:reworkmobile/services/berita_service.dart';
 
-void main() async {
-  print('🧪 TCU_005 - Upload berita dengan gambar dari internet');
+void main() {
+  test('🧪 TCU_005 Upload berita sukses mock dengan MockClient', () async {
+    final mockClient = MockClient((http.Request request) async {
+      // Cek endpoint dan method
+      if (request.url.path == '/api/berita' && request.method == 'POST') {
+        return http.Response('', 201);
+      }
+      return http.Response('Not found', 404);
+    });
 
-  try {
-    // Step 1: Download gambar dan simpan di direktori lokal sementara
-    final imageUrl =
-        'https://preview.redd.it/mas-amba-nyobain-snack-indo-v0-8vfq12nltche1.jpeg?width=554&format=pjpg&auto=webp&s=c76285ad34b29f212ea2731a45298a75255d3b06';
-
-    final response = await http.get(Uri.parse(imageUrl));
-
-    if (response.statusCode != 200) {
-      throw Exception('Gagal download gambar. Status: ${response.statusCode}');
-    }
-
-    final filePath = '${Directory.current.path}/mas_amba.jpeg';
-    final file = File(filePath);
-    await file.writeAsBytes(response.bodyBytes);
-
-    // Step 2: Upload berita
-    final success = await BeritaService.uploadBerita(
-      judul: 'Mas Amba Nyobain Snack Indo',
-      isi: 'Berita heboh hari ini, Mas Amba nyobain ciki lokal!',
+    final result = await BeritaService.uploadBerita(
+      judul: 'Test Judul',
+      isi: 'Test isi',
       tanggal: DateTime.now(),
-      foto: file,
+      foto: null,
+      client: mockClient,
     );
 
-    if (success) {
-      print('✅ TCU_005 - Berita berhasil diupload dengan gambar');
-    } else {
-      print('❌ TCU_005 - Gagal upload berita dengan gambar');
-    }
-  } catch (e) {
-    print('❌ TCU_005 - Error saat test: $e');
-  }
+    expect(result, true);
+    print("✅ TCU_005 Upload berita sukses mock dengan MockClient ${result}");
+  });
 }

@@ -19,9 +19,6 @@ void main() {
     const int? replyId = null;
 
     final mockClient = MockClient((http.Request request) async {
-      print('📥 Request: ${request.method} ${request.url}');
-      print('📦 Headers: ${request.headers}');
-      print('📦 Body: ${request.body}');
 
       if (request.method == 'POST' && request.url.path.contains('/replies')) {
         final body = jsonDecode(request.body);
