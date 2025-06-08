@@ -2,14 +2,12 @@
 import 'dart:async';
 import 'dart:convert'; // For jsonDecode, jsonEncode (error handling)
 import 'dart:isolate'; // For Isolate, SendPort, ReceivePort
-import 'dart:typed_data'; // For Uint8List (though not directly used for preview now)
 
 import 'package:flutter/material.dart';
 import 'package:camera/camera.dart';
 import 'package:flutter/services.dart'; // For DeviceOrientation
 import 'package:reworkmobile/services/image_processing_service.dart';
 import 'package:web_socket_channel/web_socket_channel.dart';
-import 'package:flutter/foundation.dart'; // for debugPrint
 import 'package:reworkmobile/models/isolate_image_data.dart';
 
 class CutoutGuideOverlayPainter extends CustomPainter {
@@ -118,12 +116,45 @@ class _SignDetectionPageState extends State<SignDetectionPage> {
     _frameSendIntervalMs = (1000 / _framesPerSecondToSendToBackend).round();
     _initializeCamera();
     _spawnFrameProcessingIsolate(); // Spawn isolate on init
+    _showPositioningGuideDialog();
+  }
+
+  void _showPositioningGuideDialog() {
+    // Use a post-frame callback to ensure the widget tree is built and context is available.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        showDialog(
+          context: context,
+          builder: (BuildContext context) {
+            return AlertDialog(
+              title: const Text(
+                'Positioning Guide',
+                style: TextStyle(fontWeight: FontWeight.bold),
+              ),
+              content: const Text(
+                'For best results, please ensure your face, chest, and hands are all clearly visible within the frame.',
+              ),
+              actions: <Widget>[
+                TextButton(
+                  child: const Text('Got It'),
+                  onPressed: () {
+                    Navigator.of(context).pop();
+                  },
+                ),
+              ],
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(15.0),
+              ),
+            );
+          },
+        );
+      }
+    });
   }
 
   Future<void> _initializeCamera() async {
-    // [ROBUSTNESS] Check if a controller exists and a stream is running before stopping it.
-    // This is the primary fix for the CameraException.
-    if (_cameraController != null && _cameraController!.value.isStreamingImages) {
+    if (_cameraController != null &&
+        _cameraController!.value.isStreamingImages) {
       await _cameraController!.stopImageStream().catchError((e) {
         debugPrint("Error stopping previous stream: $e");
       });
@@ -142,22 +173,24 @@ class _SignDetectionPageState extends State<SignDetectionPage> {
       try {
         _cameras = await availableCameras();
         if (_cameras.isEmpty) {
-          if (mounted) setState(() => _predictionText = "No cameras available.");
+          if (mounted)
+            setState(() => _predictionText = "No cameras available.");
           return;
         }
-        final frontCameraIndex = _cameras.indexWhere(
-            (c) => c.lensDirection == CameraLensDirection.front);
+        final frontCameraIndex = _cameras
+            .indexWhere((c) => c.lensDirection == CameraLensDirection.front);
         if (frontCameraIndex != -1) {
           _selectedCameraIndex = frontCameraIndex;
         }
       } catch (e) {
-        if (mounted) setState(() => _predictionText = "Error finding cameras: $e");
+        if (mounted)
+          setState(() => _predictionText = "Error finding cameras: $e");
         return;
       }
     }
 
     if (_selectedCameraIndex >= _cameras.length) {
-       _selectedCameraIndex = 0;
+      _selectedCameraIndex = 0;
     }
 
     final CameraDescription selectedCamera = _cameras[_selectedCameraIndex];
@@ -172,7 +205,8 @@ class _SignDetectionPageState extends State<SignDetectionPage> {
 
     try {
       await _cameraController!.initialize();
-      await _cameraController!.lockCaptureOrientation(DeviceOrientation.portraitUp);
+      await _cameraController!
+          .lockCaptureOrientation(DeviceOrientation.portraitUp);
       debugPrint(
           "INIT: Cam initialized. Preview: ${_cameraController?.value.previewSize}, SensorOrientation: $_cameraSensorOrientation");
       if (!mounted) return;
@@ -208,10 +242,10 @@ class _SignDetectionPageState extends State<SignDetectionPage> {
 
     // Ensure detection state is off before switching.
     if (_isDetecting) {
-       _stopProcessingFrames(); // This function already has safety checks.
-       setState(() => _isDetecting = false);
+      _stopProcessingFrames(); // This function already has safety checks.
+      setState(() => _isDetecting = false);
     }
-    
+
     // Cycle to the next camera index.
     _selectedCameraIndex = (_selectedCameraIndex + 1) % _cameras.length;
 
@@ -295,7 +329,8 @@ class _SignDetectionPageState extends State<SignDetectionPage> {
   }
 
   void _connectWebSocket() {
-    if (_webSocketChannel != null && _webSocketChannel!.closeCode == null) return;
+    if (_webSocketChannel != null && _webSocketChannel!.closeCode == null)
+      return;
     try {
       _webSocketChannel = WebSocketChannel.connect(Uri.parse(_webSocketURI));
       if (mounted) setState(() => _predictionText = "Connecting...");
@@ -309,7 +344,8 @@ class _SignDetectionPageState extends State<SignDetectionPage> {
             final decodedMessage = jsonDecode(message as String);
             final newPrediction = PredictionResponse.fromJson(decodedMessage);
 
-            final String meaningfulGesture = newPrediction.isMeaningfulGesture(newPrediction.gesture);
+            final String meaningfulGesture =
+                newPrediction.isMeaningfulGesture(newPrediction.gesture);
             final bool isCurrentMeaningful = meaningfulGesture.isNotEmpty;
 
             if (isCurrentMeaningful) {
@@ -326,26 +362,30 @@ class _SignDetectionPageState extends State<SignDetectionPage> {
               if (lastMeaningful == null) {
                 // If we've never seen a real gesture, just show the current status.
                 if (mounted) {
-                  setState(() => _predictionText = newPrediction.toDisplayText());
+                  setState(
+                      () => _predictionText = newPrediction.toDisplayText());
                 }
                 return;
               }
 
               // Calculate time since the last *real* gesture was shown.
-              final timeSinceLast = newPrediction.timestamp.difference(lastMeaningful.timestamp);
+              final timeSinceLast =
+                  newPrediction.timestamp.difference(lastMeaningful.timestamp);
               const ghostTimeThreshold = Duration(milliseconds: 1600);
 
               if (timeSinceLast < ghostTimeThreshold) {
                 // It's a "ghost" right after a real gesture. IGNORE IT.
                 // By doing nothing, we keep the last real gesture on the screen.
-                debugPrint("Ghost Filter: Ignored transient prediction -> '${newPrediction.gesture}'");
+                debugPrint(
+                    "Ghost Filter: Ignored transient prediction -> '${newPrediction.gesture}'");
                 return; // The most important part: we exit without calling setState.
               } else {
                 // It's been long enough (>1.3s) that this is a genuine pause.
                 // Reset the state and show the "Detecting..." or "Uncertain" message.
                 _lastMeaningfulPrediction = null;
                 if (mounted) {
-                  setState(() => _predictionText = newPrediction.toDisplayText());
+                  setState(
+                      () => _predictionText = newPrediction.toDisplayText());
                 }
               }
             }
@@ -591,8 +631,9 @@ class _SignDetectionPageState extends State<SignDetectionPage> {
       return;
     }
 
-    if (!_isDetecting) { // This condition means detection is about to be toggled OFF.
-        _lastMeaningfulPrediction = null;
+    if (!_isDetecting) {
+      // This condition means detection is about to be toggled OFF.
+      _lastMeaningfulPrediction = null;
     }
 
     setState(() {
