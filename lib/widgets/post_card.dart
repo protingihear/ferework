@@ -114,7 +114,7 @@ class _PostCardState extends State<PostCard> {
               if (widget.community == null) ...[
                 CircleAvatar(
                   backgroundImage: NetworkImage(
-                    post['author']?['avatarUrl'] ??
+                    post['Image']?['picture'] ??
                         'https://via.placeholder.com/150',
                   ),
                   radius: 20,
@@ -141,7 +141,6 @@ class _PostCardState extends State<PostCard> {
             ),
           ),
           const SizedBox(height: 16),
-          // Action Buttons (like, comment, share)
           Row(
             children: [
               GestureDetector(
@@ -164,12 +163,6 @@ class _PostCardState extends State<PostCard> {
                     ),
                   ],
                 ),
-              ),
-              const SizedBox(width: 16),
-              const Icon(
-                Icons.share_outlined,
-                size: 20,
-                color: Colors.black54,
               ),
             ],
           ),

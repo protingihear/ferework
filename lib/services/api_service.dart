@@ -56,33 +56,44 @@ class ApiService {
       throw Exception("❌ Gagal update: Session tidak ditemukan. Harap login.");
     }
 
-    final url = Uri.parse('$_baseUrl/api/profile');
+    final uri = Uri.parse('$_baseUrl/api/profile');
 
-    final body = {
-      "firstname": firstname,
-      "lastname": lastname,
-      "gender": gender,
-      "bio": bio ?? '',
-      "Image":
-          base64Image ?? "",
-    };
+    final request = http.MultipartRequest('POST', uri)
+      ..headers['Cookie'] = 'session_id=$sessionCookie; tt=$ttCookie'
+      ..fields['firstname'] = firstname
+      ..fields['lastname'] = lastname
+      ..fields['gender'] = gender
+      ..fields['bio'] = bio ?? '';
 
-    print('📤 Body: ${jsonEncode(body)}');
+    if (base64Image != null && base64Image.isNotEmpty) {
+      final bytes = base64Decode(base64Image);
+      request.files.add(http.MultipartFile.fromBytes(
+        'Image',
+        bytes,
+        filename: 'profile.jpg',
+        contentType: MediaType('image', 'jpeg'),
+      ));
+    }
 
-    final response = await http.put(
-      url,
-      headers: {
-        'Content-Type': 'application/json',
-        'Cookie': "session_id=$sessionCookie; tt=$ttCookie",
-      },
-      body: jsonEncode(body),
-    );
+    if (base64Image != null) {
+      if (base64Image.isEmpty) {
+        request.fields['Image'] = "";
+      }
+    }
 
-    if (response.statusCode == 200) {
-      print('✅ Profil berhasil diupdate: ${response.body}');
-      return jsonDecode(response.body);
-    } else {
-      throw Exception('❌ Gagal update profil: ${response.body}');
+    try {
+      final streamedResponse = await request.send();
+      final response = await http.Response.fromStream(streamedResponse);
+
+      if (response.statusCode == 200) {
+        print('✅ Profil berhasil diupdate: ${response.body}');
+        return jsonDecode(response.body);
+      } else {
+        print('❌ Gagal update profil: ${response.body}');
+        throw Exception('Gagal update profil: ${response.body}');
+      }
+    } catch (e) {
+      throw Exception("Terjadi kesalahan saat update profil: $e");
     }
   }
 
@@ -107,7 +118,7 @@ class ApiService {
     });
 
     try {
-      final response = await http.put(url, headers: headers, body: body);
+      final response = await http.post(url, headers: headers, body: body);
 
       if (response.statusCode == 200) {
         print("✅ Role updated successfully!");
@@ -132,9 +143,11 @@ class ApiService {
     }
   }
 
-  static Future<List<dynamic>> fetchBerita() async {
+  static Future<List<dynamic>> fetchBerita({http.Client? client}) async {
+    client ??= http.Client();
+
     try {
-      final response = await http.get(Uri.parse("$_baseUrl/api/berita"));
+      final response = await client.get(Uri.parse("$_baseUrl/api/berita"));
 
       if (response.statusCode == 200) {
         return json.decode(response.body);

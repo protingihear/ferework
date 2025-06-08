@@ -79,13 +79,13 @@ class _EditProfilePageState extends State<EditProfilePage> {
           nameParts.length > 1 ? nameParts.sublist(1).join(' ') : '';
 
       final updated = await ApiService.updateUserProfile(
-  firstname: firstName,
-  lastname: lastName,
-  bio: bioController.text,
-  gender: selectedGender ?? 'Laki-Laki',
-  base64Image: finalBase64Image,  // langsung kirim base64 string atau "" atau null
-);
-
+        firstname: firstName,
+        lastname: lastName,
+        bio: bioController.text,
+        gender: selectedGender ?? 'Laki-Laki',
+        base64Image:
+            finalBase64Image,
+      );
 
       showSnackbar("Berhasil disimpan!");
       Navigator.pop(context, updated);

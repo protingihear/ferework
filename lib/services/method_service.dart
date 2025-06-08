@@ -88,13 +88,15 @@ class MethodService {
     }
   }
 
-  static Future<List<Map<String, dynamic>>> fetchCategories() async {
+  static Future<List<Map<String, dynamic>>> fetchCategories(
+      {http.Client? client}) async {
+    client ??= http.Client();
+
     final String apiUrl = '$baseUrl/categories';
     try {
-      final response = await http.get(Uri.parse(apiUrl));
+      final response = await client.get(Uri.parse(apiUrl));
       if (response.statusCode == 200) {
         List<dynamic> data = jsonDecode(response.body);
-
         return List<Map<String, dynamic>>.from(data);
       } else {
         return [];

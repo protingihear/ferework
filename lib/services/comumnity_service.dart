@@ -2,18 +2,18 @@ import 'dart:convert';
 import 'dart:io';
 import 'package:http/http.dart' as http;
 import '../models/community.dart';
-import '../models/post.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class ComumnityService {
   static const String baseUrl = 'http://20.214.51.17:5001/api';
 
-  static Future<List<Community>> fetchCommunities() async {
-    final response = await http.get(Uri.parse('$baseUrl/communities'));
+  static Future<List<Community>> fetchCommunities({http.Client? client}) async {
+    client ??= http.Client();
+
+    final response = await client.get(Uri.parse('$baseUrl/communities'));
 
     if (response.statusCode == 200) {
       List<dynamic> data = jsonDecode(response.body);
-      // print(data);
       return data.map((json) => Community.fromJson(json)).toList();
     } else {
       throw Exception('Failed to load communities');
@@ -25,9 +25,8 @@ class ComumnityService {
         await http.get(Uri.parse("$baseUrl/communities/$communityId/posts"));
 
     if (response.statusCode == 200) {
-      List<dynamic> data =
-          jsonDecode(response.body)['posts']; 
-          return data;
+      List<dynamic> data = jsonDecode(response.body)['posts'];
+      return data;
     } else {
       throw Exception("Failed to load posts");
     }
@@ -38,8 +37,7 @@ class ComumnityService {
         await http.get(Uri.parse('$baseUrl/communities/$communityId/posts'));
 
     if (response.statusCode == 200) {
-      List<dynamic> data =
-          jsonDecode(response.body)['posts']; 
+      List<dynamic> data = jsonDecode(response.body)['posts'];
       // print(data);
       return data;
     } else {
@@ -47,47 +45,41 @@ class ComumnityService {
     }
   }
 
-  static Future<void> createPost(int communityId, String content) async {
+  static Future<http.Response> createPost(
+    int communityId,
+    String content, {
+    http.Client? client,
+  }) async {
+    client ??= http.Client();
+
     final url = Uri.parse('$baseUrl/communities/$communityId/posts');
 
-    try {
-      final prefs = await SharedPreferences.getInstance();
-      final sessionCookie = prefs.getString('session_cookie');
-      final ttCookie = prefs.getString('tt_cookie');
+    final prefs = await SharedPreferences.getInstance();
+    final sessionCookie = prefs.getString('session_cookie');
+    final ttCookie = prefs.getString('tt_cookie');
 
-      if (sessionCookie == null || ttCookie == null) {
-        throw Exception(
-            "❌ Gagal membuat post: Session tidak ditemukan. Harap login terlebih dahulu.");
-      }
-
-      final response = await http.post(
-        url,
-        headers: {
-          "Content-Type": "application/json",
-          "Cookie": "session_id=$sessionCookie; tt=$ttCookie",
-        },
-        body: jsonEncode({
-          "communityId": communityId,
-          "content": content,
-        }),
-      );
-
-      // print("📤 Payload: ${jsonEncode({
-      //       "communityId": communityId,
-      //       "content": content
-      //     })}");
-      // print("📥 Response Code: ${response.statusCode}");
-      // print("📥 Response Body: ${response.body}");
-
-      if (response.statusCode == 201 || response.statusCode == 200) {
-        // print("✅ Post berhasil dibuat!");
-      } else {
-        throw Exception("Gagal membuat post: ${response.body}");
-      }
-    } catch (e) {
-      // print("⚠️ Terjadi kesalahan: $e");
-      throw Exception("Terjadi kesalahan saat membuat post: $e");
+    if (sessionCookie == null || ttCookie == null) {
+      throw Exception(
+          "❌ Gagal membuat post: Session tidak ditemukan. Harap login terlebih dahulu.");
     }
+
+    final response = await client.post(
+      url,
+      headers: {
+        "Content-Type": "application/json",
+        "Cookie": "session_id=$sessionCookie; tt=$ttCookie",
+      },
+      body: jsonEncode({
+        "communityId": communityId,
+        "content": content,
+      }),
+    );
+
+    if (response.statusCode != 201 && response.statusCode != 200) {
+      throw Exception("Gagal membuat post: ${response.body}");
+    }
+
+    return response;
   }
 
   static Future<void> joinCommunity(int communityId) async {
@@ -180,7 +172,9 @@ class ComumnityService {
     required String name,
     required String description,
     File? imageFile,
+    http.Client? client,
   }) async {
+    client ??= http.Client();
     final uri = Uri.parse('$baseUrl/communities');
 
     final prefs = await SharedPreferences.getInstance();
@@ -196,7 +190,6 @@ class ComumnityService {
       ..fields['description'] = description
       ..headers['Cookie'] = "session_id=$sessionId; tt=$tt";
 
-    // Tambah foto jika ada
     if (imageFile != null) {
       final imageBytes = await imageFile.readAsBytes();
       request.files.add(
@@ -208,16 +201,8 @@ class ComumnityService {
       );
     }
 
-    final streamedResponse = await request.send();
+    final streamedResponse = await client.send(request); // <-- DI SINI
     final response = await http.Response.fromStream(streamedResponse);
-
-    if (response.statusCode == 201) {
-      // print('✅ Komunitas berhasil dibuat');
-    } else {
-      // print('❌ Gagal membuat komunitas: ${response.statusCode}');
-      // print(response.body);
-    }
-
     return response;
   }
 
@@ -411,7 +396,10 @@ class ComumnityService {
     required int postId,
     required String content,
     int? replyId, // opsional
+    http.Client? client,
   }) async {
+    client ??= http.Client();
+
     final prefs = await SharedPreferences.getInstance();
     final sessionId = prefs.getString('session_cookie');
     final tt = prefs.getString('tt_cookie');
@@ -424,7 +412,7 @@ class ComumnityService {
       "$baseUrl/communities/$communityId/posts/$postId/replies",
     );
 
-    final response = await http.post(
+    final response = await client.post(
       url,
       headers: {
         'Cookie': 'session_id=$sessionId; tt=$tt',
@@ -438,6 +426,28 @@ class ComumnityService {
 
     if (response.statusCode != 201 && response.statusCode != 200) {
       throw Exception("Gagal mengirim komentar: ${response.body}");
+    }
+  }
+
+  static Future<void> deleteCommunity(int communityId) async {
+    final prefs = await SharedPreferences.getInstance();
+    final sessionId = prefs.getString('session_cookie');
+    final tt = prefs.getString('tt_cookie');
+
+    if (sessionId == null || tt == null) {
+      throw Exception("Session ID or tt not found");
+    }
+
+    final response = await http.delete(
+      Uri.parse('$baseUrl/communities/$communityId'),
+      headers: {
+        'Cookie': 'session_id=$sessionId; tt=$tt',
+        'Content-Type': 'application/json',
+      },
+    );
+
+    if (response.statusCode != 200) {
+      throw Exception('Failed to delete community: ${response.body}');
     }
   }
 }

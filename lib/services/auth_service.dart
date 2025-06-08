@@ -61,8 +61,8 @@ class AuthService {
           final sessionId = sessionMatch?.group(1);
           final tt = ttMatch?.group(1);
 
-          print("📢 Ditemukan session_id: $sessionId");
-          print("📢 Ditemukan tt: $tt");
+          // print("📢 Ditemukan session_id: $sessionId");
+          // print("📢 Ditemukan tt: $tt");
 
           if (sessionId != null) {
             await prefs.setString('session_cookie', sessionId);

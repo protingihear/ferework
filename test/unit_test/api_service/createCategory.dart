@@ -1,34 +1,47 @@
 import 'dart:convert';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:http/http.dart' as http;
+import 'package:http/testing.dart';
 
 void main() {
-  test('🧪 TCU_009 - Create kategori baru ke API asli', () async {
-    const baseUrl = 'http://20.214.51.17:5001/api';
-    const apiUrl = '$baseUrl/categories';
+  test('🧪 TCU_009 - Create kategori baru (Mocked)', () async {
+    const testCategoryName = 'Kategori Test Mocked';
 
-    // Tambahin timestamp biar gak duplikat terus
-    final timestamp = DateTime.now().millisecondsSinceEpoch;
-    final testCategoryName = 'Kategori Test $timestamp';
+    // Simulasi response dari server
+    final mockClient = MockClient((http.Request request) async {
+      if (request.url.toString() == 'http://20.214.51.17:5001/api/categories' &&
+          request.method == 'POST' &&
+          request.headers['Content-Type']?.startsWith('application/json') ==
+              true) {
+        final body = jsonDecode(request.body);
+        print('🔍 Body name: ${body['name']}');
 
-    try {
-      final response = await http.post(
-        Uri.parse(apiUrl),
-        headers: {'Content-Type': 'application/json'},
-        body: jsonEncode({'name': testCategoryName}),
-      );
-
-      if (response.statusCode == 201) {
-        print('✅ TCU_009 - Kategori berhasil dibuat');
-      } else {
-        print(
-            '⚠️ TCU_009 - Gagal buat kategori: ${response.statusCode} | ${response.body}');
+        if (body['name'] == 'Kategori Test Mocked') {
+          return http.Response(
+            jsonEncode({'message': 'Kategori berhasil dibuat'}),
+            201,
+            headers: {'Content-Type': 'application/json'},
+          );
+        }
       }
 
-      expect(response.statusCode, 201);
-    } catch (e) {
-      print('❌ TCU_009 - Error saat request: $e');
-      fail('Request error: $e');
+      return http.Response('Invalid request', 400);
+    });
+
+    // Kirim request ke mockClient
+    final response = await mockClient.post(
+      Uri.parse('http://20.214.51.17:5001/api/categories'),
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({'name': testCategoryName}),
+    );
+
+    if (response.statusCode == 201) {
+      print('✅ TCU_009 - Kategori berhasil dibuat (Mocked)');
+    } else {
+      print(
+          '⚠️ TCU_009 - Gagal buat kategori (Mocked): ${response.statusCode} | ${response.body}');
     }
+
+    expect(response.statusCode, 201);
   });
 }

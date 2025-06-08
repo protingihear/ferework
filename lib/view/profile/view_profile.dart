@@ -77,6 +77,7 @@ class _ProfilePageState extends State<ProfilePage> {
         setState(() {
           users = jsonDecode(response.body);
         });
+        print(users);
       } else {
         throw Exception("Failed to load users, status: ${response.statusCode}");
       }
@@ -203,8 +204,8 @@ class _ProfilePageState extends State<ProfilePage> {
                       children: [
                         Expanded(
                           child: OutlinedButton.icon(
-                            onPressed: () {
-                              Navigator.push(
+                            onPressed: () async {
+                              final result = await Navigator.push(
                                 context,
                                 MaterialPageRoute(
                                   builder: (context) => SettingsPage(
@@ -213,6 +214,14 @@ class _ProfilePageState extends State<ProfilePage> {
                                   ),
                                 ),
                               );
+
+                              if (result == true) {
+                                setState(() {
+                                  _profileFuture =
+                                      ApiService.fetchUserProfile();
+                                });
+                                await loadMyPosts();
+                              }
                             },
                             icon:
                                 const Icon(Icons.settings, color: Colors.green),
@@ -316,8 +325,8 @@ class _ProfilePageState extends State<ProfilePage> {
                             print(community);
 
                             return Padding(
-                              padding: const EdgeInsets.symmetric(
-                                  horizontal: 16.0),
+                              padding:
+                                  const EdgeInsets.symmetric(horizontal: 16.0),
                               child: PostCard(
                                 post: post,
                                 currentUserId: currentUserId ?? 0,
@@ -365,8 +374,13 @@ class _ProfilePageState extends State<ProfilePage> {
                                 borderRadius: BorderRadius.circular(12)),
                             child: ListTile(
                               leading: CircleAvatar(
-                                backgroundImage:
-                                    NetworkImage(user['imageUrl'] ?? ''),
+                                backgroundImage: user['Image'] != null
+                                    ? MemoryImage(
+                                        base64Decode(user['Image']),
+                                      )
+                                    : const AssetImage(
+                                            'assets/default_avatar.png')
+                                        as ImageProvider,
                               ),
                               title: Text(
                                   '${user['firstname']} ${user['lastname']}'),
