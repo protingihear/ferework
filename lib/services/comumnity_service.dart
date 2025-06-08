@@ -20,9 +20,11 @@ class ComumnityService {
     }
   }
 
-  static Future<List<dynamic>> fetchPosts(int communityId) async {
+  static Future<List<dynamic>> fetchPosts(int communityId,
+      {http.Client? client}) async {
+    client ??= http.Client();
     final response =
-        await http.get(Uri.parse("$baseUrl/communities/$communityId/posts"));
+        await client.get(Uri.parse("$baseUrl/communities/$communityId/posts"));
 
     if (response.statusCode == 200) {
       List<dynamic> data = jsonDecode(response.body)['posts'];
@@ -32,13 +34,15 @@ class ComumnityService {
     }
   }
 
-  static Future<List<dynamic>> fetchCommunityPosts(int communityId) async {
+  static Future<List<dynamic>> fetchCommunityPosts(int communityId,
+      {http.Client? client}) async {
+    client ??= http.Client();
+
     final response =
-        await http.get(Uri.parse('$baseUrl/communities/$communityId/posts'));
+        await client.get(Uri.parse('$baseUrl/communities/$communityId/posts'));
 
     if (response.statusCode == 200) {
       List<dynamic> data = jsonDecode(response.body)['posts'];
-      // print(data);
       return data;
     } else {
       throw Exception('Failed to load community posts');
@@ -210,13 +214,16 @@ class ComumnityService {
     required int communityId,
     required String name,
     required String description,
+    http.Client? client, // optional client parameter
   }) async {
+    final httpClient = client ?? http.Client();
+
     final url = Uri.parse('$baseUrl/communities/$communityId');
     final prefs = await SharedPreferences.getInstance();
-    final sessionCookie = prefs.getString('session_cookie');
-    final ttCookie = prefs.getString('tt_cookie');
+    final sessionCookie = prefs.getString('session_cookie') ?? '';
+    final ttCookie = prefs.getString('tt_cookie') ?? '';
 
-    final response = await http.put(
+    final response = await httpClient.put(
       url,
       headers: {
         'Content-Type': 'application/json',
@@ -228,12 +235,7 @@ class ComumnityService {
       }),
     );
 
-    if (response.statusCode == 200) {
-      return true;
-    } else {
-      // print("Gagal update komunitas: ${response.body}");
-      return false;
-    }
+    return response.statusCode == 200;
   }
 
   static Future<List<dynamic>> getCommunityMembers({
@@ -293,7 +295,8 @@ class ComumnityService {
     }
   }
 
-  static Future<List<dynamic>> fetchMyPosts() async {
+  static Future<List<dynamic>> fetchMyPosts({http.Client? client}) async {
+    client ??= http.Client();
     final url = Uri.parse('$baseUrl/posts/mine');
 
     try {
@@ -304,7 +307,8 @@ class ComumnityService {
       if (sessionId == null || tt == null) {
         throw Exception("Session ID or tt not found");
       }
-      final response = await http.get(
+
+      final response = await client.get(
         url,
         headers: {
           'Content-Type': 'application/json',
@@ -429,7 +433,8 @@ class ComumnityService {
     }
   }
 
-  static Future<void> deleteCommunity(int communityId) async {
+  static Future<void> deleteCommunity(int communityId,
+      {http.Client? client}) async {
     final prefs = await SharedPreferences.getInstance();
     final sessionId = prefs.getString('session_cookie');
     final tt = prefs.getString('tt_cookie');
@@ -438,7 +443,7 @@ class ComumnityService {
       throw Exception("Session ID or tt not found");
     }
 
-    final response = await http.delete(
+    final response = await (client ?? http.Client()).delete(
       Uri.parse('$baseUrl/communities/$communityId'),
       headers: {
         'Cookie': 'session_id=$sessionId; tt=$tt',

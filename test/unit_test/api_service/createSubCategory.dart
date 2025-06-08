@@ -17,9 +17,6 @@ void main() {
 
     // Mock HTTP Client
     final mockClient = MockClient((http.Request request) async {
-      print('📥 Request: ${request.method} ${request.url}');
-      print('📦 Headers: ${request.headers}');
-      print('📦 Body: ${request.body}');
 
       if (request.method == 'POST' && request.url.toString() == apiUrl) {
         final body = jsonDecode(request.body);

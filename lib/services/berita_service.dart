@@ -12,17 +12,18 @@ class BeritaService {
     required String isi,
     required DateTime tanggal,
     File? foto,
+    http.Client? client,
   }) async {
+    client ??= http.Client();
+
     try {
       final uri = Uri.parse('$_baseUrl/api/berita');
       var request = http.MultipartRequest('POST', uri);
 
-      // Field biasa
       request.fields['judul'] = judul;
       request.fields['isi'] = isi;
       request.fields['tanggal'] = tanggal.toIso8601String();
 
-      // Jika ada foto, tambahkan ke request
       if (foto != null) {
         final mimeType = lookupMimeType(foto.path);
         final multipartFile = await http.MultipartFile.fromPath(
@@ -33,17 +34,9 @@ class BeritaService {
         );
         request.files.add(multipartFile);
       }
+      final response = await client.send(request);
 
-      final response = await request.send();
-
-      if (response.statusCode == 201) {
-        // print("✅ Berita berhasil ditambahkan");
-        return true;
-      } else {
-        final respStr = await response.stream.bytesToString();
-        // print("❌ Gagal tambah berita: $respStr");
-        return false;
-      }
+      return response.statusCode == 201;
     } catch (e) {
       return false;
     }
@@ -55,6 +48,7 @@ class BeritaService {
     required String isi,
     required String tanggal,
     File? fotoFile,
+    http.Client? client,
   }) async {
     final uri = Uri.parse('$_baseUrl/api/berita/$id');
     var request = http.MultipartRequest('PUT', uri);
@@ -68,7 +62,7 @@ class BeritaService {
           .add(await http.MultipartFile.fromPath('foto', fotoFile.path));
     }
 
-    final response = await request.send();
+    final response = await (client ?? http.Client()).send(request);
 
     if (response.statusCode == 200) {
       print('Berita berhasil diupdate');
@@ -77,9 +71,9 @@ class BeritaService {
     }
   }
 
-  static Future<void> deleteBerita(int id) async {
+  static Future<void> deleteBerita(int id, {http.Client? client}) async {
     final uri = Uri.parse('$_baseUrl/api/berita/$id');
-    final response = await http.delete(uri);
+    final response = await (client ?? http.Client()).delete(uri);
 
     if (response.statusCode == 200) {
       print('Berita berhasil dihapus');

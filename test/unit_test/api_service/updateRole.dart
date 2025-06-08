@@ -1,26 +1,42 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:http/testing.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
 import 'package:reworkmobile/services/api_service.dart';
 
 void main() {
-  test('🧪 TCU_004 - Update User Role dengan session valid', () async {
+  test('🧪 TCU_004 - Update User Role dengan mock client', () async {
     SharedPreferences.setMockInitialValues({
-      'session_cookie': 'hBZfO3usjq7J9zcl5Gfqnq3HHACzPwjC',
-      'tt_cookie': 's%3AhBZfO3usjq7J9zcl5Gfqnq3HHACzPwjC.KkeAzyEMzyV1TAXtITk96GQ6NYjIMor1O2CLoqMKAW0',
+      'session_cookie': 'mock-session-id',
+      'tt_cookie': 'mock-tt-id',
+    });
+
+    final mockClient = MockClient((request) async {
+      if (request.method == 'POST' && request.url.path == '/api/profile') {
+        final body = jsonDecode(request.body);
+        if (body['role'] == 'ahli_bahasa') {
+          return http.Response('', 200);
+        }
+        return http.Response(
+            jsonEncode({'message': 'Role sudah pernah diupdate'}), 400);
+      }
+      return http.Response('Not Found', 404);
     });
 
     try {
-      await ApiService.updateUserRole('ahli_bahasa');
-      print('✅ TCU_004 - Role berhasil diupdate');
+      await ApiService.updateUserRole(
+        'ahli_bahasa',
+        client: mockClient,
+      );
+      print('✅ TCU_004 - Role berhasil diupdate (mock)');
     } catch (e) {
       final message = e.toString().toLowerCase();
-
-      // Handle case kalau role sudah pernah diupdate (anggap ini tetap sukses)
       if (message.contains('sudah') || message.contains('pernah')) {
-        print('✅ TCU_004 - Role sudah pernah diupdate sebelumnya (tetap valid)');
+        print('✅ TCU_004 - Role sudah pernah diupdate sebelumnya (mock valid)');
       } else {
-        print('❌ TCU_004 - Gagal update role: $e');
-        fail('Update role failed: $e');
+        print('❌ TCU_004 - Gagal update role (mock): $e');
+        fail('Update role gagal: $e');
       }
     }
   });

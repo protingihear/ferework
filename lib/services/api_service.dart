@@ -11,7 +11,8 @@ import 'package:http_parser/http_parser.dart' as http_parser;
 class ApiService {
   static const String _baseUrl = 'http://20.214.51.17:5001';
 
-  static Future<UserProfile> fetchUserProfile() async {
+  static Future<UserProfile> fetchUserProfile({http.Client? client}) async {
+    client ??= http.Client();
     try {
       final prefs = await SharedPreferences.getInstance();
       final sessionId = prefs.getString('session_cookie');
@@ -21,7 +22,7 @@ class ApiService {
         throw Exception("Session ID or tt not found");
       }
 
-      final response = await http.get(
+      final response = await client.get(
         Uri.parse('$_baseUrl/api/profile'),
         headers: {
           "Content-Type": "application/json",
@@ -30,7 +31,6 @@ class ApiService {
       );
 
       if (response.statusCode == 200) {
-        print('✅ Raw body: ${response.body}');
         return UserProfile.fromJson(jsonDecode(response.body));
       } else {
         throw Exception(
@@ -47,7 +47,10 @@ class ApiService {
     String? bio,
     required String gender,
     String? base64Image,
+    http.Client? client,
   }) async {
+    client ??= http.Client();
+
     final prefs = await SharedPreferences.getInstance();
     final sessionCookie = prefs.getString('session_cookie');
     final ttCookie = prefs.getString('tt_cookie');
@@ -57,7 +60,6 @@ class ApiService {
     }
 
     final uri = Uri.parse('$_baseUrl/api/profile');
-
     final request = http.MultipartRequest('POST', uri)
       ..headers['Cookie'] = 'session_id=$sessionCookie; tt=$ttCookie'
       ..fields['firstname'] = firstname
@@ -75,14 +77,13 @@ class ApiService {
       ));
     }
 
-    if (base64Image != null) {
-      if (base64Image.isEmpty) {
-        request.fields['Image'] = "";
-      }
+    if (base64Image != null && base64Image.isEmpty) {
+      request.fields['Image'] = "";
     }
 
     try {
-      final streamedResponse = await request.send();
+      // pakai client.send() untuk MultipartRequest
+      final streamedResponse = await client.send(request);
       final response = await http.Response.fromStream(streamedResponse);
 
       if (response.statusCode == 200) {
@@ -94,10 +95,15 @@ class ApiService {
       }
     } catch (e) {
       throw Exception("Terjadi kesalahan saat update profil: $e");
+    } finally {
+      client.close();
     }
   }
 
-  static Future<void> updateUserRole(String newRole) async {
+  static Future<void> updateUserRole(String newRole,
+      {http.Client? client}) async {
+    client ??= http.Client();
+
     final prefs = await SharedPreferences.getInstance();
     final sessionCookie = prefs.getString('session_cookie');
     final ttCookie = prefs.getString('tt_cookie');
@@ -113,17 +119,14 @@ class ApiService {
       'Cookie': 'session_id=$sessionCookie; tt=$ttCookie',
     };
 
-    final body = jsonEncode({
-      'role': newRole,
-    });
+    final body = jsonEncode({'role': newRole});
 
     try {
-      final response = await http.post(url, headers: headers, body: body);
+      final response = await client.post(url, headers: headers, body: body);
 
       if (response.statusCode == 200) {
         print("✅ Role updated successfully!");
       } else if (response.statusCode == 400) {
-        // Coba parsing pesan dari response body
         final responseBody = jsonDecode(response.body);
         final message = responseBody['message'] ?? 'Request tidak valid';
 
@@ -140,6 +143,8 @@ class ApiService {
       }
     } catch (e) {
       throw Exception("Terjadi kesalahan saat mengubah role: $e");
+    } finally {
+      client.close();
     }
   }
 

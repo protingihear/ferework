@@ -1,14 +1,16 @@
-import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:reworkmobile/widgets/berita_detail.dart';
 
 void main() {
   group('BeritaDetail Widget', () {
+    const validBase64 =
+        'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR4nGNgYAAAAAMAASsJTYQAAAAASUVORK5CYII=';
+
     final sampleBerita = {
       'judul': 'Berita Detail Judul',
       'isi': 'Ini adalah isi lengkap dari berita yang panjang.',
-      'foto': base64Encode(List.filled(10, 0)), // dummy base64
+      'foto': validBase64,
     };
 
     testWidgets('menampilkan judul, isi, dan gambar', (WidgetTester tester) async {
@@ -27,7 +29,7 @@ void main() {
       final beritaTanpaFoto = {
         'judul': 'Tanpa Gambar',
         'isi': 'Isi berita tanpa gambar.',
-        'foto': null,
+        'foto': null, // atau bisa juga coba dengan ''
       };
 
       await tester.pumpWidget(
@@ -37,6 +39,7 @@ void main() {
       );
 
       expect(find.byIcon(Icons.image), findsOneWidget);
+      expect(find.byType(Image), findsNothing);
     });
 
     testWidgets('tombol close menutup halaman', (WidgetTester tester) async {
@@ -51,11 +54,9 @@ void main() {
       );
 
       expect(find.byIcon(Icons.close), findsOneWidget);
-
       await tester.tap(find.byIcon(Icons.close));
       await tester.pumpAndSettle();
 
-      // Karena setelah pop, tidak ada lagi BeritaDetail
       expect(find.byType(BeritaDetail), findsNothing);
     });
   });

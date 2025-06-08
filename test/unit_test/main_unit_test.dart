@@ -12,20 +12,28 @@ import 'api_service/getCommunityPost.dart' as getCommunityPost;
 import 'api_service/getMyPost.dart' as getMyPost;
 import 'api_service/createReplyPost.dart' as createReplyPost;
 import 'api_service/updateProfile.dart' as updateProfile;
+import 'auth_service/logout_test.dart' as logout;
+import "api_service/updateCommunity.dart" as updateCommunity;
+import 'api_service/updateRole.dart' as updateRole;
+import 'api_service/createCommunity.dart' as createCommunity;
 
 void main() {
   login.main(); //1
   getCategory.main(); //2
   getUserProfile.main(); //3
+  createCommunity.main(); //4
   uploadBerita.main(); //5
   getBerita.main(); //6
   updateProfile.main(); //7
+  updateCommunity.main(); //8
   createCategory.main(); //9
   createSubCategory.main(); //10
   getCommunities.main(); //11
   getPosts.main(); //12
+  updateRole.main(); //13
   createPost.main(); //14
   getCommunityPost.main(); //15
   getMyPost.main(); //16
   createReplyPost.main(); //17
+  logout.main(); //18
 }
