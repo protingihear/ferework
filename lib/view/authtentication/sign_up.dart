@@ -114,17 +114,29 @@ class _SignUpPageState extends State<Sign_Up_Page> {
                         controller: nameController,
                         hint: 'Nama Lengkap',
                         icon: Icons.person,
-                        validator: (value) => value == null || value.isEmpty
-                            ? 'Nama lengkap mu'
-                            : null,
+                        validator: (value) {
+                          if (value == null || value.isEmpty) {
+                            return 'Nama lengkap mu';
+                          } else if (value.length > 100) {
+                            return 'Nama tidak boleh lebih dari 100 karakter';
+                          }
+                          return null;
+                        },
                       ),
                       _textField(
                         controller: usernameController,
                         hint: 'Username',
                         icon: Icons.person_outline,
-                        validator: (value) => value == null || value.isEmpty
-                            ? 'Username wajib diisi'
-                            : null,
+                        validator: (value) {
+                          if (value == null || value.isEmpty) {
+                            return 'Username wajib diisi';
+                          } else if (value.length < 4) {
+                            return 'Username minimal 4 karakter';
+                          } else if (value.length > 20) {
+                            return 'Username maksimal 20 karakter';
+                          }
+                          return null;
+                        },
                       ),
                       _textField(
                         controller: registEmailController,

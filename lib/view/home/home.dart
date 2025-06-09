@@ -27,7 +27,7 @@ class _HomeScreenState extends State<HomeScreen> {
   UserProfile? _userProfile;
   bool _isLoading = true;
   bool _hasError = false;
-  final List<String> _greetingsEmojis = ['🎉', '✨', '🦄', '🌈', '💫', '🎈'];
+  final List<String> _greetingsEmojis = ['🎉', '✨', '🦄', '💫', '🎈'];
 
   @override
   void initState() {

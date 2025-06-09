@@ -1,12 +1,8 @@
 import 'dart:convert';
-import 'dart:io';
 import 'package:http/http.dart' as http;
 import 'package:http_parser/http_parser.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../models/user_profile.dart';
-import 'dart:typed_data';
-import 'package:flutter/foundation.dart';
-import 'package:http_parser/http_parser.dart' as http_parser;
 
 class ApiService {
   static const String _baseUrl = 'http://20.214.51.17:5001';

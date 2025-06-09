@@ -18,7 +18,7 @@ class MethodService {
       );
 
       if (response.statusCode == 201 && context.mounted) {
-        Navigator.of(context).pop();
+        Navigator.of(context).pop(true);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Kategori berhasil dibuat!')),
         );
@@ -70,7 +70,7 @@ class MethodService {
       );
 
       if (response.statusCode == 201 && context.mounted) {
-        Navigator.of(context, rootNavigator: true).pop();
+        Navigator.of(context, rootNavigator: true).pop(true);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('SubKategori berhasil dibuat!')),
         );
@@ -127,7 +127,7 @@ class MethodService {
             children: [
               ElevatedButton.icon(
                 onPressed: () {
-                  Navigator.of(dialogContext).pop();
+                  Navigator.of(dialogContext).pop(true);
                   showCategoryForm(context);
                 },
                 icon: const Icon(Icons.category),
@@ -144,7 +144,7 @@ class MethodService {
               const SizedBox(height: 12),
               ElevatedButton.icon(
                 onPressed: () {
-                  Navigator.of(dialogContext).pop();
+                  Navigator.of(dialogContext).pop(true);
                   showSubCategoryForm(context);
                 },
                 icon: const Icon(Icons.subtitles),
@@ -201,7 +201,7 @@ class MethodService {
               const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
           actions: [
             TextButton(
-              onPressed: () => Navigator.of(dialogContext).pop(),
+              onPressed: () => Navigator.of(dialogContext).pop(true),
               child: const Text(
                 'Batal',
                 style: TextStyle(color: Colors.grey),
@@ -359,7 +359,7 @@ class MethodService {
                     const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                 actions: [
                   TextButton(
-                    onPressed: () => Navigator.of(dialogContext).pop(),
+                    onPressed: () => Navigator.of(dialogContext).pop(true),
                     child: const Text(
                       'Batal',
                       style: TextStyle(color: Colors.grey),
@@ -490,5 +490,65 @@ class MethodService {
 
     final Map<String, dynamic> userMap = jsonDecode(userJson);
     return userMap['role'] as String?;
+  }
+
+  // Update Category
+  static Future<Map<String, dynamic>> updateCategory(
+      String id, String name) async {
+    final url = Uri.parse('$baseUrl/categories/$id');
+    final response = await http.put(
+      url,
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: jsonEncode({
+        'name': name,
+      }),
+    );
+
+    if (response.statusCode == 200) {
+      return jsonDecode(response.body);
+    } else {
+      throw Exception('Gagal update kategori: ${response.body}');
+    }
+  }
+
+  // Delete Category
+  static Future<void> deleteCategory(String id) async {
+    final url = Uri.parse('$baseUrl/categories/$id');
+    final response = await http.delete(url);
+
+    if (response.statusCode != 200) {
+      throw Exception('Gagal hapus kategori: ${response.body}');
+    }
+  }
+
+  // Update subcategory
+  static Future<bool> updateSubCategory({
+    required String id,
+    required String name,
+    required String video,
+    required String description,
+  }) async {
+    final response = await http.put(
+      Uri.parse('$baseUrl/subcategories/$id'),
+      headers: {"Content-Type": "application/json"},
+      body: jsonEncode({
+        "name": name,
+        "video": video,
+        "description": description,
+      }),
+    );
+    return response.statusCode == 200;
+  }
+
+  // Delete subcategory
+  static Future<void> deleteSubcategory(String id) async {
+    final url = Uri.parse('$baseUrl/subcategories/$id');
+    final response = await http.delete(url);
+
+    if (response.statusCode != 200) {
+      throw Exception('Failed to delete subcategory');
+    }
   }
 }
