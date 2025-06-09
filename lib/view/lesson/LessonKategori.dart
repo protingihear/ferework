@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:reworkmobile/view/lesson/update%20page/view_update_kategori.dart';
 import 'package:reworkmobile/services/method_service.dart';
 import 'package:reworkmobile/view/lesson/LessonSubKategori.dart';
 
@@ -57,7 +58,9 @@ class _LessonkategoriState extends State<Lessonkategori> {
           ? FloatingActionButton(
               backgroundColor: kGreenLightAccent,
               foregroundColor: Colors.white,
-              onPressed: () => MethodService.showChoiceDialog(context),
+              onPressed: () {
+                MethodService.showChoiceDialog(context);
+              },
               child: const Icon(Icons.add),
             )
           : null,
@@ -84,20 +87,13 @@ class _LessonkategoriState extends State<Lessonkategori> {
                     padding: const EdgeInsets.all(26.0),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 1, vertical: 4),
-                          decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(16),
-                          ),
-                          child: const Text(
-                            'Niatkan Belajar Untuk Kemajuan Bangsa',
-                            style: TextStyle(color: Colors.white),
-                          ),
+                      children: const [
+                        Text(
+                          'Niatkan Belajar Untuk Kemajuan Bangsa',
+                          style: TextStyle(color: Colors.white),
                         ),
-                        const SizedBox(height: 8),
-                        const Text(
+                        SizedBox(height: 8),
+                        Text(
                           'Sign Language Learning',
                           style: TextStyle(
                             color: Colors.white,
@@ -105,8 +101,8 @@ class _LessonkategoriState extends State<Lessonkategori> {
                             fontSize: 24,
                           ),
                         ),
-                        const SizedBox(height: 4),
-                        const Text(
+                        SizedBox(height: 4),
+                        Text(
                           'Learn more',
                           style: TextStyle(color: Colors.white),
                         ),
@@ -132,16 +128,11 @@ class _LessonkategoriState extends State<Lessonkategori> {
                     List<Map<String, dynamic>> sortedLessons =
                         List.from(snapshot.data!);
                     sortedLessons.sort(
-                      (a, b) => (a['name'] ?? '').compareTo(b['name'] ?? ''),
-                    );
+                        (a, b) => (a['name'] ?? '').compareTo(b['name'] ?? ''));
 
                     return Container(
                       margin: const EdgeInsets.symmetric(
                           horizontal: 16, vertical: 8),
-                      padding: const EdgeInsets.all(8),
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
                       child: ListView.builder(
                         shrinkWrap: true,
                         physics: const NeverScrollableScrollPhysics(),
@@ -159,14 +150,17 @@ class _LessonkategoriState extends State<Lessonkategori> {
                               return GestureDetector(
                                 onTap: () {
                                   Navigator.push(
-                                    context,
-                                    MaterialPageRoute(
-                                      builder: (context) => SubCategoryPage(
-                                        lesson['name'],
-                                        lesson['subcategories'],
-                                      ),
-                                    ),
-                                  );
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (context) => SubCategoryPage(
+                                          lesson['name'],
+                                          lesson['subcategories'],
+                                        ),
+                                      )).then((value) {
+                                    if (value == true) {
+                                      refreshLessons();
+                                    }
+                                  });
                                 },
                                 child: Card(
                                   color: Colors.green.shade200,
@@ -175,38 +169,138 @@ class _LessonkategoriState extends State<Lessonkategori> {
                                   ),
                                   margin: const EdgeInsets.symmetric(
                                       vertical: 6, horizontal: 8),
-                                  child: ListTile(
-                                    leading: const Icon(Icons.book,
-                                        color: Colors.white, size: 32),
-                                    title: Text(
-                                      lesson['name'] ?? 'Judul tidak tersedia',
-                                      style: const TextStyle(
-                                        fontWeight: FontWeight.bold,
-                                        color: Colors.white,
-                                      ),
-                                    ),
-                                    subtitle: Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      children: [
-                                        Text(
-                                          'Jumlah kata: ${lesson['subcategories']?.length}',
+                                  child: Column(
+                                    children: [
+                                      ListTile(
+                                        leading: const Icon(Icons.book,
+                                            color: Colors.white, size: 32),
+                                        title: Text(
+                                          lesson['name'] ??
+                                              'Judul tidak tersedia',
                                           style: const TextStyle(
-                                              color: Colors.white70),
-                                        ),
-                                        const SizedBox(height: 8),
-                                        LinearProgressIndicator(
-                                          value:
-                                              (progress / 100).clamp(0.0, 1.0),
-                                          backgroundColor: Colors.white38,
-                                          valueColor:
-                                              const AlwaysStoppedAnimation<
-                                                  Color>(
-                                            Colors.white,
+                                            fontWeight: FontWeight.bold,
+                                            color: Colors.white,
                                           ),
-                                        )
-                                      ],
-                                    ),
+                                        ),
+                                        subtitle: Column(
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.start,
+                                          children: [
+                                            Text(
+                                              'Jumlah kata: ${lesson['subcategories']?.length}',
+                                              style: const TextStyle(
+                                                  color: Colors.white70),
+                                            ),
+                                            const SizedBox(height: 8),
+                                            LinearProgressIndicator(
+                                              value: (progress / 100)
+                                                  .clamp(0.0, 1.0),
+                                              backgroundColor: Colors.white38,
+                                              valueColor:
+                                                  const AlwaysStoppedAnimation<
+                                                      Color>(
+                                                Colors.white,
+                                              ),
+                                            )
+                                          ],
+                                        ),
+                                        trailing: userRole == 'ahli_bahasa'
+                                            ? Row(
+                                                mainAxisSize: MainAxisSize.min,
+                                                children: [
+                                                  IconButton(
+                                                    icon: const Icon(Icons.edit,
+                                                        color: Colors.white),
+                                                    onPressed: () {
+                                                      Navigator.push(
+                                                          context,
+                                                          MaterialPageRoute(
+                                                              builder: (_) =>
+                                                                  UpdateCategoryPage(
+                                                                    categoryId:
+                                                                        lesson['id']
+                                                                            .toString(),
+                                                                    initialName:
+                                                                        lesson[
+                                                                            'name'],
+                                                                  ))).then(
+                                                          (value) {
+                                                        if (value == true) {
+                                                          refreshLessons();
+                                                        }
+                                                      });
+                                                    },
+                                                  ),
+                                                  IconButton(
+                                                    icon: const Icon(
+                                                        Icons.delete,
+                                                        color:
+                                                            Colors.redAccent),
+                                                    onPressed: () async {
+                                                      final confirm =
+                                                          await showDialog<
+                                                              bool>(
+                                                        context: context,
+                                                        builder: (context) =>
+                                                            AlertDialog(
+                                                          title: const Text(
+                                                              'Hapus Kategori'),
+                                                          content: const Text(
+                                                              'Yakin ingin menghapus kategori ini?'),
+                                                          actions: [
+                                                            TextButton(
+                                                              child: const Text(
+                                                                  'Batal'),
+                                                              onPressed: () =>
+                                                                  Navigator.pop(
+                                                                      context,
+                                                                      false),
+                                                            ),
+                                                            TextButton(
+                                                              child: const Text(
+                                                                  'Hapus'),
+                                                              onPressed: () =>
+                                                                  Navigator.pop(
+                                                                      context,
+                                                                      true),
+                                                            ),
+                                                          ],
+                                                        ),
+                                                      );
+
+                                                      if (confirm == true) {
+                                                        try {
+                                                          await MethodService
+                                                              .deleteCategory(
+                                                                  lesson['id']
+                                                                      .toString());
+                                                          ScaffoldMessenger.of(
+                                                                  context)
+                                                              .showSnackBar(
+                                                            const SnackBar(
+                                                              content: Text(
+                                                                  '✅ Kategori berhasil dihapus'),
+                                                            ),
+                                                          );
+                                                          refreshLessons();
+                                                        } catch (e) {
+                                                          ScaffoldMessenger.of(
+                                                                  context)
+                                                              .showSnackBar(
+                                                            SnackBar(
+                                                              content: Text(
+                                                                  '❌ Gagal hapus kategori: $e'),
+                                                            ),
+                                                          );
+                                                        }
+                                                      }
+                                                    },
+                                                  ),
+                                                ],
+                                              )
+                                            : null,
+                                      ),
+                                    ],
                                   ),
                                 ),
                               );

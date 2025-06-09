@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import 'package:reworkmobile/services/method_service.dart';
 import 'package:reworkmobile/view/lesson/LessonDisplay.dart';
+import 'package:reworkmobile/view/lesson/update%20page/view_update_subcategory.dart';
 
 class SubCategoryPage extends StatefulWidget {
   final String name;
@@ -15,6 +16,7 @@ class SubCategoryPage extends StatefulWidget {
 
 class _SubCategoryPageState extends State<SubCategoryPage> {
   String? userId;
+  String? userRole;
   List<dynamic> sortedSubCategory = [];
   List<dynamic> filteredSubCategory = [];
   final TextEditingController searchController = TextEditingController();
@@ -22,32 +24,51 @@ class _SubCategoryPageState extends State<SubCategoryPage> {
   @override
   void initState() {
     super.initState();
-    saveUser();
+    loadUserInfo();
     sortSubCategories();
   }
 
-  void saveUser() async {
+  void loadUserInfo() async {
     userId = await MethodService.getUserId();
+    userRole = await MethodService.getUserRole();
     setState(() {});
   }
 
   void sortSubCategories() {
     sortedSubCategory = List.from(widget.subCategory);
-    sortedSubCategory.sort((a, b) => a['name'].toString().compareTo(b['name'].toString()));
-    filteredSubCategory = List.from(sortedSubCategory); // Inisialisasi filter dengan daftar awal
+    sortedSubCategory
+        .sort((a, b) => a['name'].toString().compareTo(b['name'].toString()));
+    filteredSubCategory = List.from(sortedSubCategory);
     setState(() {});
   }
 
   void search(String query) {
     setState(() {
-      filteredSubCategory = MethodService.searchSubCategory(query, sortedSubCategory);
+      filteredSubCategory =
+          MethodService.searchSubCategory(query, sortedSubCategory);
     });
+  }
+
+  Future<void> deleteSubcategory(String id) async {
+    try {
+      await MethodService.deleteSubcategory(id);
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('✅ Subkategori dihapus')),
+      );
+      setState(() {
+        filteredSubCategory.removeWhere((item) => item['id'].toString() == id);
+      });
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('❌ Gagal hapus: $e')),
+      );
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Color(0xFFE8F5E9),
+      backgroundColor: const Color(0xFFE8F5E9),
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
@@ -57,7 +78,8 @@ class _SubCategoryPageState extends State<SubCategoryPage> {
         ),
         title: Text(
           widget.name,
-          style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.black),
+          style:
+              const TextStyle(fontWeight: FontWeight.bold, color: Colors.black),
         ),
         centerTitle: true,
       ),
@@ -80,7 +102,7 @@ class _SubCategoryPageState extends State<SubCategoryPage> {
               ),
               child: TextField(
                 controller: searchController,
-                onChanged: search, // Memanggil fungsi search setiap kali teks berubah
+                onChanged: search,
                 decoration: InputDecoration(
                   hintText: 'Cari kategori yang kamu suka!',
                   border: OutlineInputBorder(
@@ -108,59 +130,110 @@ class _SubCategoryPageState extends State<SubCategoryPage> {
               child: ListView.builder(
                 itemCount: filteredSubCategory.length,
                 itemBuilder: (context, index) {
-                  return GestureDetector(
-                    onTap: () async {
-                      if (userId != null) {
-                        bool result = await MethodService.updateStatus(
-                          filteredSubCategory[index]['id'].toString(),
-                          true,
-                          userId!,
-                        );
+                  final sub = filteredSubCategory[index];
 
-                        if (result) {
-                          print("Berhasil update status!");
-                        } else {
-                          print("Gagal update status!");
+                  return Container(
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(12),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.2),
+                          spreadRadius: 1,
+                          blurRadius: 6,
+                          offset: const Offset(0, 3),
+                        ),
+                      ],
+                    ),
+                    margin: const EdgeInsets.symmetric(vertical: 8),
+                    child: ListTile(
+                      title: Text(sub['name'].toString()),
+                      onTap: () async {
+                        if (userId != null) {
+                          await MethodService.updateStatus(
+                            sub['id'].toString(),
+                            true,
+                            userId!,
+                          );
                         }
-                      } else {
-                        print("User ID belum tersedia!");
-                      }
 
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => VideoPlayerPage(
-                            videoUrl: MethodService.convertDriveLink(
-                                filteredSubCategory[index]['video']),
-                            title: filteredSubCategory[index]['name'],
-                            description: filteredSubCategory[index]['description'],
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => VideoPlayerPage(
+                              videoUrl:
+                                  MethodService.convertDriveLink(sub['video']),
+                              title: sub['name'],
+                              description: sub['description'],
+                            ),
                           ),
-                        ),
-                      );
-                    },
-                    child: Container(
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(12),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withOpacity(0.2),
-                            spreadRadius: 1,
-                            blurRadius: 6,
-                            offset: const Offset(0, 3),
+                        );
+                      },
+                      trailing: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          IconButton(
+                            icon: const Icon(LucideIcons.play,
+                                color: Colors.blue),
+                            onPressed: () {
+                              // Bisa kosong karena sudah ada onTap di atas
+                            },
                           ),
+                          if (userRole == 'ahli_bahasa') ...[
+                            IconButton(
+                              icon:
+                                  const Icon(Icons.edit, color: Colors.orange),
+                              onPressed: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (_) => EditSubcategoryPage(
+                                      subcategory: sub,
+                                    ),
+                                  ),
+                                ).then((result) {
+                                  if (result == true) {
+                                    sortSubCategories();
+                                    Navigator.pop(
+                                        context, true);
+                                  }
+                                });
+                              },
+                            ),
+                            IconButton(
+                              icon: const Icon(Icons.delete, color: Colors.red),
+                              onPressed: () async {
+                                final confirm = await showDialog<bool>(
+                                  context: context,
+                                  builder: (ctx) => AlertDialog(
+                                    title: const Text('Hapus Subkategori'),
+                                    content: const Text(
+                                        'Yakin ingin menghapus ini?'),
+                                    actions: [
+                                      TextButton(
+                                        onPressed: () =>
+                                            Navigator.pop(ctx, false),
+                                        child: const Text('Batal'),
+                                      ),
+                                      TextButton(
+                                        onPressed: () =>
+                                            Navigator.pop(ctx, true),
+                                        child: const Text('Hapus'),
+                                      ),
+                                    ],
+                                  ),
+                                );
+
+                                if (confirm == true) {
+                                  await deleteSubcategory(sub['id'].toString())
+                                      .then((_) {
+                                    Navigator.pop(context,true);
+                                  });
+                                }
+                              },
+                            ),
+                          ]
                         ],
-                      ),
-                      margin: const EdgeInsets.symmetric(vertical: 8),
-                      child: ListTile(
-                        title: Text(filteredSubCategory[index]['name'].toString()),
-                        trailing: IconButton(
-                          icon: const Icon(
-                            LucideIcons.play,
-                            color: Colors.blue,
-                          ),
-                          onPressed: () {},
-                        ),
                       ),
                     ),
                   );
