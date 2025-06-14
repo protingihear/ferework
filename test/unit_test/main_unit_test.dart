@@ -18,7 +18,6 @@ import 'api_service/updateRole.dart' as updateRole;
 import 'api_service/createCommunity.dart' as createCommunity;
 
 void main() {
-  login.main(); //1
   getCategory.main(); //2
   getUserProfile.main(); //3
   createCommunity.main(); //4
