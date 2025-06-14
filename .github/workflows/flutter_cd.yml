@@ -13,62 +13,60 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      # 1. Checks out your repository's code so the workflow can access it
+      # 1. Checks out your repository's code
       - name: Checkout repository
         uses: actions/checkout@v3
 
-      # 2. Sets up the specific version of Flutter you need
-      - name: Set up Flutter
-        uses: subosito/flutter-action@v2
+      # 2. NEW: Set up Java, which is required for Android builds
+      - name: Set up Java
+        uses: actions/setup-java@v4
         with:
-          flutter-version: '3.28.1' # Pinning to a specific recent stable version
+          distribution: 'temurin'
+          java-version: '17'
 
-      # 3. Installs your app's dependencies
+      # 3. NEW: Use the OFFICIAL Flutter action to set up Flutter
+      - name: Set up Flutter
+        uses: flutter-actions/setup-flutter@v2
+        with:
+          # Using the same version number we tried before
+          version: '3.28.1'
+
+      # 4. Installs your app's dependencies
       - name: Install Flutter dependencies
         run: flutter pub get
 
-      # 4. Runs your tests to make sure nothing is broken
+      # 5. Runs your tests to make sure nothing is broken
       - name: Run tests
         run: flutter test
 
-      # 5. Builds the APK file (for Firebase and direct installs)
+      # 6. Builds the APK file (for Firebase and direct installs)
       - name: Build APK
         run: flutter build apk --release
 
-      # 6. Builds the App Bundle (for the Play Store and GitHub Release)
+      # 7. Builds the App Bundle (for the Play Store and GitHub Release)
       - name: Build AAB
         run: flutter build appbundle --release
 
       # --- Distribution Steps ---
 
-      # 7. Distribute APK to Firebase Testers
-      # Installs the Firebase CLI and sends the APK to your testers.
+      # 8. Distribute APK to Firebase Testers
       - name: Distribute to Firebase App Distribution
         run: |
-          # Use the original curl command to install Firebase CLI
           curl -sL https://firebase.tools | bash
-          # Distribute the APK using the secrets
           firebase appdistribution:distribute build/app/outputs/flutter-apk/app-release.apk \
             --app "${{ secrets.FIREBASE_APP_ID }}" \
             --token "${{ secrets.FIREBASE_TOKEN }}" \
             --release-notes "New test build. Also available on GitHub Release v${{ github.run_number }}." \
             --testers "youremail@example.com,teammate@example.com"
 
-      # 8. Create a Public GitHub Release
-      # This uses the action from your second file to create a formal release
-      # and attaches both the APK and AAB files to it.
+      # 9. Create a Public GitHub Release
       - name: Create GitHub Release
         uses: ncipollo/release-action@v1
         with:
-          # This creates a tag like v1, v2, v3...
           tag: v${{ github.run_number }}
-          # The name of the release
           name: "Release v${{ github.run_number }}"
-          # A description for the release
           body: "Automated release. This build was also sent to testers via Firebase."
-          # The files to attach to the release
           artifacts: |
             build/app/outputs/flutter-apk/app-release.apk
             build/app/outputs/bundle/release/app-release.aab
-          # The token is provided automatically by GitHub
           token: ${{ secrets.GITHUB_TOKEN }}
