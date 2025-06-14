@@ -55,7 +55,7 @@ jobs:
             --app "${{ secrets.FIREBASE_APP_ID }}" \
             --token "${{ secrets.FIREBASE_TOKEN }}" \
             --release-notes "New test build. Also available on GitHub Release v${{ github.run_number }}." \
-            --testers "youremail@example.com,teammate@example.com"
+            --testers "unknownhaha677@gmail.com,teammate@example.com"
 
       # 9. Create a Public GitHub Release
       - name: Create GitHub Release
