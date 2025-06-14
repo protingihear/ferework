@@ -101,6 +101,7 @@ String _executeFramePackagingInIsolate(ImageProcessingPayload payload) {
 
   totalPackagingStopwatch.stop();
   debugPrint("WORKER_ISOLATE_TIMING: Total Package: ${totalPackagingStopwatch.elapsedMilliseconds}ms, Base64: ${base64EncodingTimeMs}ms, JsonEncode: ${jsonEncodingTimeMs}ms");
+  debugPrint("WORKER_ISOLATE_TIMING: Total Package: ${totalPackagingStopwatch.elapsedMilliseconds}ms, Base64: ${base64EncodingTimeMs}ms, JsonEncode: ${jsonEncodingTimeMs}ms");
   return jsonResult;
 }
 
