@@ -260,3 +260,23 @@ class AuthService {
     }
   }
 }
+
+static Future<String> forgotPassword(String email) async {
+    final url = Uri.parse('$baseUrl/auth/forgot-password');
+
+    final response = await http.post(
+      url,
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({'email': email}),
+    );
+
+    if (response.statusCode == 200) {
+      final data = jsonDecode(response.body);
+      return data['message'] ?? "Berhasil mengirim link reset password";
+    } else if (response.statusCode == 404) {
+      final data = jsonDecode(response.body);
+      return data['message'] ?? "Email tidak ditemukan";
+    } else {
+      return "Gagal mengirim link reset password";
+    }
+  }
