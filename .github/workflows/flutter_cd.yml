@@ -28,8 +28,7 @@ jobs:
       - name: Set up Flutter
         uses: flutter-actions/setup-flutter@v2
         with:
-          # Using the same version number we tried before
-          version: '3.28.1'
+          version: '3.22.2'
 
       # 4. Installs your app's dependencies
       - name: Install Flutter dependencies
