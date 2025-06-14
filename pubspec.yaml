@@ -6,7 +6,7 @@ publish_to: 'none' # Prevents accidental publishing
 version: 1.0.0+1
 
 environment:
-  sdk: '>=3.4.3 <4.0.0' # Ensure correct version constraint format
+  sdk: '>=3.6.0 <4.0.0' # Ensure correct version constraint format
 
 dependencies:
   flutter:
@@ -21,7 +21,7 @@ dependencies:
   image: ^4.5.2
   google_fonts: ^6.1.0 
   web_socket_channel: ^3.0.2
-  camera: ^0.11.0
+  camera: ^0.11.1
   web_socket_client: ^0.2.1
   
   lucide_icons: ^0.257.0
@@ -35,7 +35,7 @@ dependencies:
   firebase_messaging: ^15.2.5
   http_parser: ^4.0.2
   path_provider: ^2.1.5
-  youtube_player_flutter: ^9.0.0
+  youtube_player_flutter: ^9.1.1
   flutter_launcher_icons: ^0.13.1
 
 flutter_icons:
@@ -48,7 +48,7 @@ dev_dependencies:
     sdk: flutter
   flutter_test:
     sdk: flutter
-  flutter_lints: ^4.0.0
+  flutter_lints: ^5.0.0
   mockito: ^5.4.2
   build_runner: ^2.4.9
 
