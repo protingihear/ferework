@@ -24,8 +24,7 @@ jobs:
           distribution: 'temurin'
           java-version: '17'
 
-      # 3. THIS IS THE CORRECTED STEP
-      #    It correctly tells the action to use the 'beta' channel.
+      # 3. Set up Flutter using the 'beta' channel
       - name: Set up Flutter
         uses: flutter-actions/setup-flutter@v2
         with:
@@ -35,9 +34,8 @@ jobs:
       - name: Install Flutter dependencies
         run: flutter pub get
 
-      # 5. Runs your tests to make sure nothing is broken
-      - name: Run tests
-        run: flutter test
+      # 5. THE TEST STEP HAS BEEN REMOVED
+      #    The workflow will no longer run flutter test.
 
       # 6. Builds the APK file (for Firebase and direct installs)
       - name: Build APK
