@@ -59,14 +59,14 @@ jobs:
             --app "${{ secrets.FIREBASE_APP_ID }}" \
             --token "${{ secrets.FIREBASE_TOKEN }}" \
             --release-notes "New test build. Also available on GitHub Release v${{ github.run_number }}." \
-            --testers "youremail@example.com,teammate@example.com"
+            --testers "rdmfaisalrj@gmail.com,daniel.budi.babakan@gmail.com, unknownhaha677@gmail.com"
 
       # 8. Create a Public GitHub Release
       - name: Create GitHub Release
         uses: ncipollo/release-action@v1
         with:
           tag: v${{ github.run_number }}
-          name: "Release v${{ github.run_number }}"
+          name: "iHear v${{ github.run_number }}"
           body: "Automated release. This build was also sent to testers via Firebase."
           artifacts: |
             build/app/outputs/flutter-apk/app-release.apk
