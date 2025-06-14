@@ -1,21 +1,21 @@
 {
   "project_info": {
-    "project_number": "654450765799",
-    "project_id": "ihear-frontend",
-    "storage_bucket": "ihear-frontend.firebasestorage.app"
+    "project_number": "897520395569",
+    "project_id": "ihear-64527",
+    "storage_bucket": "ihear-64527.firebasestorage.app"
   },
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:654450765799:android:92bd559b5cd76577261742",
+        "mobilesdk_app_id": "1:897520395569:android:9a30a839322befdda2fc10",
         "android_client_info": {
-          "package_name": "com.example.reworkmobile"
+          "package_name": "com.proting.ihear"
         }
       },
       "oauth_client": [],
       "api_key": [
         {
-          "current_key": "AIzaSyCmkuFQopC5RM7r59K5c-XcBabLCZWsrEA"
+          "current_key": "AIzaSyBflLuz9h-RcnH4UID5DseMoN-GxwBTxV0"
         }
       ],
       "services": {

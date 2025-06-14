@@ -47,11 +47,11 @@ class DefaultFirebaseOptions {
   }
 
   static const FirebaseOptions android = FirebaseOptions(
-    apiKey: 'AIzaSyCmkuFQopC5RM7r59K5c-XcBabLCZWsrEA',
-    appId: '1:654450765799:android:92bd559b5cd76577261742',
-    messagingSenderId: '654450765799',
-    projectId: 'ihear-frontend',
-    storageBucket: 'ihear-frontend.firebasestorage.app',
+    apiKey: 'AIzaSyBflLuz9h-RcnH4UID5DseMoN-GxwBTxV0',
+    appId: '1:897520395569:android:2502aa5bcbb89adaa2fc10',
+    messagingSenderId: '897520395569',
+    projectId: 'ihear-64527',
+    storageBucket: 'ihear-64527.firebasestorage.app',
   );
 
   static const FirebaseOptions ios = FirebaseOptions(
