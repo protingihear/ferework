@@ -1,46 +1,74 @@
-name: Flutter CD to GitHub Release
+# A name for the entire workflow
+name: Build, Release and Distribute
 
+# This workflow runs on any push to the 'main' branch
 on:
   push:
     branches:
-      - main  # You can change this to 'master' or any branch you want
+      - main
 
 jobs:
-  build-release:
+  # A single job that will perform all our steps
+  build-and-release:
     runs-on: ubuntu-latest
 
     steps:
+      # 1. Checks out your repository's code so the workflow can access it
       - name: Checkout repository
         uses: actions/checkout@v3
 
+      # 2. Sets up the specific version of Flutter you need
       - name: Set up Flutter
         uses: subosito/flutter-action@v2
         with:
-          flutter-version: '3.22.0' # Use your Flutter version here
+          flutter-version: '3.22.0' # Use your Flutter version
 
+      # 3. Installs your app's dependencies
       - name: Install Flutter dependencies
         run: flutter pub get
 
+      # 4. Runs your tests to make sure nothing is broken
       - name: Run tests
         run: flutter test
 
+      # 5. Builds the APK file (for Firebase and direct installs)
       - name: Build APK
         run: flutter build apk --release
 
+      # 6. Builds the App Bundle (for the Play Store and GitHub Release)
       - name: Build AAB
         run: flutter build appbundle --release
 
-      - name: Create GitHub Release and Upload Artifacts
+      # --- Distribution Steps ---
+
+      # 7. Distribute APK to Firebase Testers
+      # Installs the Firebase CLI and sends the APK to your testers.
+      - name: Distribute to Firebase App Distribution
+        run: |
+          # Use the original curl command to install Firebase CLI
+          curl -sL https://firebase.tools | bash
+          # Distribute the APK using the secrets
+          firebase appdistribution:distribute build/app/outputs/flutter-apk/app-release.apk \
+            --app "${{ secrets.FIREBASE_APP_ID }}" \
+            --token "${{ secrets.FIREBASE_TOKEN }}" \
+            --release-notes "New test build. Also available on GitHub Release v${{ github.run_number }}." \
+            --testers "youremail@example.com,teammate@example.com"
+
+      # 8. Create a Public GitHub Release
+      # This uses the action from your second file to create a formal release
+      # and attaches both the APK and AAB files to it.
+      - name: Create GitHub Release
         uses: ncipollo/release-action@v1
         with:
-          tag: v${{ github.run_number }}  # or use date: 'release-${{ github.sha }}'
-          name: "Flutter Release ${{ github.run_number }}"
-          body: |
-            Automated release from GitHub Actions.
-            Includes:
-            - APK
-            - AAB
+          # This creates a tag like v1, v2, v3...
+          tag: v${{ github.run_number }}
+          # The name of the release
+          name: "Release v${{ github.run_number }}"
+          # A description for the release
+          body: "Automated release. This build was also sent to testers via Firebase."
+          # The files to attach to the release
           artifacts: |
             build/app/outputs/flutter-apk/app-release.apk
             build/app/outputs/bundle/release/app-release.aab
+          # The token is provided automatically by GitHub
           token: ${{ secrets.GITHUB_TOKEN }}
