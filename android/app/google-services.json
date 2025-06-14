@@ -7,9 +7,9 @@
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:897520395569:android:9a30a839322befdda2fc10",
+        "mobilesdk_app_id": "1:897520395569:android:2502aa5bcbb89adaa2fc10",
         "android_client_info": {
-          "package_name": "com.proting.ihear"
+          "package_name": "com.example.reworkmobile"
         }
       },
       "oauth_client": [],
