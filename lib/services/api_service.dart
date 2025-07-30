@@ -5,7 +5,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../models/user_profile.dart';
 
 class ApiService {
-  static const String _baseUrl = 'http://20.214.51.17:5001';
+  static const String _baseUrl = 'http://20.2.209.127:3000';
 
   static Future<UserProfile> fetchUserProfile({http.Client? client}) async {
     client ??= http.Client();

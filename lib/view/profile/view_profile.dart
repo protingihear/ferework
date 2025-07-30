@@ -66,7 +66,7 @@ class _ProfilePageState extends State<ProfilePage> {
       }
 
       final response = await http.get(
-        Uri.parse('http://20.214.51.17:5001/api/users'),
+        Uri.parse('http://20.2.209.127:3000/api/users'),
         headers: {
           "Content-Type": "application/json",
           "Cookie": "session_id=$sessionId; tt=$tt",

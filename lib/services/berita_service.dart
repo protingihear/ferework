@@ -5,7 +5,7 @@ import 'package:mime/mime.dart';
 import 'package:path/path.dart';
 
 class BeritaService {
-  static const String _baseUrl = 'http://20.214.51.17:5001';
+  static const String _baseUrl = 'http://20.2.209.127:3000';
 
   static Future<bool> uploadBerita({
     required String judul,

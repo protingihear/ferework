@@ -4,7 +4,7 @@ import '../models/community.dart';
 import '../models/post.dart';
 
 class ApiService {
-  static const String baseUrl = 'http://20.214.51.17:5001/api';
+  static const String baseUrl = 'http://20.2.209.127:3000/api';
 
   static Future<List<Community>> fetchCommunities({http.Client? client}) async {
     client ??= http.Client();

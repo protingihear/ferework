@@ -9,7 +9,7 @@ void main() {
 
     // Simulasi response dari server
     final mockClient = MockClient((http.Request request) async {
-      if (request.url.toString() == 'http://20.214.51.17:5001/api/categories' &&
+      if (request.url.toString() == 'http://20.2.209.127:3000/api/categories' &&
           request.method == 'POST' &&
           request.headers['Content-Type']?.startsWith('application/json') ==
               true) {
@@ -30,7 +30,7 @@ void main() {
 
     // Kirim request ke mockClient
     final response = await mockClient.post(
-      Uri.parse('http://20.214.51.17:5001/api/categories'),
+      Uri.parse('http://20.2.209.127:3000/api/categories'),
       headers: {'Content-Type': 'application/json'},
       body: jsonEncode({'name': testCategoryName}),
     );

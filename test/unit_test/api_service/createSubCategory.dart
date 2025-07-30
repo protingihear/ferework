@@ -5,7 +5,7 @@ import 'package:http/testing.dart';
 
 void main() {
   test('🧪 TCU_010 - Create SubCategory (Mocked)', () async {
-    const baseUrl = 'http://20.214.51.17:5001/api';
+    const baseUrl = 'http://20.2.209.127:3000/api';
     const categoryId = '1';
     const apiUrl = '$baseUrl/categories/$categoryId/subcategories';
 

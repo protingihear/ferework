@@ -5,7 +5,7 @@ import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class MethodService {
-  static const String baseUrl = 'http://20.214.51.17:5001/api';
+  static const String baseUrl = 'http://20.2.209.127:3000/api';
   static Future<void> createCategory(
       BuildContext context, TextEditingController nameController) async {
     final String apiUrl = '$baseUrl/categories';

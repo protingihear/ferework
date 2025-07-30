@@ -10,7 +10,7 @@ Future<void> initPrefs() async {
 }
 
 class AuthService {
-  static const String baseUrl = 'http://20.214.51.17:5001';
+  static const String baseUrl = 'http://20.2.209.127:3000';
 
   // Pakai http.Client untuk persist cookie
   final http.Client _client;
